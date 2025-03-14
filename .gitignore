@@ -1,0 +1,158 @@
+# BookBite Project .gitignore
+
+# ------------------- Backend (C++) -------------------
+
+# Build directories
+/backend/build/
+/backend/bin/
+/backend/out/
+/backend/cmake-build-*/
+
+# CMake generated files
+/backend/CMakeFiles/
+/backend/CMakeCache.txt
+/backend/CMakeScripts/
+/backend/*.cmake
+/backend/compile_commands.json
+/backend/Makefile
+
+# Prerequisites
+*.d
+
+# Compiled Object files
+*.slo
+*.lo
+*.o
+*.obj
+
+# Precompiled Headers
+*.gch
+*.pch
+
+# Compiled Dynamic libraries
+*.so
+*.dylib
+*.dll
+
+# Fortran module files
+*.mod
+*.smod
+
+# Compiled Static libraries
+*.lai
+*.la
+*.a
+*.lib
+
+# Executables
+*.exe
+*.out
+*.app
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+
+# ------------------- Frontend (Next.js) -------------------
+
+# Dependencies
+/frontend/node_modules
+/frontend/.pnp
+/frontend/.pnp.js
+
+# Testing
+/frontend/coverage
+
+# Next.js build output
+/frontend/.next/
+/frontend/out/
+
+# Production build
+/frontend/build
+
+# Misc
+/frontend/.DS_Store
+/frontend/*.pem
+
+# Debug
+/frontend/npm-debug.log*
+/frontend/yarn-debug.log*
+/frontend/yarn-error.log*
+
+# Local env files
+/frontend/.env*.local
+/frontend/.env.development.local
+/frontend/.env.test.local
+/frontend/.env.production.local
+
+# Vercel
+/frontend/.vercel
+
+# Typescript
+/frontend/*.tsbuildinfo
+/frontend/next-env.d.ts
+
+# ------------------- General -------------------
+
+# Environment variables
+.env
+.env.local
+.env.development
+.env.test
+.env.production
+
+# IDE files
+# VS Code
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+*.code-workspace
+
+# JetBrains IDEs
+.idea/
+*.iml
+*.ipr
+*.iws
+.idea_modules/
+
+# MacOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# Linux
+*~
+.fuse_hidden*
+.directory
+.Trash-*
+.nfs*
+
+# Log files
+*.log
+log/
+logs/
+
+# Temporary files
+tmp/
+temp/
+
+# Backup files
+*.bak
+*.backup
+*.old
+*.orig
+*.temp
+*.tmp
+
+# Docker
+.dockerignore 
