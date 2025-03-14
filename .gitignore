@@ -60,6 +60,8 @@
 /frontend/node_modules
 /frontend/.pnp
 /frontend/.pnp.js
+# Generic node_modules regardless of location
+node_modules/
 
 # Testing
 /frontend/coverage
@@ -67,6 +69,9 @@
 # Next.js build output
 /frontend/.next/
 /frontend/out/
+# Generic Next.js build output regardless of location
+.next/
+out/
 
 # Production build
 /frontend/build
