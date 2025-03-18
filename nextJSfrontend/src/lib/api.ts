@@ -20,9 +20,31 @@ export interface Customer {
 
 export interface RestaurantTable {
   id: number;
+  restaurantId: number;
   tableNumber: number;
   capacity: number;
   location: string;
+  tableType: string;
+  tableDetails: string;
+  isActive: boolean;
+}
+
+export interface Restaurant {
+  id: number;
+  name: string;
+  image: string;
+  location: string;
+  distance: string;
+  category: string;
+  priceRange: string;
+  rating: number;
+  ratingLabel: string;
+  reviews: number;
+  isSpecial: boolean;
+  isRecommended: boolean;
+  isTrending: boolean;
+  features: string[];
+  tables?: RestaurantTable[];
 }
 
 export interface Reservation {
@@ -37,6 +59,7 @@ export interface Reservation {
   specialRequests?: string;
   customer?: Customer;
   table?: RestaurantTable;
+  restaurant?: Restaurant;
 }
 
 // API methods
@@ -55,6 +78,22 @@ export const getCustomer = async (id: number): Promise<Customer> => {
 export const createCustomer = async (customer: Omit<Customer, 'id'>): Promise<Customer> => {
   const response = await apiClient.post('/customers', customer);
   return response.data;
+};
+
+// Restaurants
+export const getRestaurants = async (): Promise<Restaurant[]> => {
+  const response = await apiClient.get('/restaurants');
+  return response.data.restaurants;
+};
+
+export const getRestaurant = async (id: number): Promise<Restaurant> => {
+  const response = await apiClient.get(`/restaurants/${id}`);
+  return response.data;
+};
+
+export const getRestaurantTables = async (restaurantId: number): Promise<RestaurantTable[]> => {
+  const response = await apiClient.get(`/restaurants/${restaurantId}/tables`);
+  return response.data.tables;
 };
 
 // Tables
