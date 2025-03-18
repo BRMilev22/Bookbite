@@ -59,6 +59,30 @@ int CustomerService::createCustomer(const Customer& customer) {
         return existingCustomer->id;
     }
     
+    // If a specific ID is requested, try to use it
+    if (customer.id > 0) {
+        // Check if ID is already in use
+        auto existingCustomerWithId = getCustomerById(customer.id);
+        if (!existingCustomerWithId) {
+            // ID is available, use it
+            std::string sql = "INSERT INTO customers (customer_id, first_name, last_name, email, phone) VALUES (" +
+                             std::to_string(customer.id) + ", '" +
+                             customer.firstName + "', '" + customer.lastName + "', '" +
+                             customer.email + "', '" + customer.phone + "')";
+            
+            try {
+                db.execute(sql);
+                return customer.id;
+            } catch (const std::exception& e) {
+                std::cerr << "Error creating customer with specific ID: " << e.what() << std::endl;
+                // Fall back to auto-generated ID
+            }
+        } else {
+            std::cout << "Customer ID " << customer.id << " is already in use, falling back to auto-generated ID" << std::endl;
+        }
+    }
+    
+    // Default: let the database auto-generate an ID
     std::string sql = "INSERT INTO customers (first_name, last_name, email, phone) VALUES ('" +
                      customer.firstName + "', '" + customer.lastName + "', '" +
                      customer.email + "', '" + customer.phone + "')";
@@ -69,11 +93,11 @@ int CustomerService::createCustomer(const Customer& customer) {
         if (result.next()) {
             return result.get<int>(0);
         }
-        return -1;
     } catch (const std::exception& e) {
         std::cerr << "Error creating customer: " << e.what() << std::endl;
-        throw;
     }
+    
+    return -1;
 }
 
 bool CustomerService::updateCustomer(const Customer& customer) {
