@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { GeistSans, GeistMono } from "geist/font";
 import "./globals.css";
 import Header from "../components/Header";
+import Footer from "../components/Footer";
+import { Providers } from "./providers";
 
 export const metadata: Metadata = {
   title: "BookBite - Restaurant Reservation System",
@@ -16,10 +18,15 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${GeistSans.variable} ${GeistMono.variable}`}>
       <body className="antialiased">
-        <Header />
-        <main className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100">
-          {children}
-        </main>
+        <Providers>
+          <div className="flex flex-col min-h-screen bg-tableease-dark">
+            <Header />
+            <main className="flex-grow">
+              {children}
+            </main>
+            <Footer />
+          </div>
+        </Providers>
       </body>
     </html>
   );

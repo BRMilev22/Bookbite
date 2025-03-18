@@ -3,15 +3,19 @@
 @tailwind utilities;
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #1a1a1a;
+  --foreground: #ffffff;
+  --hero-primary: 226 231 111;
+  --hero-background: 26 26 26;
+  --hero-foreground: 255 255 255;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+.light {
+  --background: #ffffff;
+  --foreground: #171717;
+  --hero-primary: 226 231 111;
+  --hero-background: 255 255 255;
+  --hero-foreground: 11 11 11;
 }
 
 body {
@@ -24,4 +28,65 @@ body {
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
+
+  body {
+    @apply text-foreground bg-background;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+}
+
+/* Custom styles for smooth transitions */
+* {
+  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 150ms;
+}
+
+.shadow-md {
+  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.3), 0 2px 4px -2px rgb(0 0 0 / 0.3);
+}
+
+.shadow-xl {
+  box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.3), 0 8px 10px -6px rgb(0 0 0 / 0.3);
+}
+
+/* BookBite specific styles */
+.tableease-btn {
+  @apply bg-tableease-primary text-tableease-dark font-medium hover:bg-tableease-secondary transition-all;
+}
+
+.tableease-card {
+  @apply bg-tableease-darkgray text-white rounded-lg shadow-md hover:shadow-lg transition-all;
+}
+
+.tableease-input {
+  @apply bg-tableease-lightgray border-none text-white rounded-md p-2 focus:ring-1 focus:ring-tableease-primary;
+}
+
+.tableease-rating {
+  @apply flex items-center gap-1 text-tableease-primary;
+}
+
+.tableease-section {
+  @apply py-12 px-4;
+}
+
+.reservation-form-container {
+  @apply bg-tableease-darkgray rounded-lg p-6 shadow-md;
+}
+
+.filter-button {
+  @apply bg-tableease-lightgray hover:bg-tableease-darkgray text-white py-2 px-4 rounded-md transition-all;
+}
+
+.filter-active {
+  @apply bg-tableease-primary text-tableease-dark;
+}
+
+.category-chip {
+  @apply bg-tableease-lightgray text-white text-sm py-1 px-3 rounded-full;
+}
+
+.price-tag {
+  @apply text-tableease-primary font-bold;
 }
