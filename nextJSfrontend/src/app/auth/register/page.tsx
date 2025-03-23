@@ -14,20 +14,10 @@ export default function RegisterPage() {
     firstName: '',
     lastName: '',
     phone: '',
-    adminUsername: '',
-    adminPassword: '',
   });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const router = useRouter();
-  const { user, login, isAdmin } = useAuth();
-
-  // Redirect if not admin
-  useState(() => {
-    if (!isAdmin) {
-      router.push('/');
-    }
-  }, [isAdmin, router]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -50,39 +40,12 @@ export default function RegisterPage() {
       setError('Password must be at least 6 characters long');
       return;
     }
-
-    if (!formData.adminUsername || !formData.adminPassword) {
-      setError('Admin credentials required');
-      return;
-    }
     
     setLoading(true);
     setError('');
 
     try {
-      // First, we need to get the admin's password hash to use as token
-      const loginResponse = await fetch('http://localhost:8080/api/auth/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          usernameOrEmail: formData.adminUsername,
-          password: formData.adminPassword
-        }),
-      });
-
-      if (!loginResponse.ok) {
-        throw new Error('Admin authentication failed');
-      }
-
-      const adminData = await loginResponse.json();
-      
-      if (adminData.role !== 'admin') {
-        throw new Error('Admin privileges required');
-      }
-
-      // Now register the new user with admin token
+      // Register the new user
       const response = await fetch('http://localhost:8080/api/auth/register', {
         method: 'POST',
         headers: {
@@ -95,55 +58,37 @@ export default function RegisterPage() {
           firstName: formData.firstName,
           lastName: formData.lastName,
           phone: formData.phone,
-          adminUsername: formData.adminUsername,
-          adminToken: adminData.passwordHash || formData.adminPassword,
         }),
       });
 
       if (!response.ok) {
-        const errorData = await response.text();
-        throw new Error(errorData || 'Failed to register');
+        const errorText = await response.text();
+        throw new Error(errorText || 'Failed to register');
       }
 
       const userData = await response.json();
       
-      // Redirect to users list
-      router.push('/admin/dashboard?registered=true');
+      // Redirect to login page
+      router.push('/auth/login?registered=true');
     } catch (err: any) {
       setError(err.message || 'An error occurred during registration');
+      console.error('Registration error:', err);
     } finally {
       setLoading(false);
     }
   };
 
-  if (!isAdmin) {
-    return (
-      <div className="min-h-screen bg-gray-100 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
-        <div className="sm:mx-auto sm:w-full sm:max-w-md">
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-            Access Denied
-          </h2>
-          <p className="mt-2 text-center text-sm text-gray-600">
-            Only administrators can register new users
-          </p>
-          <div className="mt-8 flex justify-center">
-            <Link href="/" className="font-medium text-indigo-600 hover:text-indigo-500">
-              Return to Home
-            </Link>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="min-h-screen bg-gray-100 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
         <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-          Create new user account
+          Create an account
         </h2>
         <p className="mt-2 text-center text-sm text-gray-600">
-          Admin access required
+          Or{' '}
+          <Link href="/auth/login" className="font-medium text-indigo-600 hover:text-indigo-500">
+            sign in to your account
+          </Link>
         </p>
       </div>
 
@@ -156,80 +101,38 @@ export default function RegisterPage() {
           )}
           
           <form className="space-y-6" onSubmit={handleSubmit}>
-            <div className="border-b border-gray-200 pb-4 mb-4">
-              <h3 className="text-lg font-medium text-gray-900">Admin Authentication</h3>
-              <div className="mt-4 grid grid-cols-2 gap-4">
-                <div>
-                  <label htmlFor="adminUsername" className="block text-sm font-medium text-gray-700">
-                    Admin Username
-                  </label>
-                  <div className="mt-1">
-                    <input
-                      id="adminUsername"
-                      name="adminUsername"
-                      type="text"
-                      required
-                      value={formData.adminUsername}
-                      onChange={handleChange}
-                      className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                    />
-                  </div>
-                </div>
-                
-                <div>
-                  <label htmlFor="adminPassword" className="block text-sm font-medium text-gray-700">
-                    Admin Password
-                  </label>
-                  <div className="mt-1">
-                    <input
-                      id="adminPassword"
-                      name="adminPassword"
-                      type="password"
-                      required
-                      value={formData.adminPassword}
-                      onChange={handleChange}
-                      className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                    />
-                  </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label htmlFor="firstName" className="block text-sm font-medium text-gray-700">
+                  First Name
+                </label>
+                <div className="mt-1">
+                  <input
+                    id="firstName"
+                    name="firstName"
+                    type="text"
+                    required
+                    value={formData.firstName}
+                    onChange={handleChange}
+                    className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                  />
                 </div>
               </div>
-            </div>
-
-            <div className="border-b border-gray-200 pb-4 mb-4">
-              <h3 className="text-lg font-medium text-gray-900">New User Details</h3>
-              <div className="grid grid-cols-2 gap-4 mt-4">
-                <div>
-                  <label htmlFor="firstName" className="block text-sm font-medium text-gray-700">
-                    First Name
-                  </label>
-                  <div className="mt-1">
-                    <input
-                      id="firstName"
-                      name="firstName"
-                      type="text"
-                      required
-                      value={formData.firstName}
-                      onChange={handleChange}
-                      className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                    />
-                  </div>
-                </div>
-                
-                <div>
-                  <label htmlFor="lastName" className="block text-sm font-medium text-gray-700">
-                    Last Name
-                  </label>
-                  <div className="mt-1">
-                    <input
-                      id="lastName"
-                      name="lastName"
-                      type="text"
-                      required
-                      value={formData.lastName}
-                      onChange={handleChange}
-                      className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                    />
-                  </div>
+              
+              <div>
+                <label htmlFor="lastName" className="block text-sm font-medium text-gray-700">
+                  Last Name
+                </label>
+                <div className="mt-1">
+                  <input
+                    id="lastName"
+                    name="lastName"
+                    type="text"
+                    required
+                    value={formData.lastName}
+                    onChange={handleChange}
+                    className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                  />
                 </div>
               </div>
             </div>
@@ -336,8 +239,8 @@ export default function RegisterPage() {
             </div>
 
             <div className="flex justify-center">
-              <Link href="/admin/dashboard" className="font-medium text-indigo-600 hover:text-indigo-500">
-                Back to user management
+              <Link href="/auth/login" className="font-medium text-indigo-600 hover:text-indigo-500">
+                Already have an account? Sign in
               </Link>
             </div>
           </form>

@@ -845,7 +845,7 @@ int main() {
     
     // User Authentication Routes
     
-    // Register a new user (admin only)
+    // Register a new user (open to all)
     CROW_ROUTE(app, "/api/auth/register")
         .methods("POST"_method)
         ([&userService](const crow::request& req) {
@@ -853,34 +853,6 @@ int main() {
             
             if (!bodyContent) {
                 return crow::response(400, "Invalid JSON body");
-            }
-            
-            // Check authentication - require an admin token
-            if (!bodyContent.has("adminToken")) {
-                return crow::response(401, "Authentication required - admin access only");
-            }
-            
-            std::string adminToken = bodyContent["adminToken"].s();
-            bool isAuthenticated = false;
-            
-            // Verify the admin token against admin credentials
-            try {
-                std::string adminUsername = bodyContent["adminUsername"].s();
-                auto adminUser = userService.getUserByUsername(adminUsername);
-                
-                if (adminUser && adminUser->role == "admin") {
-                    // In a real system, we'd check a proper token
-                    // For demo purposes, we're just checking if the token matches the admin's password hash
-                    if (adminUser->passwordHash == adminToken) {
-                        isAuthenticated = true;
-                    }
-                }
-            } catch (const std::exception& e) {
-                return crow::response(400, "Invalid admin authentication data");
-            }
-            
-            if (!isAuthenticated) {
-                return crow::response(403, "Unauthorized - admin privileges required");
             }
             
             // Extract user data from request
