@@ -73,10 +73,30 @@ CREATE TABLE reservations (
     dietary_restrictions TEXT, -- storing dietary restrictions as comma-separated text
     promo_code VARCHAR(20),
     price DECIMAL(10, 2) DEFAULT 0.00, -- price of the reservation in dollars
+    -- Billing information
+    billing_address VARCHAR(255) NULL,
+    postal_code VARCHAR(20) NULL,
+    city VARCHAR(100) NULL,
+    payment_method VARCHAR(50) NULL,
+    -- For security, only store last 4 digits and payment token instead of full card details
+    card_last_four VARCHAR(4) NULL,
+    payment_token VARCHAR(255) NULL, -- Token from payment processor
+    name_on_card VARCHAR(100) NULL,
+    -- Contact information
+    email VARCHAR(100) NULL,
+    phone_number VARCHAR(20) NULL,
+    -- Pricing details
+    base_fee DECIMAL(10, 2) NULL,
+    service_fee DECIMAL(10, 2) NULL,
+    person_fee DECIMAL(10, 2) NULL,
+    discount_amount DECIMAL(10, 2) NULL,
+    discount_percentage INT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (customer_id) REFERENCES customers(customer_id),
-    FOREIGN KEY (table_id) REFERENCES restaurant_tables(table_id)
+    FOREIGN KEY (table_id) REFERENCES restaurant_tables(table_id),
+    INDEX idx_reservations_email (email),
+    INDEX idx_reservations_date (reservation_date)
 );
 
 -- Promo codes for discounts

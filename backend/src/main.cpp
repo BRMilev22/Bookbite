@@ -371,32 +371,15 @@ int main() {
     
     CROW_ROUTE(app, "/api/reservations")
         .methods("POST"_method)
-        ([&reservationService, &customerService, &promoCodeService, &db](const crow::request& req) {
-            // Log the full request body for debugging
-            std::cout << "Received reservation request: " << req.body << std::endl;
-            
+        ([&reservationService, &promoCodeService, &customerService, &db](const crow::request& req) {
             auto x = crow::json::load(req.body);
             if (!x) {
-                std::cout << "Invalid JSON received" << std::endl;
                 return crow::response(400, "{\"error\":\"Invalid JSON format\"}");
             }
             
             try {
-                // Log the parsed JSON fields
-                std::cout << "JSON parsed successfully" << std::endl;
-                
-                // Check required fields
-                if (!x.has("tableId") || !x.has("reservationDate") || 
-                    !x.has("startTime") || !x.has("endTime") || !x.has("partySize")) {
-                    crow::json::wvalue error_response;
-                    error_response["error"] = "Missing required fields";
-                    return crow::response(400, error_response);
-                }
-                
                 Reservation reservation;
-                
-                // Extract required fields
-                reservation.tableId = x["tableId"].i();
+                reservation.tableId = x.has("tableId") ? x["tableId"].i() : 1; // Default to table ID 1
                 reservation.date = x["reservationDate"].s();
                 reservation.startTime = x["startTime"].s();
                 reservation.endTime = x["endTime"].s();
@@ -474,6 +457,55 @@ int main() {
                     }
                 }
                 
+                // Handle billing information
+                if (x.has("billingAddress") && x["billingAddress"].t() == crow::json::type::String) {
+                    reservation.billingAddress = x["billingAddress"].s();
+                }
+                
+                if (x.has("postalCode") && x["postalCode"].t() == crow::json::type::String) {
+                    reservation.postalCode = x["postalCode"].s();
+                }
+                
+                if (x.has("city") && x["city"].t() == crow::json::type::String) {
+                    reservation.city = x["city"].s();
+                }
+                
+                if (x.has("paymentMethod") && x["paymentMethod"].t() == crow::json::type::String) {
+                    reservation.paymentMethod = x["paymentMethod"].s();
+                }
+                
+                if (x.has("cardNumber") && x["cardNumber"].t() == crow::json::type::String) {
+                    // DON'T store full card number, only last 4 digits
+                    std::string cardNumber = x["cardNumber"].s();
+                    // Extract last 4 digits if card number is long enough
+                    if (cardNumber.length() >= 4) {
+                        // Remove spaces and get only last 4 digits
+                        std::string cleanNumber = cardNumber;
+                        cleanNumber.erase(std::remove_if(cleanNumber.begin(), cleanNumber.end(), ::isspace), cleanNumber.end());
+                        std::string lastFour = cleanNumber.substr(cleanNumber.length() - 4);
+                        reservation.cardLastFour = lastFour;
+                    }
+                }
+                
+                if (x.has("paymentToken") && x["paymentToken"].t() == crow::json::type::String) {
+                    reservation.paymentToken = x["paymentToken"].s();
+                }
+                
+                // Handle contact information
+                if (x.has("email") && x["email"].t() == crow::json::type::String) {
+                    reservation.email = x["email"].s();
+                }
+                
+                if (x.has("phoneNumber") && x["phoneNumber"].t() == crow::json::type::String) {
+                    reservation.phoneNumber = x["phoneNumber"].s();
+                }
+                
+                // Add handling for nameOnCard field
+                if (x.has("nameOnCard") && x["nameOnCard"].t() == crow::json::type::String) {
+                    reservation.nameOnCard = x["nameOnCard"].s();
+                    std::cout << "Name on card: " << reservation.nameOnCard << std::endl;
+                }
+                
                 // Check if the table is available
                 std::cout << "Checking table availability..." << std::endl;
                 bool isAvailable = reservationService.isTableAvailable(
@@ -495,7 +527,8 @@ int main() {
                 
                 // Calculate subtotal (base fee + additional guests)
                 double additionalGuests = reservation.partySize > 1 ? reservation.partySize - 1 : 0;
-                double subtotal = baseFee + (additionalGuestFee * additionalGuests);
+                double personFee = additionalGuestFee * additionalGuests;
+                double subtotal = baseFee + personFee;
                 
                 // Add service fee
                 double serviceFee = subtotal * serviceFeePct;
@@ -503,11 +536,12 @@ int main() {
                 
                 // Apply discount from promo code if valid
                 double discount = 0.0;
+                int discountPercentage = 0;
                 if (!reservation.promoCode.empty()) {
                     auto promoCode = promoCodeService.getPromoCodeByCode(reservation.promoCode);
                     if (promoCode && promoCodeService.validatePromoCode(reservation.promoCode)) {
-                        double discountPercentage = promoCode->discountPercentage / 100.0;
-                        discount = totalBeforeDiscount * discountPercentage;
+                        discountPercentage = promoCode->discountPercentage;
+                        discount = totalBeforeDiscount * (discountPercentage / 100.0);
                     }
                 }
                 
@@ -517,12 +551,17 @@ int main() {
                 // Round to 2 decimal places
                 finalPrice = std::round(finalPrice * 100) / 100;
                 
-                // Set the calculated price
+                // Set the calculated price and pricing details
                 reservation.price = finalPrice;
+                reservation.baseFee = baseFee;
+                reservation.serviceFee = serviceFee;
+                reservation.personFee = personFee;
+                reservation.discountAmount = discount;
+                reservation.discountPercentage = discountPercentage;
                 
                 std::cout << "Creating reservation with price breakdown:" << std::endl;
                 std::cout << "Base Fee: $" << baseFee << std::endl;
-                std::cout << "Additional Guests Fee: $" << (additionalGuestFee * additionalGuests) << std::endl;
+                std::cout << "Additional Guests Fee: $" << personFee << std::endl;
                 std::cout << "Service Fee: $" << serviceFee << std::endl;
                 std::cout << "Discount: $" << discount << std::endl;
                 std::cout << "Final Price: $" << finalPrice << std::endl;
@@ -549,9 +588,14 @@ int main() {
                 error_response["error"] = "Failed to create reservation";
                 return crow::response(500, error_response);
             } catch (const std::exception& e) {
-                std::cout << "Exception while creating reservation: " << e.what() << std::endl;
+                std::cout << "Exception creating reservation: " << e.what() << std::endl;
                 crow::json::wvalue error_response;
                 error_response["error"] = std::string("Error: ") + e.what();
+                return crow::response(500, error_response);
+            } catch (...) {
+                std::cout << "Unknown exception creating reservation" << std::endl;
+                crow::json::wvalue error_response;
+                error_response["error"] = "Unknown error creating reservation";
                 return crow::response(500, error_response);
             }
         });

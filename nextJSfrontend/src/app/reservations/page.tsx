@@ -34,12 +34,12 @@ export default function ReservationsPage() {
       <div className="max-w-7xl mx-auto flex">
         {/* Sidebar */}
         <aside className="hidden md:block w-64 mr-8">
-          <div className="bg-tableease-darkgray rounded-lg p-6">
-            <h2 className="text-lg font-medium text-white mb-6">Search for a table</h2>
+          <div className="bg-tableease-darkgray rounded-lg p-6 shadow-lg border border-gray-700">
+            <h2 className="text-lg font-semibold text-white mb-6 border-b border-gray-700 pb-3">Search for a table</h2>
             
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-1">Restaurant</label>
+                <label className="block text-sm font-medium text-gray-300 mb-2">Restaurant</label>
                 <div className="relative">
                   <span className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -56,7 +56,7 @@ export default function ReservationsPage() {
               </div>
               
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-1">Reservation date</label>
+                <label className="block text-sm font-medium text-gray-300 mb-2">Reservation date</label>
                 <div className="relative">
                   <span className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -71,7 +71,7 @@ export default function ReservationsPage() {
               </div>
               
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-1">Reservation time</label>
+                <label className="block text-sm font-medium text-gray-300 mb-2">Reservation time</label>
                 <div className="relative">
                   <span className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -86,7 +86,7 @@ export default function ReservationsPage() {
               </div>
               
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-1">Guests</label>
+                <label className="block text-sm font-medium text-gray-300 mb-2">Guests</label>
                 <div className="relative">
                   <span className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -104,16 +104,19 @@ export default function ReservationsPage() {
               </div>
               
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-1">Price range</label>
+                <label className="block text-sm font-medium text-gray-300 mb-2">Price range</label>
                 <div className="grid grid-cols-3 gap-2">
-                  <button className="tableease-input text-center text-tableease-textgray">$</button>
-                  <button className="tableease-input text-center text-tableease-textgray">$$</button>
-                  <button className="tableease-input text-center text-tableease-textgray">$$$</button>
+                  <button className="tableease-input text-center text-black hover:bg-tableease-primary hover:text-tableease-dark transition-colors">$</button>
+                  <button className="tableease-input text-center text-black hover:bg-tableease-primary hover:text-tableease-dark transition-colors">$$</button>
+                  <button className="tableease-input text-center text-black hover:bg-tableease-primary hover:text-tableease-dark transition-colors">$$$</button>
                 </div>
               </div>
               
-              <button className="bg-tableease-primary hover:bg-tableease-secondary text-tableease-dark w-full py-2 rounded-md font-medium mt-2">
-                Search
+              <button className="tableease-btn w-full py-3 rounded-md font-medium mt-4 flex items-center justify-center">
+                <span>Search</span>
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
               </button>
             </div>
             

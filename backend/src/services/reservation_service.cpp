@@ -1,5 +1,6 @@
 #include "../../include/services/reservation_service.h"
 #include <sstream>
+#include <iostream>
 #include <algorithm>
 
 ReservationService::ReservationService(Database& db) : db(db) {}
@@ -150,46 +151,171 @@ int ReservationService::createReservation(const Reservation& reservation) {
         sql += ", promo_code";
     }
     
-    // Add price field
+    // Add billing information fields if present
+    if (!reservation.billingAddress.empty()) {
+        sql += ", billing_address";
+    }
+    
+    if (!reservation.postalCode.empty()) {
+        sql += ", postal_code";
+    }
+    
+    if (!reservation.city.empty()) {
+        sql += ", city";
+    }
+    
+    if (!reservation.paymentMethod.empty()) {
+        sql += ", payment_method";
+    }
+    
+    if (!reservation.cardLastFour.empty()) {
+        sql += ", card_last_four";
+    }
+    
+    if (!reservation.paymentToken.empty()) {
+        sql += ", payment_token";
+    }
+    
+    if (!reservation.nameOnCard.empty()) {
+        sql += ", name_on_card";
+    }
+    
+    // Add contact information
+    if (!reservation.email.empty()) {
+        sql += ", email";
+    }
+    
+    if (!reservation.phoneNumber.empty()) {
+        sql += ", phone_number";
+    }
+    
+    // Add pricing fields
     sql += ", price";
     
-    sql += ") VALUES (" +
-         std::to_string(reservation.customerId) + ", " +
-         std::to_string(reservation.tableId) + ", '" +
-         reservation.date + "', '" +
-         reservation.startTime + "', '" +
-         reservation.endTime + "', " +
-         std::to_string(reservation.partySize) + ", '" +
-         statusToString(reservation.status) + "', '" +
-         reservation.specialRequests + "'";
+    if (reservation.baseFee > 0) {
+        sql += ", base_fee";
+    }
     
-    // Add occasion value if present
+    if (reservation.serviceFee > 0) {
+        sql += ", service_fee";
+    }
+    
+    if (reservation.personFee > 0) {
+        sql += ", person_fee";
+    }
+    
+    if (reservation.discountAmount > 0) {
+        sql += ", discount_amount";
+    }
+    
+    if (reservation.discountPercentage > 0) {
+        sql += ", discount_percentage";
+    }
+    
+    // For VALUES part, we're going to use consistent approach - either all placeholders or all direct values
+    // Since we already started with placeholders, we'll continue with that approach
+    sql += ") VALUES (";
+    sql += std::to_string(reservation.customerId) + ", ";
+    sql += std::to_string(reservation.tableId) + ", '";
+    sql += reservation.date + "', '";
+    sql += reservation.startTime + "', '";
+    sql += reservation.endTime + "', ";
+    sql += std::to_string(reservation.partySize) + ", '";
+    sql += statusToString(reservation.status) + "', '";
+    sql += reservation.specialRequests + "'";
+    
+    // Add optional field values
     if (!reservation.occasion.empty()) {
         sql += ", '" + reservation.occasion + "'";
     }
     
-    // Add dietary restrictions value if present
     if (!dietaryRestrictionsStr.empty()) {
         sql += ", '" + dietaryRestrictionsStr + "'";
     }
     
-    // Add promo code if present
     if (!reservation.promoCode.empty()) {
         sql += ", '" + reservation.promoCode + "'";
+    }
+    
+    // Add billing information values
+    if (!reservation.billingAddress.empty()) {
+        sql += ", '" + reservation.billingAddress + "'";
+    }
+    
+    if (!reservation.postalCode.empty()) {
+        sql += ", '" + reservation.postalCode + "'";
+    }
+    
+    if (!reservation.city.empty()) {
+        sql += ", '" + reservation.city + "'";
+    }
+    
+    if (!reservation.paymentMethod.empty()) {
+        sql += ", '" + reservation.paymentMethod + "'";
+    }
+    
+    if (!reservation.cardLastFour.empty()) {
+        sql += ", '" + reservation.cardLastFour + "'";
+    }
+    
+    if (!reservation.paymentToken.empty()) {
+        sql += ", '" + reservation.paymentToken + "'";
+    }
+    
+    if (!reservation.nameOnCard.empty()) {
+        sql += ", '" + reservation.nameOnCard + "'";
+    }
+    
+    // Add contact information values
+    if (!reservation.email.empty()) {
+        sql += ", '" + reservation.email + "'";
+    }
+    
+    if (!reservation.phoneNumber.empty()) {
+        sql += ", '" + reservation.phoneNumber + "'";
     }
     
     // Add price
     sql += ", " + std::to_string(reservation.price);
     
-    sql += ")";
-    
-    db.execute(sql);
-    auto result = db.query("SELECT LAST_INSERT_ID()");
-    if (!result.next()) {
-        return -1;
+    // Add pricing details
+    if (reservation.baseFee > 0) {
+        sql += ", " + std::to_string(reservation.baseFee);
     }
     
-    return result.get<int>(0);
+    if (reservation.serviceFee > 0) {
+        sql += ", " + std::to_string(reservation.serviceFee);
+    }
+    
+    if (reservation.personFee > 0) {
+        sql += ", " + std::to_string(reservation.personFee);
+    }
+    
+    if (reservation.discountAmount > 0) {
+        sql += ", " + std::to_string(reservation.discountAmount);
+    }
+    
+    if (reservation.discountPercentage > 0) {
+        sql += ", " + std::to_string(reservation.discountPercentage);
+    }
+    
+    sql += ")";
+    
+    std::cout << "Executing SQL: " << sql << std::endl;
+    
+    try {
+        db.execute(sql);
+        auto result = db.query("SELECT LAST_INSERT_ID()");
+        if (!result.next()) {
+            return -1;
+        }
+        
+        return result.get<int>(0);
+    } catch (const std::exception& e) {
+        std::cerr << "Error in createReservation: " << e.what() << std::endl;
+        std::cerr << "SQL: " << sql << std::endl;
+        throw;
+    }
 }
 
 bool ReservationService::updateReservation(const Reservation& reservation) {
@@ -226,8 +352,95 @@ bool ReservationService::updateReservation(const Reservation& reservation) {
         sql += ", promo_code = NULL";
     }
     
+    // Add billing information
+    if (!reservation.billingAddress.empty()) {
+        sql += ", billing_address = '" + reservation.billingAddress + "'";
+    } else {
+        sql += ", billing_address = NULL";
+    }
+    
+    if (!reservation.postalCode.empty()) {
+        sql += ", postal_code = '" + reservation.postalCode + "'";
+    } else {
+        sql += ", postal_code = NULL";
+    }
+    
+    if (!reservation.city.empty()) {
+        sql += ", city = '" + reservation.city + "'";
+    } else {
+        sql += ", city = NULL";
+    }
+    
+    if (!reservation.paymentMethod.empty()) {
+        sql += ", payment_method = '" + reservation.paymentMethod + "'";
+    } else {
+        sql += ", payment_method = NULL";
+    }
+    
+    if (!reservation.cardLastFour.empty()) {
+        sql += ", card_last_four = '" + reservation.cardLastFour + "'";
+    } else {
+        sql += ", card_last_four = NULL";
+    }
+    
+    if (!reservation.paymentToken.empty()) {
+        sql += ", payment_token = '" + reservation.paymentToken + "'";
+    } else {
+        sql += ", payment_token = NULL";
+    }
+    
+    if (!reservation.nameOnCard.empty()) {
+        sql += ", name_on_card = '" + reservation.nameOnCard + "'";
+    } else {
+        sql += ", name_on_card = NULL";
+    }
+    
+    // Add contact information
+    if (!reservation.email.empty()) {
+        sql += ", email = '" + reservation.email + "'";
+    } else {
+        sql += ", email = NULL";
+    }
+    
+    if (!reservation.phoneNumber.empty()) {
+        sql += ", phone_number = '" + reservation.phoneNumber + "'";
+    } else {
+        sql += ", phone_number = NULL";
+    }
+    
     // Update price
     sql += ", price = " + std::to_string(reservation.price);
+    
+    // Update pricing details
+    if (reservation.baseFee > 0) {
+        sql += ", base_fee = " + std::to_string(reservation.baseFee);
+    } else {
+        sql += ", base_fee = NULL";
+    }
+    
+    if (reservation.serviceFee > 0) {
+        sql += ", service_fee = " + std::to_string(reservation.serviceFee);
+    } else {
+        sql += ", service_fee = NULL";
+    }
+    
+    if (reservation.personFee > 0) {
+        sql += ", person_fee = " + std::to_string(reservation.personFee);
+    } else {
+        sql += ", person_fee = NULL";
+    }
+    
+    if (reservation.discountAmount > 0) {
+        sql += ", discount_amount = " + std::to_string(reservation.discountAmount);
+    } else {
+        sql += ", discount_amount = NULL";
+    }
+    
+    if (reservation.discountPercentage > 0) {
+        sql += ", discount_percentage = " + std::to_string(reservation.discountPercentage);
+    } else {
+        sql += ", discount_percentage = NULL";
+    }
     
     sql += " WHERE reservation_id = " + std::to_string(reservation.id);
     

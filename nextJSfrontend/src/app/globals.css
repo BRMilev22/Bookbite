@@ -52,15 +52,117 @@ body {
 
 /* BookBite specific styles */
 .tableease-btn {
-  @apply bg-tableease-primary text-tableease-dark font-medium hover:bg-tableease-secondary transition-all;
+  @apply bg-tableease-primary text-tableease-dark font-medium hover:bg-tableease-secondary transition-all duration-300 rounded-lg px-4 py-2 shadow-md hover:shadow-lg transform hover:-translate-y-1;
 }
 
 .tableease-card {
-  @apply bg-tableease-darkgray text-white rounded-lg shadow-md hover:shadow-lg transition-all;
+  @apply bg-tableease-darkgray text-white rounded-lg shadow-md hover:shadow-xl transition-all duration-300 border border-gray-700;
 }
 
 .tableease-input {
-  @apply bg-tableease-lightgray border-none text-white rounded-md p-2 focus:ring-1 focus:ring-tableease-primary;
+  @apply bg-gray-100 border-none text-gray-800 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-tableease-primary transition-all shadow-sm;
+}
+
+/* Input placeholder styles */
+.tableease-input::placeholder {
+  @apply text-gray-500;
+}
+
+/* Input focus state */
+.tableease-input:focus {
+  @apply bg-white text-black shadow-md;
+}
+
+/* Date and time input styles */
+input[type="date"].tableease-input,
+input[type="time"].tableease-input {
+  @apply appearance-none;
+  min-height: 45px;
+  color-scheme: light;
+}
+
+/* Select element styles */
+select.tableease-input {
+  @apply appearance-none bg-no-repeat;
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+  background-position: right 0.75rem center;
+  background-size: 1.25em 1.25em;
+  min-height: 45px;
+  color: #1a1a1a;
+}
+
+/* Ensure text is visible in select options */
+select.tableease-input option {
+  @apply bg-white text-gray-800;
+}
+
+/* Checkbox styles */
+input[type="checkbox"] {
+  @apply rounded border-gray-600 text-tableease-primary focus:ring-tableease-primary;
+}
+
+/* Textarea styles */
+textarea.tableease-input {
+  @apply min-h-[100px] resize-y;
+}
+
+/* Form label styles */
+.form-label {
+  @apply block text-gray-300 text-sm font-medium mb-2;
+}
+
+/* Form group spacing */
+.form-group {
+  @apply mb-5;
+}
+
+/* Reservation form container */
+.reservation-form-container {
+  @apply bg-tableease-darkgray rounded-lg p-8 shadow-lg border border-gray-700;
+}
+
+/* Form section styles */
+.form-section {
+  @apply border-b border-gray-700 pb-6 mb-6 last:border-b-0 last:mb-0 last:pb-0;
+}
+
+/* Form section heading */
+.form-section-heading {
+  @apply text-xl font-semibold text-white mb-4;
+}
+
+/* Form step indicator */
+.step-indicator {
+  @apply flex items-center justify-center mb-8;
+}
+
+.step-circle {
+  @apply w-10 h-10 rounded-full flex items-center justify-center font-medium text-sm relative;
+}
+
+.step-circle.active {
+  @apply bg-tableease-primary text-tableease-dark;
+}
+
+.step-circle.completed {
+  @apply bg-green-500 text-white;
+}
+
+.step-circle.inactive {
+  @apply bg-tableease-lightgray text-gray-400;
+}
+
+.step-connector {
+  @apply h-1 bg-tableease-lightgray flex-grow mx-2;
+}
+
+.step-connector.active {
+  @apply bg-tableease-primary;
+}
+
+/* Form navigation buttons */
+.form-nav-buttons {
+  @apply flex justify-between pt-6 mt-6 border-t border-gray-700;
 }
 
 .tableease-rating {
@@ -69,10 +171,6 @@ body {
 
 .tableease-section {
   @apply py-12 px-4;
-}
-
-.reservation-form-container {
-  @apply bg-tableease-darkgray rounded-lg p-6 shadow-md;
 }
 
 .filter-button {
