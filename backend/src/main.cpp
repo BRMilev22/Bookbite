@@ -506,6 +506,12 @@ int main() {
                     std::cout << "Name on card: " << reservation.nameOnCard << std::endl;
                 }
                 
+                // Add handling for cardLastFour that is sent directly
+                if (x.has("cardLastFour") && x["cardLastFour"].t() == crow::json::type::String) {
+                    reservation.cardLastFour = x["cardLastFour"].s();
+                    std::cout << "Card last four: " << reservation.cardLastFour << std::endl;
+                }
+                
                 // Check if the table is available
                 std::cout << "Checking table availability..." << std::endl;
                 bool isAvailable = reservationService.isTableAvailable(
