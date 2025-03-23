@@ -9,15 +9,22 @@ CREATE DATABASE bookbite;
 -- Use the database
 USE bookbite;
 
--- Customers table
-CREATE TABLE customers (
-    customer_id INT AUTO_INCREMENT PRIMARY KEY,
+-- Users table for authentication and customer info
+CREATE TABLE users (
+    user_id INT AUTO_INCREMENT PRIMARY KEY,
+    username VARCHAR(50) UNIQUE NOT NULL,
+    email VARCHAR(100) UNIQUE NOT NULL,
+    password_hash VARCHAR(64) NOT NULL, -- SHA-256 hash (64 characters)
+    role ENUM('user', 'admin') DEFAULT 'user',
     first_name VARCHAR(50) NOT NULL,
     last_name VARCHAR(50) NOT NULL,
-    email VARCHAR(100) UNIQUE NOT NULL,
     phone VARCHAR(20) NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
+-- Insert default admin user (password: admin123)
+INSERT INTO users (username, email, password_hash, role, first_name, last_name, phone) VALUES
+('admin', 'admin@bookbite.com', '240be518fabd2724ddb6f04eeb1da5967448d7e831c08c8fa822809f74c720a9', 'admin', 'Admin', 'User', '555-0000');
 
 -- Restaurants table
 CREATE TABLE restaurants (
@@ -61,7 +68,7 @@ CREATE TABLE restaurant_features (
 -- Reservations
 CREATE TABLE reservations (
     reservation_id INT AUTO_INCREMENT PRIMARY KEY,
-    customer_id INT NOT NULL,
+    user_id INT NOT NULL,
     table_id INT NOT NULL,
     reservation_date DATE NOT NULL,
     start_time TIME NOT NULL,
@@ -83,7 +90,6 @@ CREATE TABLE reservations (
     payment_token VARCHAR(255) NULL, -- Token from payment processor
     name_on_card VARCHAR(100) NULL,
     -- Contact information
-    email VARCHAR(100) NULL,
     phone_number VARCHAR(20) NULL,
     -- Pricing details
     base_fee DECIMAL(10, 2) NULL,
@@ -93,9 +99,8 @@ CREATE TABLE reservations (
     discount_percentage INT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (customer_id) REFERENCES customers(customer_id),
+    FOREIGN KEY (user_id) REFERENCES users(user_id),
     FOREIGN KEY (table_id) REFERENCES restaurant_tables(table_id),
-    INDEX idx_reservations_email (email),
     INDEX idx_reservations_date (reservation_date)
 );
 

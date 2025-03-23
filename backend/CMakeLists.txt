@@ -17,6 +17,9 @@ if(NOT Crow_FOUND)
     FetchContent_MakeAvailable(Crow)
 endif()
 
+# Find OpenSSL for SHA-256 hashing
+find_package(OpenSSL REQUIRED)
+
 # Find MySQL and nanodbc
 find_path(NANODBC_INCLUDE_DIR nanodbc/nanodbc.h HINTS /usr/local/include)
 find_library(NANODBC_LIBRARY nanodbc HINTS /usr/local/lib)
@@ -79,6 +82,8 @@ target_include_directories(bookbite_server PRIVATE
 target_link_libraries(bookbite_server PRIVATE
     Crow::Crow
     ${NANODBC_LIBRARY}
+    OpenSSL::SSL
+    OpenSSL::Crypto
 )
 
 # Link ODBC libraries if found

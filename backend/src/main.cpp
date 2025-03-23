@@ -4,34 +4,36 @@
 #include <iostream>
 #include <cmath> // For std::round
 #include "../include/database/db_manager.h"
-#include "../include/services/customer_service.h"
 #include "../include/services/reservation_service.h"
 #include "../include/services/promo_code_service.h"
 #include "../include/services/restaurant_service.h"
-#include "../include/models/customer.h"
+#include "../include/services/user_service.h"
 #include "../include/models/reservation.h"
 #include "../include/models/restaurant_table.h"
 #include "../include/models/restaurant.h"
 #include "../include/models/promo_code.h"
+#include "../include/models/user.h"
 
-// Helper function to ensure a default customer exists
-void ensureDefaultCustomer(CustomerService& customerService) {
-    // Check if customer with ID 1 exists
-    auto result = customerService.getCustomerById(1);
-    if (!result) {
-        // Create a default customer
-        Customer defaultCustomer;
-        defaultCustomer.id = 1; // Try to set specific ID
-        defaultCustomer.firstName = "Default";
-        defaultCustomer.lastName = "Customer";
-        defaultCustomer.email = "default@bookbite.com";
-        defaultCustomer.phone = "555-0000";
+// Helper function to ensure a default admin exists
+void ensureDefaultAdmin(UserService& userService) {
+    // Check if admin user exists
+    auto admin = userService.getUserByUsername("admin");
+    if (!admin) {
+        // Create a default admin user
+        User defaultAdmin;
+        defaultAdmin.username = "admin";
+        defaultAdmin.email = "admin@bookbite.com";
+        defaultAdmin.passwordHash = UserService::hashPassword("admin123");
+        defaultAdmin.role = "admin";
+        defaultAdmin.firstName = "Admin";
+        defaultAdmin.lastName = "User";
+        defaultAdmin.phone = "555-0000";
         
-        customerService.createCustomer(defaultCustomer);
+        userService.createUser(defaultAdmin);
         
-        std::cout << "Created default customer with ID 1" << std::endl;
+        std::cout << "Created default admin user" << std::endl;
     } else {
-        std::cout << "Default customer with ID 1 already exists" << std::endl;
+        std::cout << "Default admin user already exists" << std::endl;
     }
 }
 
@@ -41,13 +43,13 @@ int main() {
     Database db(config);
     
     // Create services
-    CustomerService customerService(db);
     ReservationService reservationService(db);
     PromoCodeService promoCodeService(db);
     RestaurantService restaurantService(db);
+    UserService userService(db);
     
-    // Ensure we have a default customer
-    ensureDefaultCustomer(customerService);
+    // Ensure we have a default admin
+    ensureDefaultAdmin(userService);
     
     // Create web app with CORS middleware
     crow::App<crow::CORSHandler> app;
@@ -237,18 +239,18 @@ int main() {
     // Customer routes
     CROW_ROUTE(app, "/api/customers")
         .methods("GET"_method)
-        ([&customerService]() {
-            auto customers = customerService.getAllCustomers();
+        ([&userService]() {
+            auto users = userService.getAllUsers();
             crow::json::wvalue response;
             crow::json::wvalue::list customerList;
             
-            for (const auto& customer : customers) {
+            for (const auto& user : users) {
                 crow::json::wvalue customerJson;
-                customerJson["id"] = customer.id;
-                customerJson["firstName"] = customer.firstName;
-                customerJson["lastName"] = customer.lastName;
-                customerJson["email"] = customer.email;
-                customerJson["phone"] = customer.phone;
+                customerJson["id"] = user.id;
+                customerJson["firstName"] = user.firstName;
+                customerJson["lastName"] = user.lastName;
+                customerJson["email"] = user.email;
+                customerJson["phone"] = user.phone;
                 customerList.push_back(std::move(customerJson));
             }
             
@@ -258,16 +260,16 @@ int main() {
     
     CROW_ROUTE(app, "/api/customers/<int>")
         .methods("GET"_method)
-        ([&customerService](int customerId) {
-            auto customer = customerService.getCustomerById(customerId);
+        ([&userService](int userId) {
+            auto user = userService.getUserById(userId);
             
-            if (customer) {
+            if (user) {
                 crow::json::wvalue response;
-                response["id"] = customer->id;
-                response["firstName"] = customer->firstName;
-                response["lastName"] = customer->lastName;
-                response["email"] = customer->email;
-                response["phone"] = customer->phone;
+                response["id"] = user->id;
+                response["firstName"] = user->firstName;
+                response["lastName"] = user->lastName;
+                response["email"] = user->email;
+                response["phone"] = user->phone;
                 return crow::response(200, response);
             }
             
@@ -278,20 +280,21 @@ int main() {
     
     CROW_ROUTE(app, "/api/customers")
         .methods("POST"_method)
-        ([&customerService](const crow::request& req) {
+        ([&userService](const crow::request& req) {
             auto x = crow::json::load(req.body);
             if (!x) {
                 return crow::response(400, "{\"error\":\"Invalid JSON format\"}");
             }
             
             try {
-                Customer customer;
+                User customer;
+                customer.username = x["username"].s();
+                customer.email = x["email"].s();
                 customer.firstName = x["firstName"].s();
                 customer.lastName = x["lastName"].s();
-                customer.email = x["email"].s();
                 customer.phone = x["phone"].s();
                 
-                int id = customerService.createCustomer(customer);
+                int id = userService.createUser(customer);
                 
                 if (id > 0) {
                     crow::json::wvalue response;
@@ -331,7 +334,7 @@ int main() {
             for (const auto& reservation : reservations) {
                 crow::json::wvalue reservationJson;
                 reservationJson["id"] = reservation.id;
-                reservationJson["customerId"] = reservation.customerId;
+                reservationJson["userId"] = reservation.userId;
                 reservationJson["tableId"] = reservation.tableId;
                 reservationJson["date"] = reservation.date;
                 reservationJson["startTime"] = reservation.startTime;
@@ -371,13 +374,16 @@ int main() {
     
     CROW_ROUTE(app, "/api/reservations")
         .methods("POST"_method)
-        ([&reservationService, &promoCodeService, &customerService, &db](const crow::request& req) {
+        ([&reservationService, &promoCodeService, &userService, &db](const crow::request& req) {
             auto x = crow::json::load(req.body);
             if (!x) {
                 return crow::response(400, "{\"error\":\"Invalid JSON format\"}");
             }
             
             try {
+                // Debug print the received JSON
+                std::cout << "Received reservation JSON: " << req.body << std::endl;
+                
                 Reservation reservation;
                 reservation.tableId = x.has("tableId") ? x["tableId"].i() : 1; // Default to table ID 1
                 reservation.date = x["reservationDate"].s();
@@ -385,27 +391,35 @@ int main() {
                 reservation.endTime = x["endTime"].s();
                 reservation.partySize = x["partySize"].i();
                 
-                // Handle customer ID - either use provided one or create/use default
-                if (x.has("customerId")) {
-                    reservation.customerId = x["customerId"].i();
-                    
-                    // Verify the customer exists
-                    auto result = db.query("SELECT COUNT(*) FROM customers WHERE customer_id = " + 
-                                          std::to_string(reservation.customerId));
-                    if (result.next() && result.get<int>(0) == 0) {
-                        // Customer doesn't exist, use or create a default one
-                        std::cout << "Customer ID " << reservation.customerId << " not found, using default." << std::endl;
-                        reservation.customerId = 1; // Use default customer (ID 1)
-                        
-                        // Ensure default customer exists
-                        ensureDefaultCustomer(customerService);
-                    }
-                } else {
-                    // No customer ID provided, use or create default
-                    reservation.customerId = 1; // Use default customer (ID 1)
-                    
-                    // Ensure default customer exists
-                    ensureDefaultCustomer(customerService);
+                // Handle user ID - check all possible field names
+                if (!x.has("userId") && !x.has("user_id") && !x.has("id")) {
+                    crow::json::wvalue error_response;
+                    error_response["error"] = "Authentication required - must be logged in to make reservations";
+                    std::cout << "No userId found in request" << std::endl;
+                    return crow::response(401, error_response);
+                }
+                
+                // Try to get userId from multiple possible field names
+                if (x.has("userId")) {
+                    reservation.userId = x["userId"].i();
+                    std::cout << "Using userId: " << reservation.userId << std::endl;
+                } else if (x.has("user_id")) {
+                    reservation.userId = x["user_id"].i();
+                    std::cout << "Using user_id: " << reservation.userId << std::endl;
+                } else if (x.has("id")) {
+                    reservation.userId = x["id"].i();
+                    std::cout << "Using id: " << reservation.userId << std::endl;
+                }
+                
+                // Verify the user exists
+                auto result = db.query("SELECT COUNT(*) FROM users WHERE user_id = " + 
+                                      std::to_string(reservation.userId));
+                if (result.next() && result.get<int>(0) == 0) {
+                    // User doesn't exist
+                    crow::json::wvalue error_response;
+                    error_response["error"] = "User not found";
+                    std::cout << "User with ID " << reservation.userId << " not found" << std::endl;
+                    return crow::response(404, error_response);
                 }
                 
                 // Use defaults for optional fields
@@ -492,12 +506,9 @@ int main() {
                 }
                 
                 // Handle contact information
-                if (x.has("email") && x["email"].t() == crow::json::type::String) {
-                    reservation.email = x["email"].s();
-                }
-                
-                if (x.has("phoneNumber") && x["phoneNumber"].t() == crow::json::type::String) {
-                    reservation.phoneNumber = x["phoneNumber"].s();
+                auto user = userService.getUserById(reservation.userId);
+                if (user) {
+                    reservation.phoneNumber = user->phone;
                 }
                 
                 // Add handling for nameOnCard field
@@ -830,6 +841,287 @@ int main() {
             crow::json::wvalue error_response;
             error_response["error"] = "Failed to delete promo code or promo code not found";
             return crow::response(404, error_response);
+        });
+    
+    // User Authentication Routes
+    
+    // Register a new user (admin only)
+    CROW_ROUTE(app, "/api/auth/register")
+        .methods("POST"_method)
+        ([&userService](const crow::request& req) {
+            auto bodyContent = crow::json::load(req.body);
+            
+            if (!bodyContent) {
+                return crow::response(400, "Invalid JSON body");
+            }
+            
+            // Check authentication - require an admin token
+            if (!bodyContent.has("adminToken")) {
+                return crow::response(401, "Authentication required - admin access only");
+            }
+            
+            std::string adminToken = bodyContent["adminToken"].s();
+            bool isAuthenticated = false;
+            
+            // Verify the admin token against admin credentials
+            try {
+                std::string adminUsername = bodyContent["adminUsername"].s();
+                auto adminUser = userService.getUserByUsername(adminUsername);
+                
+                if (adminUser && adminUser->role == "admin") {
+                    // In a real system, we'd check a proper token
+                    // For demo purposes, we're just checking if the token matches the admin's password hash
+                    if (adminUser->passwordHash == adminToken) {
+                        isAuthenticated = true;
+                    }
+                }
+            } catch (const std::exception& e) {
+                return crow::response(400, "Invalid admin authentication data");
+            }
+            
+            if (!isAuthenticated) {
+                return crow::response(403, "Unauthorized - admin privileges required");
+            }
+            
+            // Extract user data from request
+            User newUser;
+            
+            try {
+                newUser.username = bodyContent["username"].s();
+                newUser.email = bodyContent["email"].s();
+                newUser.firstName = bodyContent["firstName"].s();
+                newUser.lastName = bodyContent["lastName"].s();
+                newUser.phone = bodyContent["phone"].s();
+                newUser.role = "user"; // Default role for new registrations
+                
+                // Hash the password
+                std::string plainPassword = bodyContent["password"].s();
+                newUser.passwordHash = UserService::hashPassword(plainPassword);
+                
+                // Check if username or email already exists
+                if (userService.getUserByUsername(newUser.username) || 
+                    userService.getUserByEmail(newUser.email)) {
+                    return crow::response(409, "Username or email already exists");
+                }
+                
+                // Create the user
+                int userId = userService.createUser(newUser);
+                if (userId > 0) {
+                    // Success - return the new user ID
+                    crow::json::wvalue response;
+                    response["userId"] = userId;
+                    response["username"] = newUser.username;
+                    response["email"] = newUser.email;
+                    response["firstName"] = newUser.firstName;
+                    response["lastName"] = newUser.lastName;
+                    response["phone"] = newUser.phone;
+                    response["role"] = newUser.role;
+                    
+                    return crow::response(201, response);
+                } else {
+                    return crow::response(500, "Failed to create user");
+                }
+            } catch (const std::exception& e) {
+                return crow::response(400, "Invalid request data: " + std::string(e.what()));
+            }
+        });
+    
+    // Login route
+    CROW_ROUTE(app, "/api/auth/login")
+        .methods("POST"_method)
+        ([&userService](const crow::request& req) {
+            auto bodyContent = crow::json::load(req.body);
+            
+            if (!bodyContent) {
+                return crow::response(400, "Invalid JSON body");
+            }
+            
+            try {
+                std::string usernameOrEmail = bodyContent["usernameOrEmail"].s();
+                std::string password = bodyContent["password"].s();
+                
+                // Authenticate user
+                auto user = userService.login(usernameOrEmail, password);
+                
+                if (user) {
+                    // Login successful
+                    crow::json::wvalue response;
+                    response["id"] = user->id;  // Include id for consistency
+                    response["userId"] = user->id;  // Include userId as well
+                    response["username"] = user->username;
+                    response["email"] = user->email;
+                    response["firstName"] = user->firstName;
+                    response["lastName"] = user->lastName;
+                    response["phone"] = user->phone;
+                    response["role"] = user->role;
+                    
+                    return crow::response(200, response);
+                } else {
+                    // Authentication failed
+                    return crow::response(401, "Invalid credentials");
+                }
+            } catch (const std::exception& e) {
+                return crow::response(400, "Invalid request data: " + std::string(e.what()));
+            }
+        });
+    
+    // Get all users (admin only)
+    CROW_ROUTE(app, "/api/users")
+        .methods("GET"_method)
+        ([&userService](const crow::request& req) {
+            // Check for admin role
+            // In a real application, this would use a proper auth middleware
+            // For now, we'll just assume the admin is authenticated if they have the route
+            
+            auto users = userService.getAllUsers();
+            crow::json::wvalue response;
+            crow::json::wvalue::list userList;
+            
+            for (const auto& user : users) {
+                crow::json::wvalue userJson;
+                userJson["id"] = user.id;
+                userJson["username"] = user.username;
+                userJson["email"] = user.email;
+                userJson["firstName"] = user.firstName;
+                userJson["lastName"] = user.lastName;
+                userJson["phone"] = user.phone;
+                userJson["role"] = user.role;
+                userJson["createdAt"] = user.createdAt;
+                
+                // Don't include password hash in response
+                userList.push_back(std::move(userJson));
+            }
+            
+            response["users"] = std::move(userList);
+            return crow::response(200, response);
+        });
+    
+    // Get user by ID
+    CROW_ROUTE(app, "/api/users/<int>")
+        .methods("GET"_method)
+        ([&userService](int userId) {
+            auto user = userService.getUserById(userId);
+            
+            if (user) {
+                crow::json::wvalue response;
+                response["id"] = user->id;
+                response["username"] = user->username;
+                response["email"] = user->email;
+                response["firstName"] = user->firstName;
+                response["lastName"] = user->lastName;
+                response["phone"] = user->phone;
+                response["role"] = user->role;
+                response["createdAt"] = user->createdAt;
+                
+                return crow::response(200, response);
+            } else {
+                return crow::response(404, "User not found");
+            }
+        });
+    
+    // Update user role (admin only)
+    CROW_ROUTE(app, "/api/users/<int>/role")
+        .methods("PUT"_method)
+        ([&userService](const crow::request& req, int userId) {
+            auto bodyContent = crow::json::load(req.body);
+            
+            if (!bodyContent) {
+                return crow::response(400, "Invalid JSON body");
+            }
+            
+            try {
+                std::string newRole = bodyContent["role"].s();
+                
+                // Validate role
+                if (newRole != "user" && newRole != "admin") {
+                    return crow::response(400, "Invalid role. Must be 'user' or 'admin'");
+                }
+                
+                // Check if user exists
+                auto user = userService.getUserById(userId);
+                if (!user) {
+                    return crow::response(404, "User not found");
+                }
+                
+                // Update role
+                if (userService.updateUserRole(userId, newRole)) {
+                    crow::json::wvalue response;
+                    response["userId"] = userId;
+                    response["role"] = newRole;
+                    return crow::response(200, response);
+                } else {
+                    return crow::response(500, "Failed to update user role");
+                }
+            } catch (const std::exception& e) {
+                return crow::response(400, "Invalid request data: " + std::string(e.what()));
+            }
+        });
+    
+    // Update user profile 
+    CROW_ROUTE(app, "/api/users/<int>")
+        .methods("PUT"_method)
+        ([&userService](const crow::request& req, int userId) {
+            auto bodyContent = crow::json::load(req.body);
+            
+            if (!bodyContent) {
+                return crow::response(400, "Invalid JSON body");
+            }
+            
+            try {
+                // Get current user data
+                auto existingUser = userService.getUserById(userId);
+                if (!existingUser) {
+                    return crow::response(404, "User not found");
+                }
+                
+                User updatedUser = *existingUser;
+                
+                // Update fields from request body
+                if (bodyContent.has("firstName")) {
+                    updatedUser.firstName = bodyContent["firstName"].s();
+                }
+                
+                if (bodyContent.has("lastName")) {
+                    updatedUser.lastName = bodyContent["lastName"].s();
+                }
+                
+                if (bodyContent.has("phone")) {
+                    updatedUser.phone = bodyContent["phone"].s();
+                }
+                
+                // Optionally update password if provided and authenticated
+                if (bodyContent.has("currentPassword") && bodyContent.has("newPassword")) {
+                    std::string currentPassword = bodyContent["currentPassword"].s();
+                    std::string newPassword = bodyContent["newPassword"].s();
+                    
+                    // Verify current password
+                    if (!userService.verifyPassword(currentPassword, updatedUser.passwordHash)) {
+                        return crow::response(401, "Current password is incorrect");
+                    }
+                    
+                    // Update password
+                    updatedUser.passwordHash = UserService::hashPassword(newPassword);
+                }
+                
+                // Update the user
+                if (userService.updateUser(updatedUser)) {
+                    // Return updated user data without password hash
+                    crow::json::wvalue response;
+                    response["id"] = updatedUser.id;
+                    response["username"] = updatedUser.username;
+                    response["email"] = updatedUser.email;
+                    response["firstName"] = updatedUser.firstName;
+                    response["lastName"] = updatedUser.lastName;
+                    response["phone"] = updatedUser.phone;
+                    response["role"] = updatedUser.role;
+                    
+                    return crow::response(200, response);
+                } else {
+                    return crow::response(500, "Failed to update user");
+                }
+            } catch (const std::exception& e) {
+                return crow::response(400, "Invalid request data: " + std::string(e.what()));
+            }
         });
     
     // Start the server

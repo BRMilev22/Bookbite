@@ -16,8 +16,8 @@ public:
     // Get reservation by ID
     std::optional<Reservation> getReservationById(int id);
 
-    // Get reservations by customer ID
-    std::vector<Reservation> getReservationsByCustomerId(int customerId);
+    // Get reservations by user ID
+    std::vector<Reservation> getReservationsByUserId(int userId);
 
     // Create new reservation
     int createReservation(const Reservation& reservation);

@@ -3,6 +3,8 @@
 import { useState, useEffect } from 'react';
 import { Input, Textarea, Button, Card, Badge } from "@heroui/react";
 import { ChevronRightIcon, ChevronLeftIcon } from '@heroicons/react/24/outline';
+import { useAuth } from '@/lib/auth-context';
+import { useRouter } from 'next/navigation';
 
 // Define a form data interface
 interface ReservationFormData {
@@ -29,6 +31,7 @@ interface ReservationFormData {
   // Add contact information
   email?: string;
   phoneNumber?: string;
+  userId?: number;
 }
 
 // Base pricing information
@@ -64,6 +67,8 @@ interface ValidationError {
 }
 
 export default function ReservationPage() {
+  const { user } = useAuth();
+  const router = useRouter();
   const [step, setStep] = useState(1);
   const [promoCodeValid, setPromoCodeValid] = useState(false);
   const [discount, setDiscount] = useState(0);
@@ -71,6 +76,13 @@ export default function ReservationPage() {
   const [submitError, setSubmitError] = useState('');
   const [submitSuccess, setSubmitSuccess] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<{[key: string]: string}>({});
+  
+  // Redirect if not logged in
+  useEffect(() => {
+    if (!user) {
+      router.push('/auth/login?redirect=/reservations/new');
+    }
+  }, [user, router]);
   
   // Form data state
   const [formData, setFormData] = useState<ReservationFormData>({
@@ -96,7 +108,37 @@ export default function ReservationPage() {
     email: '',
     phoneNumber: '',
     promoCode: '',
+    userId: user?.id,
   });
+  
+  // Effect to log and update user data when it changes
+  useEffect(() => {
+    console.log('User context changed:', user);
+    if (user) {
+      console.log('User ID from context:', user.id);
+      console.log('User context complete:', {
+        id: user.id,
+        username: user.username,
+        email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        role: user.role,
+      });
+    }
+  }, [user]);
+  
+  // Update userId when user logs in
+  useEffect(() => {
+    if (user) {
+      setFormData(prev => ({
+        ...prev,
+        userId: user.id,
+        email: user.email || prev.email,
+        phoneNumber: user.phone || prev.phoneNumber,
+      }));
+      console.log('Updated formData with userId:', user.id);
+    }
+  }, [user]);
   
   // Add calculated price state
   const [calculatedPrice, setCalculatedPrice] = useState({
@@ -371,6 +413,17 @@ export default function ReservationPage() {
     setIsSubmitting(true);
     setSubmitError('');
     
+    // Check if user is logged in
+    if (!user) {
+      setSubmitError('Please log in to make a reservation');
+      setIsSubmitting(false);
+      router.push('/auth/login?redirect=/reservations/new');
+      return;
+    }
+    
+    console.log('Current user:', user);
+    console.log('User ID:', user.id);
+    
     // Validate the form
     if (!validateForm()) {
       setSubmitError('Please correct the errors in the form');
@@ -381,6 +434,7 @@ export default function ReservationPage() {
     // Format the data for submission - Do not send full card details to backend
     const reservationData = {
       ...formData,
+      userId: user.id, // Ensure userId is included
       // Add any additional calculated fields
       total: calculatedPrice.total,
       baseFee: calculatedPrice.baseFee,
@@ -405,15 +459,27 @@ export default function ReservationPage() {
       nameOnCard: reservationData.nameOnCard
     });
     
+    console.log('User ID being sent:', reservationData.userId);
+    
     try {
-      console.log('Submitting reservation data:', reservationData);
+      // Create a copy of the data and explicitly extract userId from user object
+      const userData = user ? { id: user.id, role: user.role } : null;
+      console.log('Current user data:', userData);
+      
+      const reservationDataWithUserId = {
+        ...reservationData,
+        userId: user?.id, // Ensure userId is set from user context
+        id: user?.id,     // Also include as id for compatibility
+      };
+      
+      console.log('Submitting reservation data:', reservationDataWithUserId);
       
       const response = await fetch('http://localhost:8080/api/reservations', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify(reservationData)
+        body: JSON.stringify(reservationDataWithUserId)
       });
       
       const data = await response.json();

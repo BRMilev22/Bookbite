@@ -1,17 +1,32 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Button } from "@heroui/react";
+import { useAuth } from '@/lib/auth-context';
+import { useRouter } from 'next/navigation';
 
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const { user, logout, isAdmin } = useAuth();
+  const router = useRouter();
+
+  const handleLogout = () => {
+    logout();
+    // Reload to ensure state is fresh
+    window.location.href = '/';
+  };
   
   const menuItems = [
     { name: "Table", href: "/table" },
     { name: "Interactive", href: "/interactive" },
     { name: "Book Now", href: "/reservations/new" },
   ];
+
+  // Add admin dashboard menu item if user is admin
+  if (isAdmin) {
+    menuItems.push({ name: "Admin Dashboard", href: "/admin/dashboard" });
+  }
 
   return (
     <header className="bg-tableease-dark border-b border-tableease-lightgray">
@@ -46,13 +61,40 @@ export default function Header() {
             >
               Reserve
             </Button>
-            <Button
-              as={Link}
-              href="/login"
-              className="bg-tableease-primary hover:bg-tableease-secondary text-tableease-dark font-medium px-4 py-2 rounded-md text-sm"
-            >
-              Login
-            </Button>
+            
+            {!user ? (
+              <>
+                <Button
+                  as={Link}
+                  href="/auth/login"
+                  className="bg-tableease-primary hover:bg-tableease-secondary text-tableease-dark font-medium px-4 py-2 rounded-md text-sm"
+                >
+                  Login
+                </Button>
+                <Button
+                  as={Link}
+                  href="/auth/register"
+                  className="bg-tableease-secondary hover:bg-tableease-primary text-tableease-dark font-medium px-4 py-2 rounded-md text-sm"
+                >
+                  Register
+                </Button>
+              </>
+            ) : (
+              <div className="flex items-center space-x-3">
+                <Link
+                  href="/profile"
+                  className="text-white hover:text-tableease-primary"
+                >
+                  Hello, {user.firstName}
+                </Link>
+                <Button
+                  onClick={handleLogout}
+                  className="bg-red-500 hover:bg-red-600 text-white font-medium px-4 py-2 rounded-md text-sm"
+                >
+                  Logout
+                </Button>
+              </div>
+            )}
           </div>
           
           {/* Mobile menu button */}
@@ -122,13 +164,40 @@ export default function Header() {
               >
                 Reserve
               </Button>
-              <Button
-                as={Link}
-                href="/login"
-                className="bg-tableease-primary hover:bg-tableease-secondary text-tableease-dark font-medium py-2 rounded-md text-sm w-full text-center"
-              >
-                Login
-              </Button>
+              
+              {!user ? (
+                <>
+                  <Button
+                    as={Link}
+                    href="/auth/login"
+                    className="bg-tableease-primary hover:bg-tableease-secondary text-tableease-dark font-medium py-2 rounded-md text-sm w-full text-center"
+                  >
+                    Login
+                  </Button>
+                  <Button
+                    as={Link}
+                    href="/auth/register"
+                    className="bg-tableease-secondary hover:bg-tableease-primary text-tableease-dark font-medium py-2 rounded-md text-sm w-full text-center"
+                  >
+                    Register
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <Link
+                    href="/profile"
+                    className="text-white hover:bg-tableease-lightgray block px-3 py-2 rounded-md text-base font-medium"
+                  >
+                    My Profile
+                  </Link>
+                  <Button
+                    onClick={handleLogout}
+                    className="bg-red-500 hover:bg-red-600 text-white font-medium py-2 rounded-md text-sm w-full text-center"
+                  >
+                    Logout
+                  </Button>
+                </>
+              )}
             </div>
           </div>
         </div>

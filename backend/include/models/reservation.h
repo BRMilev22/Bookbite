@@ -15,7 +15,7 @@ enum class ReservationStatus {
 // Simple reservation data structure
 struct Reservation {
     int id = 0;
-    int customerId = 0;
+    int userId = 0;
     int tableId = 0;
     std::string date;
     std::string startTime;

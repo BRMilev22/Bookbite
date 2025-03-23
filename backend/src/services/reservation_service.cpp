@@ -12,7 +12,7 @@ std::vector<Reservation> ReservationService::getAllReservations() {
     while (result.next()) {
         Reservation reservation;
         reservation.id = result.get<int>(0);
-        reservation.customerId = result.get<int>(1);
+        reservation.userId = result.get<int>(1);
         reservation.tableId = result.get<int>(2);
         reservation.date = result.get<std::string>(3);
         reservation.startTime = result.get<std::string>(4);
@@ -53,7 +53,7 @@ std::optional<Reservation> ReservationService::getReservationById(int id) {
     if (result.next()) {
         Reservation reservation;
         reservation.id = result.get<int>(0);
-        reservation.customerId = result.get<int>(1);
+        reservation.userId = result.get<int>(1);
         reservation.tableId = result.get<int>(2);
         reservation.date = result.get<std::string>(3);
         reservation.startTime = result.get<std::string>(4);
@@ -88,14 +88,14 @@ std::optional<Reservation> ReservationService::getReservationById(int id) {
     return std::nullopt;
 }
 
-std::vector<Reservation> ReservationService::getReservationsByCustomerId(int customerId) {
+std::vector<Reservation> ReservationService::getReservationsByUserId(int userId) {
     std::vector<Reservation> reservations;
-    auto result = db.query("SELECT * FROM reservations WHERE customer_id = " + std::to_string(customerId));
+    auto result = db.query("SELECT * FROM reservations WHERE user_id = " + std::to_string(userId));
     
     while (result.next()) {
         Reservation reservation;
         reservation.id = result.get<int>(0);
-        reservation.customerId = result.get<int>(1);
+        reservation.userId = result.get<int>(1);
         reservation.tableId = result.get<int>(2);
         reservation.date = result.get<std::string>(3);
         reservation.startTime = result.get<std::string>(4);
@@ -135,7 +135,7 @@ int ReservationService::createReservation(const Reservation& reservation) {
     std::string dietaryRestrictionsStr = formatDietaryRestrictions(reservation.dietaryRestrictions);
     
     // Start with base reservation data
-    std::string sql = "INSERT INTO reservations (customer_id, table_id, reservation_date, "
+    std::string sql = "INSERT INTO reservations (user_id, table_id, reservation_date, "
                      "start_time, end_time, party_size, status, special_requests";
     
     // Add optional fields if present
@@ -215,7 +215,7 @@ int ReservationService::createReservation(const Reservation& reservation) {
     // For VALUES part, we're going to use consistent approach - either all placeholders or all direct values
     // Since we already started with placeholders, we'll continue with that approach
     sql += ") VALUES (";
-    sql += std::to_string(reservation.customerId) + ", ";
+    sql += std::to_string(reservation.userId) + ", ";
     sql += std::to_string(reservation.tableId) + ", '";
     sql += reservation.date + "', '";
     sql += reservation.startTime + "', '";
@@ -322,7 +322,7 @@ bool ReservationService::updateReservation(const Reservation& reservation) {
     // Create the dietary restrictions string
     std::string dietaryRestrictionsStr = formatDietaryRestrictions(reservation.dietaryRestrictions);
     
-    std::string sql = "UPDATE reservations SET customer_id = " + std::to_string(reservation.customerId) +
+    std::string sql = "UPDATE reservations SET user_id = " + std::to_string(reservation.userId) +
                      ", table_id = " + std::to_string(reservation.tableId) +
                      ", reservation_date = '" + reservation.date +
                      "', start_time = '" + reservation.startTime +
