@@ -82,13 +82,84 @@ export const createCustomer = async (customer: Omit<Customer, 'id'>): Promise<Cu
 
 // Restaurants
 export const getRestaurants = async (): Promise<Restaurant[]> => {
-  const response = await apiClient.get('/restaurants');
-  return response.data.restaurants;
+  try {
+    const response = await apiClient.get('/restaurants');
+    
+    // Handle both the old and new API structure
+    // Old API returned { restaurants: Restaurant[] }
+    // New API directly returns Restaurant[]
+    if (response.data && Array.isArray(response.data)) {
+      // Map to ensure returned data matches our interface
+      return response.data.map((restaurant: any) => ({
+        id: restaurant.id,
+        name: restaurant.name,
+        // Handle possible change in imageUrl vs image property
+        image: restaurant.image || restaurant.imageUrl,
+        location: restaurant.location,
+        distance: restaurant.distance,
+        category: restaurant.category,
+        priceRange: restaurant.priceRange,
+        rating: restaurant.rating,
+        ratingLabel: restaurant.ratingLabel,
+        reviews: restaurant.reviews,
+        isSpecial: restaurant.isSpecial,
+        isRecommended: restaurant.isRecommended,
+        isTrending: restaurant.isTrending,
+        features: Array.isArray(restaurant.features) 
+          ? restaurant.features.map((f: any) => typeof f === 'string' ? f : f.name)
+          : []
+      }));
+    }
+    
+    // Handle the old API structure
+    if (response.data && response.data.restaurants && Array.isArray(response.data.restaurants)) {
+      return response.data.restaurants;
+    }
+    
+    // If neither structure is found, return empty array
+    console.error('Unexpected restaurants API response structure:', response.data);
+    return [];
+  } catch (error) {
+    console.error('Error fetching restaurants:', error);
+    return []; // Return empty array instead of throwing
+  }
 };
 
-export const getRestaurant = async (id: number): Promise<Restaurant> => {
-  const response = await apiClient.get(`/restaurants/${id}`);
-  return response.data;
+export const getRestaurant = async (id: number): Promise<Restaurant | null> => {
+  try {
+    const response = await apiClient.get(`/restaurants/${id}`);
+    
+    if (!response.data) {
+      return null;
+    }
+    
+    // Parse response data
+    const restaurant = response.data;
+    
+    return {
+      id: restaurant.id,
+      name: restaurant.name,
+      // Handle possible change in imageUrl vs image property
+      image: restaurant.image || restaurant.imageUrl,
+      location: restaurant.location,
+      distance: restaurant.distance,
+      category: restaurant.category,
+      priceRange: restaurant.priceRange,
+      rating: restaurant.rating,
+      ratingLabel: restaurant.ratingLabel,
+      reviews: restaurant.reviews,
+      isSpecial: restaurant.isSpecial,
+      isRecommended: restaurant.isRecommended,
+      isTrending: restaurant.isTrending,
+      features: Array.isArray(restaurant.features) 
+        ? restaurant.features.map((f: any) => typeof f === 'string' ? f : f.name)
+        : [],
+      tables: restaurant.tables
+    };
+  } catch (error) {
+    console.error(`Error fetching restaurant with ID ${id}:`, error);
+    return null;
+  }
 };
 
 export const getRestaurantTables = async (restaurantId: number): Promise<RestaurantTable[]> => {
