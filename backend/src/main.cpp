@@ -71,17 +71,109 @@ int main() {
     
     // Restaurants route
     CROW_ROUTE(app, "/api/restaurants")
-        .methods("GET"_method)
-        ([&restaurantService]() {
-            auto restaurants = restaurantService.getAllRestaurants();
-            crow::json::wvalue response;
-            crow::json::wvalue::list restaurantList;
+        .methods(crow::HTTPMethod::GET)
+        ([&db](const crow::request& req) {
+            crow::json::wvalue result;
+            RestaurantService restaurantService(db);
             
-            for (const auto& restaurant : restaurants) {
+            try {
+                // Parse filter parameters
+                RestaurantFilter filter;
+                
+                // Extract location filter
+                if (req.url_params.get("location") != nullptr) {
+                    filter.location = req.url_params.get("location");
+                }
+                
+                // Extract category filter
+                if (req.url_params.get("category") != nullptr) {
+                    filter.category = req.url_params.get("category");
+                }
+                
+                // Extract minRating filter
+                if (req.url_params.get("minRating") != nullptr) {
+                    filter.minRating = std::stod(req.url_params.get("minRating"));
+                }
+                
+                // Extract priceRange filter
+                if (req.url_params.get("priceRange") != nullptr) {
+                    filter.priceRange = req.url_params.get("priceRange");
+                }
+                
+                // Extract availability filters
+                if (req.url_params.get("date") != nullptr) {
+                    filter.date = req.url_params.get("date");
+                }
+                
+                if (req.url_params.get("time") != nullptr) {
+                    filter.time = req.url_params.get("time");
+                }
+                
+                if (req.url_params.get("partySize") != nullptr) {
+                    filter.partySize = std::stoi(req.url_params.get("partySize"));
+                }
+                
+                // Get filtered restaurants
+                std::vector<Restaurant> restaurants = restaurantService.getFilteredRestaurants(filter);
+                
+                // Convert to JSON
+                crow::json::wvalue restaurantsJson = crow::json::wvalue::list();
+                for (size_t i = 0; i < restaurants.size(); i++) {
+                    const auto& restaurant = restaurants[i];
+                    crow::json::wvalue restaurantJson;
+                    
+                    restaurantJson["id"] = restaurant.id;
+                    restaurantJson["name"] = restaurant.name;
+                    restaurantJson["imageUrl"] = restaurant.imageUrl;
+                    restaurantJson["location"] = restaurant.location;
+                    restaurantJson["distance"] = restaurant.distance;
+                    restaurantJson["category"] = restaurant.category;
+                    restaurantJson["priceRange"] = restaurant.priceRange;
+                    restaurantJson["rating"] = restaurant.rating;
+                    restaurantJson["ratingLabel"] = restaurant.ratingLabel;
+                    restaurantJson["reviews"] = restaurant.reviews;
+                    restaurantJson["isSpecial"] = restaurant.isSpecial;
+                    restaurantJson["isRecommended"] = restaurant.isRecommended;
+                    restaurantJson["isTrending"] = restaurant.isTrending;
+                    
+                    // Add features
+                    crow::json::wvalue featuresJson = crow::json::wvalue::list();
+                    for (size_t j = 0; j < restaurant.features.size(); j++) {
+                        crow::json::wvalue featureJson;
+                        featureJson["id"] = restaurant.features[j].id;
+                        featureJson["name"] = restaurant.features[j].name;
+                        featuresJson[j] = std::move(featureJson);
+                    }
+                    restaurantJson["features"] = std::move(featuresJson);
+                    
+                    restaurantsJson[i] = std::move(restaurantJson);
+                }
+                
+                return crow::response(restaurantsJson);
+            } catch (const std::exception& e) {
+                return crow::response(500, std::string("Internal server error: ") + e.what());
+            }
+        });
+    
+    // Restaurant by ID route
+    CROW_ROUTE(app, "/api/restaurants/<int>")
+        .methods(crow::HTTPMethod::GET)
+        ([&db](const crow::request& req, int restaurantId) {
+            RestaurantService restaurantService(db);
+            
+            try {
+                auto restaurantOpt = restaurantService.getRestaurantById(restaurantId);
+                
+                if (!restaurantOpt.has_value()) {
+                    return crow::response(404, "Restaurant not found");
+                }
+                
+                const auto& restaurant = restaurantOpt.value();
                 crow::json::wvalue restaurantJson;
+                
                 restaurantJson["id"] = restaurant.id;
                 restaurantJson["name"] = restaurant.name;
-                restaurantJson["image"] = restaurant.imageUrl;
+                restaurantJson["imageUrl"] = restaurant.imageUrl;
                 restaurantJson["location"] = restaurant.location;
                 restaurantJson["distance"] = restaurant.distance;
                 restaurantJson["category"] = restaurant.category;
@@ -93,77 +185,20 @@ int main() {
                 restaurantJson["isRecommended"] = restaurant.isRecommended;
                 restaurantJson["isTrending"] = restaurant.isTrending;
                 
-                // Add features if any
-                if (!restaurant.features.empty()) {
-                    crow::json::wvalue::list featuresList;
-                    for (const auto& feature : restaurant.features) {
-                        featuresList.push_back(feature.name);
-                    }
-                    restaurantJson["features"] = std::move(featuresList);
-                } else {
-                    restaurantJson["features"] = crow::json::wvalue::list{};
-                }
-                
-                restaurantList.push_back(std::move(restaurantJson));
-            }
-            
-            response["restaurants"] = std::move(restaurantList);
-            return crow::response(200, response);
-        });
-    
-    // Restaurant by ID route
-    CROW_ROUTE(app, "/api/restaurants/<int>")
-        .methods("GET"_method)
-        ([&restaurantService](int restaurantId) {
-            auto restaurant = restaurantService.getRestaurantById(restaurantId);
-            
-            if (restaurant) {
-                crow::json::wvalue response;
-                response["id"] = restaurant->id;
-                response["name"] = restaurant->name;
-                response["image"] = restaurant->imageUrl;
-                response["location"] = restaurant->location;
-                response["distance"] = restaurant->distance;
-                response["category"] = restaurant->category;
-                response["priceRange"] = restaurant->priceRange;
-                response["rating"] = restaurant->rating;
-                response["ratingLabel"] = restaurant->ratingLabel;
-                response["reviews"] = restaurant->reviews;
-                response["isSpecial"] = restaurant->isSpecial;
-                response["isRecommended"] = restaurant->isRecommended;
-                response["isTrending"] = restaurant->isTrending;
-                
                 // Add features
-                crow::json::wvalue::list featuresList;
-                for (const auto& feature : restaurant->features) {
-                    featuresList.push_back(feature.name);
+                crow::json::wvalue featuresJson = crow::json::wvalue::list();
+                for (size_t i = 0; i < restaurant.features.size(); i++) {
+                    crow::json::wvalue featureJson;
+                    featureJson["id"] = restaurant.features[i].id;
+                    featureJson["name"] = restaurant.features[i].name;
+                    featuresJson[i] = std::move(featureJson);
                 }
-                response["features"] = std::move(featuresList);
+                restaurantJson["features"] = std::move(featuresJson);
                 
-                // Get tables for this restaurant
-                auto tables = restaurantService.getRestaurantTables(restaurantId);
-                crow::json::wvalue::list tableList;
-                
-                for (const auto& table : tables) {
-                    crow::json::wvalue tableJson;
-                    tableJson["id"] = table.id;
-                    tableJson["tableNumber"] = table.tableNumber;
-                    tableJson["capacity"] = table.capacity;
-                    tableJson["location"] = table.location;
-                    tableJson["tableType"] = table.tableType;
-                    tableJson["tableDetails"] = table.tableDetails;
-                    tableJson["isActive"] = table.isActive;
-                    tableList.push_back(std::move(tableJson));
-                }
-                
-                response["tables"] = std::move(tableList);
-                
-                return crow::response(200, response);
+                return crow::response(restaurantJson);
+            } catch (const std::exception& e) {
+                return crow::response(500, std::string("Internal server error: ") + e.what());
             }
-            
-            crow::json::wvalue response;
-            response["error"] = "Restaurant not found";
-            return crow::response(404, response);
         });
     
     // Tables route - updated to include restaurant information
@@ -1093,6 +1128,71 @@ int main() {
                 }
             } catch (const std::exception& e) {
                 return crow::response(400, "Invalid request data: " + std::string(e.what()));
+            }
+        });
+    
+    // GET /api/restaurants/:id/tables/availability - Get tables with availability information
+    CROW_ROUTE(app, "/api/restaurants/<int>/tables/availability")
+        .methods(crow::HTTPMethod::GET)
+        ([&db](const crow::request& req, int restaurantId) {
+            RestaurantService restaurantService(db);
+            
+            try {
+                // Check if restaurant exists
+                auto restaurantOpt = restaurantService.getRestaurantById(restaurantId);
+                if (!restaurantOpt.has_value()) {
+                    return crow::response(404, "Restaurant not found");
+                }
+                
+                // Get required parameters
+                std::string date = req.url_params.get("date") ? req.url_params.get("date") : "";
+                std::string time = req.url_params.get("time") ? req.url_params.get("time") : "";
+                
+                if (date.empty() || time.empty()) {
+                    return crow::response(400, "Date and time parameters are required");
+                }
+                
+                // Get tables with availability information
+                std::vector<RestaurantTable> tables = restaurantService.getRestaurantTablesWithAvailability(
+                    restaurantId, date, time, ""
+                );
+                
+                // Convert to JSON
+                crow::json::wvalue tablesJson = crow::json::wvalue::list();
+                for (size_t i = 0; i < tables.size(); i++) {
+                    const auto& table = tables[i];
+                    crow::json::wvalue tableJson;
+                    
+                    tableJson["id"] = table.id;
+                    tableJson["restaurantId"] = table.restaurantId;
+                    tableJson["tableNumber"] = table.tableNumber;
+                    tableJson["capacity"] = table.capacity;
+                    tableJson["location"] = table.location;
+                    tableJson["tableType"] = table.tableType;
+                    tableJson["tableDetails"] = table.tableDetails;
+                    tableJson["isActive"] = table.isActive;
+                    tableJson["positionX"] = table.positionX;
+                    tableJson["positionY"] = table.positionY;
+                    tableJson["width"] = table.width;
+                    tableJson["height"] = table.height;
+                    
+                    // Convert shape enum to string
+                    if (table.shape == TableShape::Circle) {
+                        tableJson["shape"] = "circle";
+                    } else if (table.shape == TableShape::Custom) {
+                        tableJson["shape"] = "custom";
+                    } else {
+                        tableJson["shape"] = "rectangle";
+                    }
+                    
+                    tableJson["isAvailable"] = table.isAvailable;
+                    
+                    tablesJson[i] = std::move(tableJson);
+                }
+                
+                return crow::response(tablesJson);
+            } catch (const std::exception& e) {
+                return crow::response(500, std::string("Internal server error: ") + e.what());
             }
         });
     
