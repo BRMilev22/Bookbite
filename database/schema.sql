@@ -54,6 +54,11 @@ CREATE TABLE restaurant_tables (
     table_type VARCHAR(100) NOT NULL DEFAULT 'Standard Table',
     table_details VARCHAR(255),
     is_active BOOLEAN DEFAULT TRUE, -- to mark tables as active or inactive
+    position_x INT NOT NULL DEFAULT 0, -- X coordinate for table layout
+    position_y INT NOT NULL DEFAULT 0, -- Y coordinate for table layout
+    width INT NOT NULL DEFAULT 50, -- width in pixels for visual representation
+    height INT NOT NULL DEFAULT 50, -- height in pixels for visual representation
+    shape ENUM('rectangle', 'circle', 'custom') DEFAULT 'rectangle', -- shape for visual representation
     FOREIGN KEY (restaurant_id) REFERENCES restaurants(restaurant_id)
 );
 
@@ -138,15 +143,15 @@ INSERT INTO restaurant_features (restaurant_id, feature_name) VALUES
 (4, 'Flexible booking'),
 (5, 'Outdoor seating');
 
--- Insert some sample tables
-INSERT INTO restaurant_tables (restaurant_id, table_number, capacity, location, table_type, table_details) VALUES
-(1, 1, 2, 'window', 'Table for two', '2x table for two, 1x window view'),
-(1, 2, 2, 'window', 'Table for two', '2x table for two, 1x window view'),
-(1, 3, 4, 'center', 'Family table', '1x table for four, center location'),
-(2, 4, 4, 'center', 'Standard table', '1x table for four, center location'),
-(2, 5, 6, 'center', 'Group table', '1x table for six, center location'),
-(3, 6, 8, 'window', 'Party table', '1x large table, window view'),
-(3, 7, 2, 'outdoor', 'Romantic table', '1x table for two, garden view'),
-(4, 8, 4, 'outdoor', 'Family table', '1x table for four, terrace location'),
-(4, 9, 6, 'outdoor', 'Party table', '1x table for six, outdoor location'),
-(5, 10, 10, 'private room', 'VIP table', '1x table for ten, private dining');
+-- Insert some sample tables with layout information
+INSERT INTO restaurant_tables (restaurant_id, table_number, capacity, location, table_type, table_details, position_x, position_y, width, height, shape) VALUES
+(1, 1, 2, 'window', 'Table for two', '2x table for two, 1x window view', 50, 50, 60, 60, 'rectangle'),
+(1, 2, 2, 'window', 'Table for two', '2x table for two, 1x window view', 150, 50, 60, 60, 'rectangle'),
+(1, 3, 4, 'center', 'Family table', '1x table for four, center location', 100, 150, 80, 80, 'rectangle'),
+(2, 4, 4, 'center', 'Standard table', '1x table for four, center location', 50, 50, 80, 80, 'rectangle'),
+(2, 5, 6, 'center', 'Group table', '1x table for six, center location', 150, 50, 100, 80, 'rectangle'),
+(3, 6, 8, 'window', 'Party table', '1x large table, window view', 100, 100, 120, 80, 'rectangle'),
+(3, 7, 2, 'outdoor', 'Romantic table', '1x table for two, garden view', 50, 200, 60, 60, 'circle'),
+(4, 8, 4, 'outdoor', 'Family table', '1x table for four, terrace location', 50, 50, 80, 80, 'rectangle'),
+(4, 9, 6, 'outdoor', 'Party table', '1x table for six, outdoor location', 150, 50, 100, 80, 'rectangle'),
+(5, 10, 10, 'private room', 'VIP table', '1x table for ten, private dining', 100, 100, 150, 100, 'rectangle');
