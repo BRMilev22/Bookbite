@@ -40,7 +40,16 @@ export default function Header() {
           </div>
           
           {/* Desktop Navigation */}
-          <nav className="hidden md:flex space-x-8">
+          <nav className="hidden md:flex space-x-10">
+            <Link href="/" className="font-medium text-gray-500 hover:text-gray-900 transition duration-300">
+              Home
+            </Link>
+            <Link href="/restaurants" className="font-medium text-gray-500 hover:text-gray-900 transition duration-300">
+              Restaurants
+            </Link>
+            <Link href="/about" className="font-medium text-gray-500 hover:text-gray-900 transition duration-300">
+              About
+            </Link>
             {menuItems.map((item) => (
               <Link
                 key={item.name}
@@ -147,6 +156,17 @@ export default function Header() {
       {isMenuOpen && (
         <div className="md:hidden bg-tableease-darkgray border-t border-tableease-lightgray">
           <div className="px-2 pt-2 pb-3 space-y-1">
+            <div className="py-3">
+              <Link href="/" className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50 transition duration-300">
+                Home
+              </Link>
+              <Link href="/restaurants" className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50 transition duration-300">
+                Restaurants
+              </Link>
+              <Link href="/about" className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50 transition duration-300">
+                About
+              </Link>
+            </div>
             {menuItems.map((item) => (
               <Link
                 key={item.name}

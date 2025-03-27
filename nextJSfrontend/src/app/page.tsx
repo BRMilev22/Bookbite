@@ -127,13 +127,13 @@ export default function Home() {
     fetchRestaurants();
   }, []);
 
-  const categories = [
-    { name: "Italian", image: "https://via.placeholder.com/600x400?text=Italian" },
-    { name: "Seafood", image: "https://via.placeholder.com/600x400?text=Seafood" },
-    { name: "Mexican", image: "https://via.placeholder.com/600x400?text=Mexican" },
-    { name: "Steakhouse", image: "https://via.placeholder.com/600x400?text=Steakhouse" },
-    { name: "Vegetarian", image: "https://via.placeholder.com/600x400?text=Vegetarian" },
-    { name: "Asian Fusion", image: "https://via.placeholder.com/600x400?text=Asian+Fusion" },
+  const cuisineTypes = [
+    { name: "Italian", image: "https://images.unsplash.com/photo-1595295333158-4742f28fbd85?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=600&q=80" },
+    { name: "Seafood", image: "https://images.unsplash.com/photo-1579617385447-e27d2ccfed18?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=600&q=80" },
+    { name: "Mexican", image: "https://images.unsplash.com/photo-1615870216519-2f9fa575fa36?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=600&q=80" },
+    { name: "Steakhouse", image: "https://images.unsplash.com/photo-1588168333986-5078d3ae3976?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=600&q=80" },
+    { name: "Vegetarian", image: "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=600&q=80" },
+    { name: "Asian Fusion", image: "https://images.unsplash.com/photo-1563245372-f21724e3856d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=600&q=80" },
   ];
 
   return (
@@ -142,9 +142,10 @@ export default function Home() {
       <section className="relative">
         <div className="relative bg-black">
           <Image
-            src="https://via.placeholder.com/1920x800?text=Restaurant+Atmosphere"
-            alt="Restaurant Atmosphere"
-            className="w-full h-[600px] object-cover opacity-60"
+            src="https://images.unsplash.com/photo-1555396273-367ea4eb4db5?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1920&q=80"
+            alt="Restaurant atmosphere"
+            fill
+            style={{ objectFit: 'cover' }}
           />
           <div className="absolute inset-0 bg-gradient-to-t from-tableease-dark to-transparent opacity-80"></div>
           <div className="absolute inset-0 bg-gradient-to-r from-tableease-dark to-transparent opacity-40"></div>
@@ -163,9 +164,13 @@ export default function Home() {
                   <label className="block text-sm font-medium text-gray-300 mb-2">Location</label>
                   <select className="tableease-input w-full">
                     <option>Select Restaurant</option>
-                    {restaurants.map(restaurant => (
-                      <option key={restaurant.id} value={restaurant.id}>{restaurant.name}</option>
-                    ))}
+                    {restaurants && restaurants.length > 0 ? (
+                      restaurants.map(restaurant => (
+                        <option key={restaurant.id} value={restaurant.id}>{restaurant.name}</option>
+                      ))
+                    ) : (
+                      <option disabled>Loading restaurants...</option>
+                    )}
                   </select>
                 </div>
                 <div>
@@ -214,7 +219,7 @@ export default function Home() {
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {categories.slice(0, 4).map((category, index) => (
+            {cuisineTypes.slice(0, 4).map((category, index) => (
               <CategoryCard key={index} {...category} />
             ))}
           </div>
