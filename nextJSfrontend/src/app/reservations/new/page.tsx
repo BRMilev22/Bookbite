@@ -150,6 +150,58 @@ export default function ReservationPage() {
     total: 0
   });
   
+  // Effect to parse URL params and set initial form data
+  useEffect(() => {
+    // Get URL parameters
+    const params = new URLSearchParams(window.location.search);
+    const restaurantId = params.get('restaurantId');
+    const restaurantName = params.get('restaurantName');
+    const tableId = params.get('tableId');
+    const tableNumber = params.get('tableNumber');
+    const date = params.get('date');
+    const time = params.get('time');
+    const partySize = params.get('partySize');
+
+    // Build end time (2 hours after start time)
+    let endTime = '';
+    if (time) {
+      const [hours, minutes] = time.split(':');
+      const endHours = (parseInt(hours) + 2) % 24;
+      endTime = `${endHours.toString().padStart(2, '0')}:${minutes}`;
+    }
+
+    // Update form data with URL parameters if they exist
+    setFormData(prev => ({
+      ...prev,
+      tableId: tableId ? parseInt(tableId, 10) : prev.tableId,
+      reservationDate: date || prev.reservationDate,
+      startTime: time || prev.startTime,
+      endTime: endTime || prev.endTime,
+      partySize: partySize ? parseInt(partySize, 10) : prev.partySize,
+    }));
+
+    // Store restaurant info for display
+    if (restaurantName) {
+      setRestaurantInfo({
+        id: restaurantId ? parseInt(restaurantId, 10) : 0,
+        name: decodeURIComponent(restaurantName),
+        tableNumber: tableNumber || '',
+      });
+    }
+
+    // Calculate price based on party size from URL
+    if (partySize) {
+      calculatePrice(parseInt(partySize, 10), 0);
+    }
+  }, []);
+
+  // Add state for restaurant info
+  const [restaurantInfo, setRestaurantInfo] = useState({
+    id: 0,
+    name: '',
+    tableNumber: '',
+  });
+  
   const validatePromoCode = (code: string) => {
     if (!code) {
       setPromoCodeValid(false);
@@ -532,28 +584,26 @@ export default function ReservationPage() {
           <p className="text-gray-400 mt-2">Reserve your table at BookBite with just a few steps.</p>
         </div>
 
-        <div className="flex flex-col lg:flex-row gap-8">
-          <div className="w-full lg:w-2/3">
-            {submitSuccess ? (
-              <Card className="bg-tableease-darkgray border border-gray-700 rounded-xl p-8 shadow-lg">
-                <div className="text-center py-10">
-                  <div className="mx-auto w-20 h-20 bg-green-500 rounded-full flex items-center justify-center mb-6">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                    </svg>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Form */}
+          <div className="lg:col-span-2">
+            <Card className="bg-tableease-darkgray text-white border border-gray-700">
+              <div className="p-6">
+                {/* Reservation summary header showing restaurant information */}
+                {restaurantInfo.name && (
+                  <div className="bg-tableease-darkergray rounded-lg p-4 mb-6">
+                    <h2 className="text-xl font-semibold mb-2">Reservation at {restaurantInfo.name}</h2>
+                    {restaurantInfo.tableNumber && (
+                      <p className="text-sm text-tableease-lightgray">
+                        Table #{restaurantInfo.tableNumber} • {formData.partySize} {formData.partySize === 1 ? 'person' : 'people'} • 
+                        {formData.reservationDate ? new Date(formData.reservationDate).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }) : '(Select date)'} • 
+                        {formData.startTime || '(Select time)'}
+                      </p>
+                    )}
                   </div>
-                  <h2 className="text-2xl font-semibold text-white mb-2">Reservation Confirmed!</h2>
-                  <p className="text-gray-400 mb-6">Your reservation has been successfully booked.</p>
-                  <p className="text-white mb-1">Confirmation number: <span className="font-medium">REF-{Math.floor(Math.random() * 10000).toString().padStart(4, '0')}</span></p>
-                  <p className="text-gray-400 mb-8">A confirmation has been sent to your email.</p>
-                  <Button variant="primary" size="lg" className="px-6 tableease-btn">
-                    Return to Homepage
-                  </Button>
-                </div>
-              </Card>
-            ) : (
-              <Card className="bg-tableease-darkgray border border-gray-700 rounded-xl p-8 shadow-lg">
-                {/* Step indicator */}
+                )}
+                
+                {/* Step progress */}
                 <div className="step-indicator">
                   <div className={`step-circle ${step >= 1 ? 'active' : 'inactive'} ${step > 1 ? 'completed' : ''}`}>
                     1
@@ -970,26 +1020,40 @@ export default function ReservationPage() {
                     </Button>
                   )}
                 </div>
-              </Card>
-            )}
+              </div>
+            </Card>
           </div>
           
-          {/* Reservation Summary */}
-          <div className="w-full lg:w-1/3">
-            <Card className="bg-tableease-darkgray border border-gray-700 rounded-xl p-8 shadow-lg">
-              <h2 className="text-xl font-semibold text-white mb-6 pb-3 border-b border-gray-700">Reservation Summary</h2>
+          {/* Reservation Summary Sidebar */}
+          <div className="lg:col-span-1">
+            <Card className="bg-tableease-darkgray border border-gray-700 rounded-xl p-6 sticky top-24">
+              <h3 className="text-xl font-semibold text-white mb-6 pb-3 border-b border-gray-700">Reservation Summary</h3>
               
               <div className="space-y-4 mb-6">
+                {restaurantInfo.name && (
+                  <div>
+                    <h4 className="text-gray-400 text-sm font-medium mb-2">Restaurant</h4>
+                    <p className="text-white font-medium">{restaurantInfo.name}</p>
+                  </div>
+                )}
+                
+                {restaurantInfo.tableNumber && (
+                  <div>
+                    <h4 className="text-gray-400 text-sm font-medium mb-2">Table</h4>
+                    <p className="text-white font-medium">#{restaurantInfo.tableNumber}</p>
+                  </div>
+                )}
+                
                 <div>
-                  <h3 className="text-gray-400 text-sm font-medium mb-2">Party Size</h3>
+                  <h4 className="text-gray-400 text-sm font-medium mb-2">Party Size</h4>
                   <p className="text-white font-medium">{formData.partySize} {formData.partySize === 1 ? 'person' : 'people'}</p>
                 </div>
                 
                 {formData.reservationDate && (
                   <div>
-                    <h3 className="text-gray-400 text-sm font-medium mb-2">Date & Time</h3>
+                    <h4 className="text-gray-400 text-sm font-medium mb-2">Date & Time</h4>
                     <p className="text-white font-medium">
-                      {new Date(formData.reservationDate).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+                      {new Date(formData.reservationDate).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
                       {formData.startTime && `, ${formData.startTime}`}
                     </p>
                   </div>
@@ -997,14 +1061,14 @@ export default function ReservationPage() {
                 
                 {formData.occasion && (
                   <div>
-                    <h3 className="text-gray-400 text-sm font-medium mb-2">Occasion</h3>
+                    <h4 className="text-gray-400 text-sm font-medium mb-2">Occasion</h4>
                     <p className="text-white">{formData.occasion}</p>
                   </div>
                 )}
                 
                 {formData.dietaryRestrictions.length > 0 && (
                   <div>
-                    <h3 className="text-gray-400 text-sm font-medium mb-2">Dietary Restrictions</h3>
+                    <h4 className="text-gray-400 text-sm font-medium mb-2">Dietary Restrictions</h4>
                     <div className="flex flex-wrap gap-2">
                       {formData.dietaryRestrictions.map(restriction => (
                         <span key={restriction} className="bg-tableease-lightgray text-white text-xs py-1 px-2 rounded-full">
@@ -1017,7 +1081,7 @@ export default function ReservationPage() {
               </div>
               
               <div className="space-y-3 border-t border-gray-700 pt-4 mb-6">
-                <h3 className="text-white font-medium mb-3">Price Breakdown</h3>
+                <h4 className="text-white font-medium mb-3">Price Breakdown</h4>
                 
                 <div className="flex justify-between">
                   <span className="text-gray-400">Reservation Fee</span>
@@ -1054,6 +1118,26 @@ export default function ReservationPage() {
             </Card>
           </div>
         </div>
+
+        {/* Success Card */}
+        {submitSuccess && (
+          <Card className="bg-tableease-darkgray border border-gray-700 rounded-xl p-8 shadow-lg mt-8">
+            <div className="text-center py-10">
+              <div className="mx-auto w-20 h-20 bg-green-500 rounded-full flex items-center justify-center mb-6">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+              </div>
+              <h2 className="text-2xl font-semibold text-white mb-2">Reservation Confirmed!</h2>
+              <p className="text-gray-400 mb-6">Your reservation has been successfully booked.</p>
+              <p className="text-white mb-1">Confirmation number: <span className="font-medium">REF-{Math.floor(Math.random() * 10000).toString().padStart(4, '0')}</span></p>
+              <p className="text-gray-400 mb-8">A confirmation has been sent to your email.</p>
+              <Button variant="primary" size="lg" className="px-6 tableease-btn">
+                Return to Homepage
+              </Button>
+            </div>
+          </Card>
+        )}
       </div>
     </div>
   );
