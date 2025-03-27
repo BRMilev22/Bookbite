@@ -93,11 +93,22 @@ export default function RestaurantsPage() {
         }
         const data = await response.json();
         
-        // Add Unsplash images to restaurants
-        const restaurantsWithImages = data.map((restaurant: Restaurant, index: number) => ({
-          ...restaurant,
-          imageUrl: restaurantImages[index % restaurantImages.length]
-        }));
+        // Add consistent images to restaurants based on ID
+        const restaurantsWithImages = data.map((restaurant: Restaurant) => {
+          // If image is missing or placeholder, use consistent fallback based on ID
+          if (!restaurant.imageUrl || 
+              restaurant.imageUrl === 'placeholder' || 
+              restaurant.imageUrl.includes('placeholder.com') ||
+              !restaurant.imageUrl.startsWith('http')) {
+            // Use the same formula as in the detail page
+            const imageIndex = restaurant.id % restaurantImages.length;
+            return {
+              ...restaurant,
+              imageUrl: restaurantImages[imageIndex]
+            };
+          }
+          return restaurant;
+        });
         
         setRestaurants(restaurantsWithImages);
       } catch (err) {
@@ -151,7 +162,7 @@ export default function RestaurantsPage() {
               </label>
               <select
                 id="location"
-                className="w-full p-2 bg-tableease-darkergray text-white border border-gray-600 rounded focus:ring-tableease-primary focus:border-tableease-primary [&>option]:text-black [&>option]:bg-white"
+                className="w-full p-2 bg-white text-gray-800 border border-gray-300 rounded focus:ring-tableease-primary focus:border-tableease-primary"
                 value={filters.location}
                 onChange={(e) => handleFilterChange('location', e.target.value)}
               >
@@ -171,7 +182,7 @@ export default function RestaurantsPage() {
               </label>
               <select
                 id="category"
-                className="w-full p-2 bg-tableease-darkergray text-white border border-gray-600 rounded focus:ring-tableease-primary focus:border-tableease-primary [&>option]:text-black [&>option]:bg-white"
+                className="w-full p-2 bg-white text-gray-800 border border-gray-300 rounded focus:ring-tableease-primary focus:border-tableease-primary"
                 value={filters.category}
                 onChange={(e) => handleFilterChange('category', e.target.value)}
               >
@@ -192,7 +203,7 @@ export default function RestaurantsPage() {
               <input
                 type="date"
                 id="date"
-                className="w-full p-2 bg-tableease-darkergray text-white border border-gray-600 rounded focus:ring-tableease-primary focus:border-tableease-primary"
+                className="w-full p-2 bg-white text-gray-800 border border-gray-300 rounded focus:ring-tableease-primary focus:border-tableease-primary"
                 value={filters.availability.date}
                 onChange={(e) => handleFilterChange('availability.date', e.target.value)}
                 min={new Date().toISOString().split('T')[0]}
@@ -206,7 +217,7 @@ export default function RestaurantsPage() {
               </label>
               <select
                 id="time"
-                className="w-full p-2 bg-tableease-darkergray text-white border border-gray-600 rounded focus:ring-tableease-primary focus:border-tableease-primary [&>option]:text-black [&>option]:bg-white"
+                className="w-full p-2 bg-white text-gray-800 border border-gray-300 rounded focus:ring-tableease-primary focus:border-tableease-primary"
                 value={filters.availability.time}
                 onChange={(e) => handleFilterChange('availability.time', e.target.value)}
               >
@@ -229,7 +240,7 @@ export default function RestaurantsPage() {
               </label>
               <select
                 id="partySize"
-                className="w-full p-2 bg-tableease-darkergray text-white border border-gray-600 rounded focus:ring-tableease-primary focus:border-tableease-primary [&>option]:text-black [&>option]:bg-white"
+                className="w-full p-2 bg-white text-gray-800 border border-gray-300 rounded focus:ring-tableease-primary focus:border-tableease-primary"
                 value={filters.availability.partySize}
                 onChange={(e) => handleFilterChange('availability.partySize', parseInt(e.target.value, 10))}
               >

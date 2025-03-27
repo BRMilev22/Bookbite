@@ -51,15 +51,17 @@ interface ReservationDetails {
   partySize: number;
 }
 
-// Unsplash restaurant images - in case the original image doesn't load
-const fallbackImage = 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1470&q=80';
-
-// Additional restaurant images for variety
+// Unsplash restaurant images - must match EXACTLY with the array in restaurants/page.tsx
 const restaurantImages = [
+  'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1470&q=80',
   'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1374&q=80',
   'https://images.unsplash.com/photo-1414235077428-338989a2e8c0?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1470&q=80',
   'https://images.unsplash.com/photo-1544148103-0773bf10d330?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1470&q=80',
+  'https://images.unsplash.com/photo-1537047902294-62a40c20a6ae?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1470&q=80',
 ];
+
+// Fallback image is the first image in the array for consistency
+const fallbackImage = restaurantImages[0];
 
 export default function RestaurantDetailPage() {
   const params = useParams();
@@ -93,11 +95,17 @@ export default function RestaurantDetailPage() {
         }
         const restaurantData = await restaurantResponse.json();
         
-        // Always set a fallback image
-        if (!restaurantData.imageUrl || restaurantData.imageUrl === 'placeholder') {
-          // Use a random image from our collection
-          const randomIndex = Math.floor(Math.random() * restaurantImages.length);
-          restaurantData.imageUrl = restaurantImages[randomIndex];
+        // Always set a fallback image for missing, placeholder, or via.placeholder.com URLs
+        if (!restaurantData.imageUrl || 
+            restaurantData.imageUrl === 'placeholder' || 
+            restaurantData.imageUrl.includes('placeholder.com') ||
+            !restaurantData.imageUrl.startsWith('http')) {
+          // Use consistent image selection based on restaurant ID
+          // This ensures the same restaurant always gets the same image
+          const restaurantIdNum = parseInt(restaurantId, 10);
+          // Use modulo to get index within array range, ensuring same restaurant always gets same image
+          const imageIndex = restaurantIdNum % restaurantImages.length;
+          restaurantData.imageUrl = restaurantImages[imageIndex];
         }
         
         setRestaurant(restaurantData);
@@ -125,7 +133,7 @@ export default function RestaurantDetailPage() {
     if (restaurantId) {
       fetchRestaurantDetails();
     }
-  }, [restaurantId, reservationDetails, restaurantImages]);
+  }, [restaurantId, reservationDetails]);
   
   // Handle table selection
   const handleTableClick = (table: RestaurantTable) => {
@@ -248,7 +256,9 @@ export default function RestaurantDetailPage() {
                   </div>
                   
                   <Image
-                    src={restaurant.imageUrl || restaurantImages[0]}
+                    src={restaurant.imageUrl && !restaurant.imageUrl.includes('placeholder.com') 
+                      ? restaurant.imageUrl 
+                      : fallbackImage}
                     alt={restaurant.name}
                     fill
                     style={{ objectFit: 'cover' }}
@@ -256,8 +266,7 @@ export default function RestaurantDetailPage() {
                       // If image fails to load, use fallback
                       const target = e.target as HTMLImageElement;
                       target.onerror = null; // Prevent infinite error loop
-                      const randomIndex = Math.floor(Math.random() * restaurantImages.length);
-                      target.src = restaurantImages[randomIndex];
+                      target.src = fallbackImage; // Use main fallback image for consistency
                     }}
                     priority // Add priority to ensure image loads first
                   />
@@ -330,7 +339,7 @@ export default function RestaurantDetailPage() {
                     <input
                       type="date"
                       id="date"
-                      className="w-full p-2 bg-tableease-darkergray text-white border border-gray-600 rounded focus:ring-tableease-primary focus:border-tableease-primary"
+                      className="w-full p-2 bg-white text-gray-800 border border-gray-300 rounded focus:ring-tableease-primary focus:border-tableease-primary"
                       value={reservationDetails.date}
                       onChange={(e) => handleDetailsChange('date', e.target.value)}
                       min={new Date().toISOString().split('T')[0]}
@@ -343,7 +352,7 @@ export default function RestaurantDetailPage() {
                     </label>
                     <select
                       id="time"
-                      className="w-full p-2 bg-tableease-darkergray text-white border border-gray-600 rounded focus:ring-tableease-primary focus:border-tableease-primary [&>option]:text-black [&>option]:bg-white"
+                      className="w-full p-2 bg-white text-gray-800 border border-gray-300 rounded focus:ring-tableease-primary focus:border-tableease-primary"
                       value={reservationDetails.time}
                       onChange={(e) => handleDetailsChange('time', e.target.value)}
                     >
@@ -365,7 +374,7 @@ export default function RestaurantDetailPage() {
                     </label>
                     <select
                       id="partySize"
-                      className="w-full p-2 bg-tableease-darkergray text-white border border-gray-600 rounded focus:ring-tableease-primary focus:border-tableease-primary [&>option]:text-black [&>option]:bg-white"
+                      className="w-full p-2 bg-white text-gray-800 border border-gray-300 rounded focus:ring-tableease-primary focus:border-tableease-primary"
                       value={reservationDetails.partySize}
                       onChange={(e) => handleDetailsChange('partySize', parseInt(e.target.value, 10))}
                     >
