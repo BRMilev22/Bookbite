@@ -18,9 +18,7 @@ export default function Header() {
   };
   
   const menuItems = [
-    { name: "Table", href: "/table" },
-    { name: "Interactive", href: "/interactive" },
-    { name: "Book Now", href: "/reservations/new" },
+    // Removed "Table", "Interactive", and "Book Now" as requested
   ];
 
   // Add admin dashboard menu item if user is admin
