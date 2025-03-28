@@ -62,8 +62,8 @@ export default function RestaurantsPage() {
     rating: 0,
     priceRange: '',
     availability: {
-      date: new Date().toISOString().split('T')[0], // Current date in YYYY-MM-DD format
-      time: '19:00', // Default time: 7 PM
+      date: new Date().toISOString().split('T')[0], // Default to today
+      time: '19:00', // Default time: 19:00
       partySize: 2,
     },
   });
@@ -148,12 +148,17 @@ export default function RestaurantsPage() {
   };
 
   return (
-    <div className="bg-tableease-dark min-h-screen py-10 px-4">
+    <div className="bg-gradient-to-b from-tableease-dark to-gray-900 min-h-screen py-10 px-4">
       <div className="max-w-6xl mx-auto">
-        <h1 className="text-3xl font-bold mb-8 text-white">Find Your Perfect Table</h1>
+        <h1 className="text-3xl font-bold mb-8 text-white inline-flex items-center">
+          <svg className="w-7 h-7 mr-2 text-tableease-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+          </svg>
+          Find Your Perfect Table
+        </h1>
         
         {/* Filters section */}
-        <div className="bg-tableease-darkgray border border-gray-700 p-6 mb-8 rounded-lg">
+        <div className="bg-tableease-darkgray backdrop-blur-sm bg-opacity-80 border border-gray-700 p-6 mb-8 rounded-xl shadow-xl">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
             {/* Location filter */}
             <div>
@@ -162,7 +167,7 @@ export default function RestaurantsPage() {
               </label>
               <select
                 id="location"
-                className="w-full p-2 bg-white text-gray-800 border border-gray-300 rounded focus:ring-tableease-primary focus:border-tableease-primary"
+                className="w-full p-3 bg-tableease-darkergray text-black border border-gray-600 rounded-lg focus:ring-tableease-primary focus:border-tableease-primary transition-all duration-200 hover:border-gray-500"
                 value={filters.location}
                 onChange={(e) => handleFilterChange('location', e.target.value)}
               >
@@ -182,7 +187,7 @@ export default function RestaurantsPage() {
               </label>
               <select
                 id="category"
-                className="w-full p-2 bg-white text-gray-800 border border-gray-300 rounded focus:ring-tableease-primary focus:border-tableease-primary"
+                className="w-full p-3 bg-tableease-darkergray text-black border border-gray-600 rounded-lg focus:ring-tableease-primary focus:border-tableease-primary transition-all duration-200 hover:border-gray-500"
                 value={filters.category}
                 onChange={(e) => handleFilterChange('category', e.target.value)}
               >
@@ -203,7 +208,7 @@ export default function RestaurantsPage() {
               <input
                 type="date"
                 id="date"
-                className="w-full p-2 bg-white text-gray-800 border border-gray-300 rounded focus:ring-tableease-primary focus:border-tableease-primary"
+                className="w-full p-3 bg-tableease-darkergray text-black border border-gray-600 rounded-lg focus:ring-tableease-primary focus:border-tableease-primary transition-all duration-200 hover:border-gray-500"
                 value={filters.availability.date}
                 onChange={(e) => handleFilterChange('availability.date', e.target.value)}
                 min={new Date().toISOString().split('T')[0]}
@@ -217,19 +222,19 @@ export default function RestaurantsPage() {
               </label>
               <select
                 id="time"
-                className="w-full p-2 bg-white text-gray-800 border border-gray-300 rounded focus:ring-tableease-primary focus:border-tableease-primary"
+                className="w-full p-3 bg-tableease-darkergray text-black border border-gray-600 rounded-lg focus:ring-tableease-primary focus:border-tableease-primary transition-all duration-200 hover:border-gray-500"
                 value={filters.availability.time}
                 onChange={(e) => handleFilterChange('availability.time', e.target.value)}
               >
-                <option value="17:00">5:00 PM</option>
-                <option value="17:30">5:30 PM</option>
-                <option value="18:00">6:00 PM</option>
-                <option value="18:30">6:30 PM</option>
-                <option value="19:00">7:00 PM</option>
-                <option value="19:30">7:30 PM</option>
-                <option value="20:00">8:00 PM</option>
-                <option value="20:30">8:30 PM</option>
-                <option value="21:00">9:00 PM</option>
+                <option value="17:00">17:00</option>
+                <option value="17:30">17:30</option>
+                <option value="18:00">18:00</option>
+                <option value="18:30">18:30</option>
+                <option value="19:00">19:00</option>
+                <option value="19:30">19:30</option>
+                <option value="20:00">20:00</option>
+                <option value="20:30">20:30</option>
+                <option value="21:00">21:00</option>
               </select>
             </div>
             
@@ -240,7 +245,7 @@ export default function RestaurantsPage() {
               </label>
               <select
                 id="partySize"
-                className="w-full p-2 bg-white text-gray-800 border border-gray-300 rounded focus:ring-tableease-primary focus:border-tableease-primary"
+                className="w-full p-3 bg-tableease-darkergray text-black border border-gray-600 rounded-lg focus:ring-tableease-primary focus:border-tableease-primary transition-all duration-200 hover:border-gray-500"
                 value={filters.availability.partySize}
                 onChange={(e) => handleFilterChange('availability.partySize', parseInt(e.target.value, 10))}
               >
@@ -277,33 +282,49 @@ export default function RestaurantsPage() {
               restaurants.map((restaurant) => (
                 <div 
                   key={restaurant.id} 
-                  className="bg-tableease-darkgray border border-gray-700 rounded-lg overflow-hidden cursor-pointer hover:shadow-lg transition-all duration-300 hover:transform hover:scale-[1.02]"
+                  className="bg-tableease-darkgray backdrop-blur-sm bg-opacity-80 border border-gray-700 rounded-xl overflow-hidden cursor-pointer hover:shadow-xl transition-all duration-300 hover:transform hover:scale-[1.02]"
                   onClick={() => handleRestaurantClick(restaurant.id)}
                 >
-                  <div className="relative h-48 w-full">
+                  <div className="relative h-56 w-full bg-tableease-darkergray">
+                    {/* Show a loading placeholder */}
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <div className="animate-pulse">
+                        <svg className="h-16 w-16 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                      </div>
+                    </div>
+                    
                     <Image
                       src={restaurant.imageUrl}
                       alt={restaurant.name}
                       fill
                       style={{ objectFit: 'cover' }}
+                      className="brightness-75 hover:brightness-90 transition-all duration-300"
+                      onError={(e) => {
+                        // If image fails to load, use fallback
+                        const target = e.target as HTMLImageElement;
+                        target.onerror = null; // Prevent infinite error loop
+                        target.src = restaurantImages[0]; // Use first image as fallback
+                      }}
                     />
-                    <div className="absolute top-2 right-2">
-                      <div className="flex items-center bg-tableease-primary text-white px-2 py-1 rounded-full">
+                    <div className="absolute top-4 right-4">
+                      <div className="flex items-center bg-tableease-primary text-white px-3 py-1 rounded-full shadow-lg">
                         <span className="font-bold mr-1">{restaurant.rating}</span>
-                        <span className="text-sm">{restaurant.ratingLabel}</span>
+                        <span>{restaurant.ratingLabel}</span>
+                      </div>
+                    </div>
+                    <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/80 to-transparent">
+                      <h3 className="text-2xl font-bold text-white mb-1 drop-shadow-md">{restaurant.name}</h3>
+                      <div className="flex items-center text-gray-200">
+                        <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
+                        </svg>
+                        <span>{restaurant.location} • {restaurant.distance}</span>
                       </div>
                     </div>
                   </div>
                   <div className="p-4">
-                    <h3 className="text-xl font-semibold text-white mb-2">{restaurant.name}</h3>
-                    
-                    <div className="flex items-center text-gray-400 mb-2">
-                      <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
-                      </svg>
-                      <span>{restaurant.location} • {restaurant.distance}</span>
-                    </div>
-                    
                     <div className="flex items-center text-gray-400 mb-2">
                       <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
                         <path fillRule="evenodd" d="M18 5v8a2 2 0 01-2 2h-5l-5 4v-4H4a2 2 0 01-2-2V5a2 2 0 012-2h12a2 2 0 012 2zM7 8H5v2h2V8zm2 0h2v2H9V8zm6 0h-2v2h2V8z" clipRule="evenodd" />
@@ -319,7 +340,7 @@ export default function RestaurantsPage() {
                     
                     <div className="flex flex-wrap gap-2">
                       {restaurant.features.map((feature) => (
-                        <span key={feature.id} className="bg-tableease-dark text-gray-300 text-xs px-2 py-1 rounded">
+                        <span key={feature.id} className="bg-tableease-dark/40 text-gray-300 px-3 py-1 rounded-full text-sm font-medium">
                           {feature.name}
                         </span>
                       ))}

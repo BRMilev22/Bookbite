@@ -13,18 +13,31 @@ export async function GET(
     // Extract parameters for availability check
     const date = searchParams.get('date');
     const time = searchParams.get('time');
+    const endTime = searchParams.get('endTime');
     const partySize = searchParams.get('partySize');
+    
+    // Check if we need to fetch reservations for all tables on this date
+    const fetchReservations = searchParams.get('reservations') === 'true';
     
     // Build query parameters for backend API
     const backendParams = new URLSearchParams();
     if (date) backendParams.append('date', date);
     if (time) backendParams.append('time', time);
+    if (endTime) backendParams.append('endTime', endTime);
     if (partySize) backendParams.append('partySize', partySize);
+    if (fetchReservations) backendParams.append('fetchReservations', 'true');
     
     // Backend API URL (assuming running locally)
     const backendUrl = process.env.BACKEND_API_URL || 'http://localhost:8080';
+    
+    // Determine which endpoint to call based on what we need
+    let endpoint = `/api/restaurants/${restaurantId}/tables/availability`;
+    if (fetchReservations) {
+      endpoint = `/api/restaurants/${restaurantId}/tables/reservations`;
+    }
+    
     const response = await fetch(
-      `${backendUrl}/api/restaurants/${restaurantId}/tables/availability?${backendParams.toString()}`
+      `${backendUrl}${endpoint}?${backendParams.toString()}`
     );
     
     if (!response.ok) {

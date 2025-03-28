@@ -48,6 +48,7 @@ interface RestaurantTable {
 interface ReservationDetails {
   date: string;
   time: string;
+  endTime?: string; // Optional end time
   partySize: number;
 }
 
@@ -74,10 +75,12 @@ export default function RestaurantDetailPage() {
   const [error, setError] = useState<string | null>(null);
   const [selectedTable, setSelectedTable] = useState<RestaurantTable | null>(null);
   const [reservationDetails, setReservationDetails] = useState<ReservationDetails>({
-    date: new Date().toISOString().split('T')[0], // Current date in YYYY-MM-DD format
-    time: '19:00', // Default time: 7 PM
+    date: new Date().toISOString().split('T')[0], // Default to today
+    time: '19:00', // Default time: 19:00
+    endTime: '21:00', // Default end time: 21:00 (2 hours after start time)
     partySize: 2,
   });
+  const [tableReservations, setTableReservations] = useState<{[tableId: number]: {startTime: string, endTime: string}[]}>({});
   
   // Canvas dimensions
   const canvasWidth = 600;
@@ -110,10 +113,18 @@ export default function RestaurantDetailPage() {
         
         setRestaurant(restaurantData);
         
+        // Fetch table reservations for the date
+        const reservationsResponse = await fetch(`/api/restaurants/${restaurantId}/tables?date=${reservationDetails.date}&reservations=true`);
+        if (reservationsResponse.ok) {
+          const reservationsData = await reservationsResponse.json();
+          setTableReservations(reservationsData);
+        }
+        
         // Fetch table availability with query parameters
         const queryParams = new URLSearchParams({
           date: reservationDetails.date,
           time: reservationDetails.time,
+          endTime: reservationDetails.endTime || '', // Include end time if available
           partySize: reservationDetails.partySize.toString(),
         });
         
@@ -135,27 +146,86 @@ export default function RestaurantDetailPage() {
     }
   }, [restaurantId, reservationDetails]);
   
+  useEffect(() => {
+    const fetchTableReservations = async () => {
+      if (!restaurantId || !reservationDetails.date) return;
+      
+      try {
+        const response = await fetch(`/api/restaurants/${restaurantId}/tables/reservations?date=${reservationDetails.date}`);
+        if (response.ok) {
+          const data = await response.json();
+          // Format: { tableId: [{ startTime, endTime }] }
+          setTableReservations(data);
+        }
+      } catch (error) {
+        console.error("Error fetching table reservations:", error);
+      }
+    };
+    
+    fetchTableReservations();
+  }, [restaurantId, reservationDetails.date]);
+  
   // Handle table selection
   const handleTableClick = (table: RestaurantTable) => {
-    if (!table.isAvailable) {
-      return; // Table is not available
+    // Always allow selecting a table to see its details
+    const isCurrentlySelected = selectedTable?.id === table.id;
+    
+    if (isCurrentlySelected) {
+      // If already selected, deselect it
+      setSelectedTable(null);
+      return;
     }
     
-    setSelectedTable(table === selectedTable ? null : table);
+    setSelectedTable(table);
+    
+    // If table is not available, fetch and show its reservation details
+    if (!table.isAvailable && tableReservations[table.id]) {
+      // We already have the reservation data from the initial fetch
+      // The UI will show reservation times in the selected table info section
+    }
+  };
+  
+  // Add a function to update the default end time when start time changes
+  const updateEndTimeFromStartTime = (startTime: string) => {
+    // Calculate default end time (2 hours after start time)
+    const [hours, minutes] = startTime.split(':').map(Number);
+    let endHours = hours + 2;
+    if (endHours >= 24) {
+      endHours -= 24;
+    }
+    
+    // Format back to HH:MM
+    const endTime = `${String(endHours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
+    return endTime;
   };
   
   // Handle reservation details change
   const handleDetailsChange = (field: keyof ReservationDetails, value: string | number) => {
-    setReservationDetails(prev => ({
-      ...prev,
-      [field]: value,
-    }));
+    setReservationDetails(prev => {
+      const newDetails = { ...prev, [field]: value };
+      
+      // If changing start time, update end time automatically (unless end time was manually set)
+      if (field === 'time') {
+        newDetails.endTime = updateEndTimeFromStartTime(value as string);
+      }
+      
+      return newDetails;
+    });
     setSelectedTable(null); // Reset selected table when changing reservation details
   };
   
   // Handle reservation submission
   const handleReserveTable = () => {
     if (!selectedTable || !restaurant) return;
+    
+    // Check if the table is available at the selected time
+    if (isTableReservedAtTime(selectedTable.id, reservationDetails.time)) {
+      // If the table is reserved at this time, don't proceed
+      return;
+    }
+    
+    // Get the end time (either specified or default 2 hours later)
+    const endTime = reservationDetails.endTime || updateEndTimeFromStartTime(reservationDetails.time);
     
     // Navigate to reservation form with pre-filled details
     router.push(
@@ -165,16 +235,53 @@ export default function RestaurantDetailPage() {
       `&tableNumber=${selectedTable.tableNumber}` +
       `&date=${reservationDetails.date}` +
       `&time=${reservationDetails.time}` +
+      `&endTime=${endTime}` +
       `&partySize=${selectedTable.capacity}` // Use table capacity instead of current party size
     );
   };
   
-  // Render table on canvas
+  // Helper function to check if a table is reserved at the selected time
+  const isTableReservedAtTime = (tableId: number, selectedTime: string) => {
+    if (!tableReservations[tableId]) return false;
+    
+    // Convert the selected time to a comparable format (in minutes since midnight)
+    const [selectedHours, selectedMinutes] = selectedTime.split(':').map(Number);
+    const selectedTimeInMinutes = selectedHours * 60 + selectedMinutes;
+    
+    // Get the end time (either specified or default 2 hours later)
+    const selectedEndTime = reservationDetails.endTime || updateEndTimeFromStartTime(selectedTime);
+    const [endHours, endMinutes] = selectedEndTime.split(':').map(Number);
+    const selectedEndTimeInMinutes = endHours * 60 + endMinutes;
+    
+    // Check if any of the table's reservations overlap with the selected time slot
+    return tableReservations[tableId].some(reservation => {
+      const [startHours, startMinutes] = reservation.startTime.split(':').map(Number);
+      const [endHours, endMinutes] = reservation.endTime.split(':').map(Number);
+      
+      const reservationStartInMinutes = startHours * 60 + startMinutes;
+      const reservationEndInMinutes = endHours * 60 + endMinutes;
+      
+      // Check for overlap between the time slots
+      return (reservationStartInMinutes < selectedEndTimeInMinutes && 
+              reservationEndInMinutes > selectedTimeInMinutes);
+    });
+  };
+  
+  // Render table on canvas with improved styling
   const renderTable = (table: RestaurantTable) => {
     const isSelected = selectedTable?.id === table.id;
-    const tableColor = table.isAvailable 
-      ? isSelected ? 'bg-tableease-primary' : 'bg-green-500'
-      : 'bg-red-500';
+    
+    // Determine table color based on availability and reservations
+    let tableColor;
+    let reservedAtSelectedTime = isTableReservedAtTime(table.id, reservationDetails.time);
+    
+    if (table.isAvailable) {
+      tableColor = isSelected ? 'bg-tableease-primary' : 'bg-green-500';
+    } else if (reservedAtSelectedTime) {
+      tableColor = 'bg-red-500'; // Reserved at the selected time
+    } else {
+      tableColor = 'bg-yellow-500'; // Reserved at other times
+    }
     
     const tableStyles = {
       position: 'absolute',
@@ -182,20 +289,22 @@ export default function RestaurantDetailPage() {
       top: `${table.positionY}px`,
       width: `${table.width}px`,
       height: `${table.height}px`,
-      borderRadius: table.shape === 'circle' ? '50%' : '4px',
-      cursor: table.isAvailable ? 'pointer' : 'not-allowed',
+      borderRadius: table.shape === 'circle' ? '50%' : '8px',
+      cursor: 'pointer', // Make all tables clickable
       display: 'flex',
       justifyContent: 'center',
       alignItems: 'center',
       color: 'white',
       fontWeight: 'bold',
       border: isSelected ? '3px solid white' : 'none',
+      boxShadow: isSelected ? '0 0 15px rgba(255, 255, 255, 0.6)' : '0 4px 6px rgba(0, 0, 0, 0.1)',
+      transition: 'all 0.3s ease',
     };
     
     return (
       <div 
         key={table.id}
-        className={`${tableColor} shadow transition-all duration-200 hover:shadow-lg`}
+        className={`${tableColor} shadow-lg hover:shadow-xl transform hover:scale-105 hover:-translate-y-1 transition-all duration-300`}
         style={tableStyles as React.CSSProperties}
         onClick={() => handleTableClick(table)}
         title={`Table ${table.tableNumber} - ${table.capacity} people - ${table.tableType}`}
@@ -231,11 +340,11 @@ export default function RestaurantDetailPage() {
   }
   
   return (
-    <div className="bg-tableease-dark min-h-screen py-10 px-4">
+    <div className="bg-gradient-to-b from-tableease-dark to-gray-900 min-h-screen py-10 px-4">
       <div className="max-w-6xl mx-auto">
         {/* Restaurant header */}
         <div className="mb-8">
-          <Link href="/restaurants" className="text-tableease-primary hover:underline mb-4 inline-flex items-center">
+          <Link href="/restaurants" className="text-tableease-primary hover:text-tableease-secondary transition-colors duration-300 mb-4 inline-flex items-center font-medium">
             <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
             </svg>
@@ -244,8 +353,8 @@ export default function RestaurantDetailPage() {
           
           {restaurant && (
             <>
-              <div className="bg-tableease-darkgray border border-gray-700 rounded-lg overflow-hidden">
-                <div className="relative h-64 w-full bg-tableease-darkergray">
+              <div className="bg-tableease-darkgray backdrop-blur-sm bg-opacity-80 border border-gray-700 rounded-xl overflow-hidden shadow-xl transition-all duration-500">
+                <div className="relative h-80 w-full bg-tableease-darkergray">
                   {/* Show a loading placeholder */}
                   <div className="absolute inset-0 flex items-center justify-center">
                     <div className="animate-pulse">
@@ -262,6 +371,7 @@ export default function RestaurantDetailPage() {
                     alt={restaurant.name}
                     fill
                     style={{ objectFit: 'cover' }}
+                    className="brightness-75 hover:brightness-90 transition-all duration-300"
                     onError={(e) => {
                       // If image fails to load, use fallback
                       const target = e.target as HTMLImageElement;
@@ -271,55 +381,45 @@ export default function RestaurantDetailPage() {
                     priority // Add priority to ensure image loads first
                   />
                   <div className="absolute top-4 right-4">
-                    <div className="flex items-center bg-tableease-primary text-white px-3 py-1 rounded-full">
+                    <div className="flex items-center bg-tableease-primary text-white px-3 py-1 rounded-full shadow-lg">
                       <span className="font-bold mr-1">{restaurant.rating}</span>
                       <span>{restaurant.ratingLabel}</span>
                     </div>
                   </div>
-                </div>
-                
-                <div className="p-6">
-                  <h1 className="text-3xl font-bold text-white mb-4">{restaurant.name}</h1>
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                    <div>
-                      <div className="flex items-center text-gray-400 mb-2">
-                        <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                  <div className="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-black/80 to-transparent">
+                    <h1 className="text-4xl font-bold text-white mb-2 drop-shadow-md">{restaurant.name}</h1>
+                    <div className="flex flex-wrap items-center text-gray-200 gap-4">
+                      <div className="flex items-center">
+                        <svg className="w-5 h-5 mr-1" fill="currentColor" viewBox="0 0 20 20">
                           <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
                         </svg>
-                        <span>{restaurant.location} • {restaurant.distance}</span>
+                        <span>{restaurant.location}</span>
                       </div>
-                      
-                      <div className="flex items-center text-gray-400 mb-2">
-                        <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                      <div className="flex items-center">
+                        <svg className="w-5 h-5 mr-1" fill="currentColor" viewBox="0 0 20 20">
                           <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z" />
                         </svg>
                         <span>Capacity from 1 to 10 people</span>
                       </div>
-                    </div>
-                    
-                    <div>
-                      <div className="flex items-center text-gray-400 mb-2">
-                        <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                      <div className="flex items-center">
+                        <svg className="w-5 h-5 mr-1" fill="currentColor" viewBox="0 0 20 20">
                           <path fillRule="evenodd" d="M18 5v8a2 2 0 01-2 2h-5l-5 4v-4H4a2 2 0 01-2-2V5a2 2 0 012-2h12a2 2 0 012 2zM7 8H5v2h2V8zm2 0h2v2H9V8zm6 0h-2v2h2V8z" clipRule="evenodd" />
                         </svg>
                         <span>{restaurant.reviews} reviews</span>
                       </div>
-                      
-                      <div className="flex items-center text-gray-400">
-                        <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                          <path d="M10 3.5a1.5 1.5 0 013 0V4a1 1 0 001 1h3a1 1 0 011 1v3a1 1 0 01-1 1h-.5a1.5 1.5 0 000 3h.5a1 1 0 011 1v3a1 1 0 01-1 1h-3a1 1 0 01-1-1v-.5a1.5 1.5 0 00-3 0v.5a1 1 0 01-1 1H6a1 1 0 01-1-1v-3a1 1 0 00-1-1H3.5a1.5 1.5 0 010-3H4a1 1 0 001-1V6a1 1 0 011-1h3a1 1 0 001-1v-.5z" />
-                        </svg>
+                      <div className="flex items-center">
                         <span>{restaurant.category}</span>
                         <span className="mx-2">•</span>
                         <span>{restaurant.priceRange}</span>
                       </div>
                     </div>
                   </div>
-                  
+                </div>
+                
+                <div className="p-6">
                   <div className="flex flex-wrap gap-2 mb-4">
                     {restaurant.features.map((feature) => (
-                      <span key={feature.id} className="bg-tableease-darkergray text-gray-300 px-3 py-1 rounded-full">
+                      <span key={feature.id} className="bg-tableease-dark/40 text-gray-300 px-3 py-1 rounded-full text-sm font-medium">
                         {feature.name}
                       </span>
                     ))}
@@ -328,53 +428,104 @@ export default function RestaurantDetailPage() {
               </div>
               
               {/* Reservation options */}
-              <div className="bg-tableease-darkgray border border-gray-700 rounded-lg p-6 mb-8 mt-8">
-                <h2 className="text-2xl font-semibold mb-4 text-white">Choose Your Table</h2>
+              <div className="bg-tableease-darkgray backdrop-blur-sm bg-opacity-80 border border-gray-700 rounded-xl p-8 mb-8 mt-8 shadow-xl">
+                <h2 className="text-2xl font-bold mb-6 text-white inline-flex items-center">
+                  <svg className="w-6 h-6 mr-2 text-tableease-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+                  Choose Your Table
+                </h2>
                 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                  <div>
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+                  <div className="md:col-span-1">
                     <label htmlFor="date" className="block text-sm font-medium text-gray-300 mb-2">
                       Date
                     </label>
                     <input
                       type="date"
                       id="date"
-                      className="w-full p-2 bg-white text-gray-800 border border-gray-300 rounded focus:ring-tableease-primary focus:border-tableease-primary"
+                      className="w-full p-3 bg-tableease-darkergray text-black border border-gray-600 rounded-lg focus:ring-tableease-primary focus:border-tableease-primary transition-all duration-200 hover:border-gray-500"
                       value={reservationDetails.date}
                       onChange={(e) => handleDetailsChange('date', e.target.value)}
                       min={new Date().toISOString().split('T')[0]}
                     />
                   </div>
                   
-                  <div>
+                  <div className="md:col-span-1">
                     <label htmlFor="time" className="block text-sm font-medium text-gray-300 mb-2">
-                      Time
+                      Start Time
                     </label>
                     <select
                       id="time"
-                      className="w-full p-2 bg-white text-gray-800 border border-gray-300 rounded focus:ring-tableease-primary focus:border-tableease-primary"
+                      className="w-full p-3 bg-tableease-darkergray text-black border border-gray-600 rounded-lg focus:ring-tableease-primary focus:border-tableease-primary transition-all duration-200 hover:border-gray-500 [&>option]:text-black"
                       value={reservationDetails.time}
                       onChange={(e) => handleDetailsChange('time', e.target.value)}
                     >
-                      <option value="17:00">5:00 PM</option>
-                      <option value="17:30">5:30 PM</option>
-                      <option value="18:00">6:00 PM</option>
-                      <option value="18:30">6:30 PM</option>
-                      <option value="19:00">7:00 PM</option>
-                      <option value="19:30">7:30 PM</option>
-                      <option value="20:00">8:00 PM</option>
-                      <option value="20:30">8:30 PM</option>
-                      <option value="21:00">9:00 PM</option>
+                      <option value="12:00">12:00</option>
+                      <option value="12:30">12:30</option>
+                      <option value="13:00">13:00</option>
+                      <option value="13:30">13:30</option>
+                      <option value="14:00">14:00</option>
+                      <option value="14:30">14:30</option>
+                      <option value="15:00">15:00</option>
+                      <option value="15:30">15:30</option>
+                      <option value="16:00">16:00</option>
+                      <option value="16:30">16:30</option>
+                      <option value="17:00">17:00</option>
+                      <option value="17:30">17:30</option>
+                      <option value="18:00">18:00</option>
+                      <option value="18:30">18:30</option>
+                      <option value="19:00">19:00</option>
+                      <option value="19:30">19:30</option>
+                      <option value="20:00">20:00</option>
+                      <option value="20:30">20:30</option>
+                      <option value="21:00">21:00</option>
+                      <option value="21:30">21:30</option>
+                      <option value="22:00">22:00</option>
                     </select>
                   </div>
                   
-                  <div>
+                  <div className="md:col-span-1">
+                    <label htmlFor="endTime" className="block text-sm font-medium text-gray-300 mb-2">
+                      End Time <span className="text-xs font-normal text-tableease-primary">(Default: +2h)</span>
+                    </label>
+                    <select
+                      id="endTime"
+                      className="w-full p-3 bg-tableease-darkergray text-black border border-gray-600 rounded-lg focus:ring-tableease-primary focus:border-tableease-primary transition-all duration-200 hover:border-gray-500 [&>option]:text-black"
+                      value={reservationDetails.endTime}
+                      onChange={(e) => handleDetailsChange('endTime', e.target.value)}
+                    >
+                      <option value="12:00">12:00</option>
+                      <option value="12:30">12:30</option>
+                      <option value="13:00">13:00</option>
+                      <option value="13:30">13:30</option>
+                      <option value="14:00">14:00</option>
+                      <option value="14:30">14:30</option>
+                      <option value="15:00">15:00</option>
+                      <option value="15:30">15:30</option>
+                      <option value="16:00">16:00</option>
+                      <option value="16:30">16:30</option>
+                      <option value="17:00">17:00</option>
+                      <option value="17:30">17:30</option>
+                      <option value="18:00">18:00</option>
+                      <option value="18:30">18:30</option>
+                      <option value="19:00">19:00</option>
+                      <option value="19:30">19:30</option>
+                      <option value="20:00">20:00</option>
+                      <option value="20:30">20:30</option>
+                      <option value="21:00">21:00</option>
+                      <option value="21:30">21:30</option>
+                      <option value="22:00">22:00</option>
+                    </select>
+                  </div>
+                  
+                  <div className="md:col-span-1">
                     <label htmlFor="partySize" className="block text-sm font-medium text-gray-300 mb-2">
                       Party Size
                     </label>
                     <select
                       id="partySize"
-                      className="w-full p-2 bg-white text-gray-800 border border-gray-300 rounded focus:ring-tableease-primary focus:border-tableease-primary"
+                      className="w-full p-3 bg-tableease-darkergray text-black border border-gray-600 rounded-lg focus:ring-tableease-primary focus:border-tableease-primary transition-all duration-200 hover:border-gray-500 [&>option]:text-black"
                       value={reservationDetails.partySize}
                       onChange={(e) => handleDetailsChange('partySize', parseInt(e.target.value, 10))}
                     >
@@ -390,24 +541,27 @@ export default function RestaurantDetailPage() {
                   </div>
                 </div>
                 
-                <div className="bg-tableease-darkergray p-3 rounded mb-4">
-                  <div className="flex items-center justify-between flex-wrap gap-2">
-                    <div className="flex items-center gap-6">
-                      <div className="flex items-center">
-                        <div className="w-4 h-4 bg-green-500 rounded mr-2"></div>
-                        <span className="text-sm text-gray-300">Available</span>
-                      </div>
-                      <div className="flex items-center">
-                        <div className="w-4 h-4 bg-red-500 rounded mr-2"></div>
-                        <span className="text-sm text-gray-300">Reserved</span>
-                      </div>
-                      <div className="flex items-center">
-                        <div className="w-4 h-4 bg-tableease-primary border-2 border-white rounded mr-2"></div>
-                        <span className="text-sm text-gray-300">Selected</span>
-                      </div>
+                <div className="bg-tableease-darkergray/70 p-4 rounded-lg mb-6">
+                  <h3 className="text-white text-sm font-medium mb-3">Table Legend</h3>
+                  <div className="flex flex-wrap items-center gap-x-8 gap-y-3">
+                    <div className="flex items-center">
+                      <div className="w-4 h-4 bg-green-500 rounded-md shadow-md shadow-green-500/20 mr-2"></div>
+                      <span className="text-sm text-gray-300">Available</span>
                     </div>
-                    <div>
-                      <span className="text-sm text-gray-300">Click on an available table to select it</span>
+                    <div className="flex items-center">
+                      <div className="w-4 h-4 bg-yellow-500 rounded-md shadow-md shadow-yellow-500/20 mr-2"></div>
+                      <span className="text-sm text-gray-300">Reserved (at other times)</span>
+                    </div>
+                    <div className="flex items-center">
+                      <div className="w-4 h-4 bg-red-500 rounded-md shadow-md shadow-red-500/20 mr-2"></div>
+                      <span className="text-sm text-gray-300">Reserved (selected time)</span>
+                    </div>
+                    <div className="flex items-center">
+                      <div className="w-4 h-4 bg-tableease-primary border-2 border-white rounded-md shadow-md shadow-tableease-primary/20 mr-2"></div>
+                      <span className="text-sm text-gray-300">Selected</span>
+                    </div>
+                    <div className="ml-auto">
+                      <span className="text-sm text-gray-300 italic">Click on a table to see details</span>
                     </div>
                   </div>
                 </div>
@@ -417,66 +571,166 @@ export default function RestaurantDetailPage() {
           
           {/* Interactive table layout */}
           {restaurant && (
-            <div className="bg-tableease-darkgray border border-gray-700 rounded-lg p-6 mb-8">
-              <h2 className="text-xl font-semibold mb-4 text-white">Table Layout</h2>
-              
-              {tables.length === 0 ? (
-                <div className="text-center py-8 text-gray-400">
-                  No tables available for this restaurant or selected criteria.
+            <div className="grid md:grid-cols-3 gap-8">
+              <div className="md:col-span-2">
+                <div className="bg-tableease-darkgray backdrop-blur-sm bg-opacity-80 border border-gray-700 rounded-xl p-8 mb-8 shadow-xl">
+                  <h2 className="text-2xl font-bold mb-6 text-white inline-flex items-center">
+                    <svg className="w-6 h-6 mr-2 text-tableease-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                    </svg>
+                    Table Layout
+                  </h2>
+                  
+                  {tables.length === 0 ? (
+                    <div className="text-center py-12 bg-tableease-darkergray/50 rounded-xl border border-gray-700">
+                      <svg className="w-16 h-16 mx-auto text-gray-600 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                      </svg>
+                      <p className="text-gray-400 text-lg mb-2">No tables available</p>
+                      <p className="text-gray-500 text-sm">Try adjusting your date, time, or party size</p>
+                    </div>
+                  ) : (
+                    <div className="relative w-full mx-auto bg-tableease-darkergray border border-gray-600 rounded-xl overflow-hidden shadow-inner" style={{ height: `${canvasHeight}px`, width: `${canvasWidth}px` }}>
+                      {tables
+                        .filter(table => table.capacity >= reservationDetails.partySize) // Filter tables by party size
+                        .map(renderTable)
+                      }
+                      
+                      {/* Wall decorations with more elegant styling */}
+                      <div className="absolute top-0 left-0 w-full h-4 bg-gray-800 bg-opacity-70"></div>
+                      <div className="absolute bottom-0 left-0 w-full h-4 bg-gray-800 bg-opacity-70"></div>
+                      <div className="absolute top-0 left-0 h-full w-4 bg-gray-800 bg-opacity-70"></div>
+                      <div className="absolute top-0 right-0 h-full w-4 bg-gray-800 bg-opacity-70"></div>
+                      
+                      {/* Entrance with better visual indication */}
+                      <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-24 h-6">
+                        <div className="absolute top-0 left-0 w-full h-full bg-gray-600 border-t-2 border-gray-400"></div>
+                        <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 text-xs text-gray-400 font-medium bg-gray-800 px-3 py-1 rounded-full">
+                          Entrance
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                  
+                  {/* Message when tables are filtered out */}
+                  {tables.length > 0 && tables.filter(table => table.capacity >= reservationDetails.partySize).length === 0 && (
+                    <div className="text-center py-4 mt-6 bg-red-900/20 border border-red-500 text-red-400 rounded-lg">
+                      <p className="font-medium">No tables available for a party of {reservationDetails.partySize}.</p>
+                      <p className="text-sm">Please select a smaller party size.</p>
+                    </div>
+                  )}
                 </div>
-              ) : (
-                <div className="relative w-full max-w-3xl mx-auto bg-tableease-darkergray border border-gray-600 rounded-lg" style={{ height: `${canvasHeight}px`, width: `${canvasWidth}px` }}>
-                  {tables
-                    .filter(table => table.capacity >= reservationDetails.partySize) // Filter tables by party size
-                    .map(renderTable)
-                  }
-                  
-                  {/* Wall decorations */}
-                  <div className="absolute top-0 left-0 w-full h-4 bg-gray-800"></div>
-                  <div className="absolute bottom-0 left-0 w-full h-4 bg-gray-800"></div>
-                  <div className="absolute top-0 left-0 h-full w-4 bg-gray-800"></div>
-                  <div className="absolute top-0 right-0 h-full w-4 bg-gray-800"></div>
-                  
-                  {/* Entrance */}
-                  <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-20 h-2 bg-gray-500 border-t-2 border-gray-400">
-                    <div className="absolute -top-5 left-1/2 transform -translate-x-1/2 text-xs text-gray-400">
-                      Entrance
+              </div>
+              
+              {/* Selected table information in a separate column */}
+              <div className="md:col-span-1">
+                {selectedTable ? (
+                  <div className="sticky top-8 bg-tableease-darkgray backdrop-blur-sm bg-opacity-80 border border-gray-700 rounded-xl p-6 shadow-xl">
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="text-xl font-bold text-white flex items-center">
+                        <span className={`inline-block w-5 h-5 rounded-full mr-2 ${
+                          selectedTable.isAvailable 
+                            ? 'bg-green-500' 
+                            : isTableReservedAtTime(selectedTable.id, reservationDetails.time)
+                              ? 'bg-red-500'
+                              : 'bg-yellow-500'
+                        }`}></span>
+                        Table #{selectedTable.tableNumber}
+                      </h3>
+                      <button 
+                        onClick={() => setSelectedTable(null)}
+                        className="text-gray-400 hover:text-white"
+                      >
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                      </button>
+                    </div>
+                    
+                    <div className="bg-tableease-darkergray/50 rounded-lg p-4 mb-4">
+                      <div className="grid grid-cols-2 gap-3 mb-4">
+                        <div>
+                          <p className="text-gray-400 text-sm mb-1">Type</p>
+                          <p className="text-white font-medium">{selectedTable.tableType}</p>
+                        </div>
+                        <div>
+                          <p className="text-gray-400 text-sm mb-1">Capacity</p>
+                          <p className="text-white font-medium">{selectedTable.capacity} people</p>
+                        </div>
+                        <div>
+                          <p className="text-gray-400 text-sm mb-1">Location</p>
+                          <p className="text-white font-medium">{selectedTable.location}</p>
+                        </div>
+                        <div>
+                          <p className="text-gray-400 text-sm mb-1">Status</p>
+                          <p className="text-white font-medium">
+                            {selectedTable.isAvailable 
+                              ? 'Available' 
+                              : isTableReservedAtTime(selectedTable.id, reservationDetails.time)
+                                ? 'Reserved at selected time'
+                                : 'Reserved at other times'}
+                          </p>
+                        </div>
+                      </div>
+                      
+                      {selectedTable.tableDetails && (
+                        <div>
+                          <p className="text-gray-400 text-sm mb-1">Details</p>
+                          <p className="text-white">{selectedTable.tableDetails}</p>
+                        </div>
+                      )}
+                    </div>
+                    
+                    {/* Show reservation information if the table is reserved */}
+                    {!selectedTable.isAvailable && tableReservations[selectedTable.id] && (
+                      <div className="mb-4 bg-tableease-darkergray/50 rounded-lg p-4 border-l-4 border-yellow-500">
+                        <h4 className="text-white font-medium mb-3 flex items-center">
+                          <svg className="w-4 h-4 mr-2 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                          Reservation Times
+                        </h4>
+                        <ul className="space-y-2">
+                          {tableReservations[selectedTable.id].map((reservation, idx) => (
+                            <li key={idx} className="text-gray-300 bg-tableease-darkergray/70 px-3 py-2 rounded flex items-center">
+                              <svg className="w-4 h-4 mr-2 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                              </svg>
+                              <span>{reservation.startTime} - {reservation.endTime}</span>
+                            </li>
+                          ))}
+                        </ul>
+                        <p className="mt-3 text-sm text-gray-400">
+                          This table is available at other times. Please select a different time slot.
+                        </p>
+                      </div>
+                    )}
+                    
+                    {/* Only show reserve button if the table is not reserved at the selected time */}
+                    {!isTableReservedAtTime(selectedTable.id, reservationDetails.time) && (
+                      <button
+                        className="w-full py-3 px-4 bg-gradient-to-r from-tableease-primary to-tableease-secondary hover:from-tableease-secondary hover:to-tableease-primary text-white font-bold rounded-lg shadow transition-all duration-300 transform hover:-translate-y-1 flex items-center justify-center gap-2"
+                        onClick={handleReserveTable}
+                      >
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                        Reserve This Table
+                      </button>
+                    )}
+                  </div>
+                ) : (
+                  <div className="sticky top-8 bg-tableease-darkgray backdrop-blur-sm bg-opacity-80 border border-gray-700 rounded-xl p-6 shadow-xl text-center">
+                    <div className="py-8">
+                      <svg className="w-16 h-16 mx-auto text-gray-600 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                      </svg>
+                      <h3 className="text-xl font-bold text-white mb-2">Select a Table</h3>
+                      <p className="text-gray-400">Click on any table in the layout to view details and make a reservation.</p>
                     </div>
                   </div>
-                </div>
-              )}
-              
-              {/* Add message when tables are filtered out */}
-              {tables.length > 0 && tables.filter(table => table.capacity >= reservationDetails.partySize).length === 0 && (
-                <div className="text-center py-4 mt-4 text-red-400">
-                  No tables available for a party of {reservationDetails.partySize}. Please select a smaller party size.
-                </div>
-              )}
-              
-              {/* Selected table information */}
-              {selectedTable && (
-                <div className="mt-6 p-4 bg-tableease-primary/10 border border-tableease-primary rounded-lg">
-                  <h3 className="text-lg font-semibold mb-2 text-white">Selected Table: #{selectedTable.tableNumber}</h3>
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    <div>
-                      <p className="text-gray-300"><span className="font-medium text-white">Type:</span> {selectedTable.tableType}</p>
-                      <p className="text-gray-300"><span className="font-medium text-white">Capacity:</span> {selectedTable.capacity} people</p>
-                    </div>
-                    <div>
-                      <p className="text-gray-300"><span className="font-medium text-white">Location:</span> {selectedTable.location}</p>
-                      <p className="text-gray-300"><span className="font-medium text-white">Details:</span> {selectedTable.tableDetails || 'No additional details'}</p>
-                    </div>
-                  </div>
-                  
-                  <button
-                    className="mt-4 w-full py-2 px-4 bg-tableease-primary hover:bg-tableease-primary/90 text-white font-medium rounded-lg shadow transition-colors duration-200"
-                    onClick={handleReserveTable}
-                  >
-                    Reserve This Table
-                  </button>
-                </div>
-              )}
+                )}
+              </div>
             </div>
           )}
         </div>
