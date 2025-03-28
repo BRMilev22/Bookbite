@@ -55,6 +55,10 @@ public:
                            const std::string& startTime, const std::string& endTime, 
                            int partySize);
 
+    // Get all reservations for tables in a restaurant on a specific date
+    std::map<int, std::vector<std::pair<std::string, std::string>>> getTableReservationsForDate(
+        int restaurantId, const std::string& date);
+
     // Create a new restaurant
     int createRestaurant(const Restaurant& restaurant);
 

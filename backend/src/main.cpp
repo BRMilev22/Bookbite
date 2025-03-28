@@ -543,7 +543,15 @@ int main() {
                 // Handle contact information
                 auto user = userService.getUserById(reservation.userId);
                 if (user) {
-                    reservation.phoneNumber = user->phone;
+                    // First check if phoneNumber was provided in the request
+                    if (x.has("phoneNumber") && x["phoneNumber"].t() == crow::json::type::String) {
+                        reservation.phoneNumber = x["phoneNumber"].s();
+                        std::cout << "Using provided phone number: " << reservation.phoneNumber << std::endl;
+                    } else {
+                        // Default to user's stored phone number
+                        reservation.phoneNumber = user->phone;
+                        std::cout << "Using user's stored phone number: " << reservation.phoneNumber << std::endl;
+                    }
                 }
                 
                 // Add handling for nameOnCard field
@@ -1147,6 +1155,7 @@ int main() {
                 // Get required parameters
                 std::string date = req.url_params.get("date") ? req.url_params.get("date") : "";
                 std::string time = req.url_params.get("time") ? req.url_params.get("time") : "";
+                std::string endTime = req.url_params.get("endTime") ? req.url_params.get("endTime") : "";
                 
                 if (date.empty() || time.empty()) {
                     return crow::response(400, "Date and time parameters are required");
@@ -1154,7 +1163,7 @@ int main() {
                 
                 // Get tables with availability information
                 std::vector<RestaurantTable> tables = restaurantService.getRestaurantTablesWithAvailability(
-                    restaurantId, date, time, ""
+                    restaurantId, date, time, endTime
                 );
                 
                 // Convert to JSON
@@ -1191,6 +1200,52 @@ int main() {
                 }
                 
                 return crow::response(tablesJson);
+            } catch (const std::exception& e) {
+                return crow::response(500, std::string("Internal server error: ") + e.what());
+            }
+        });
+    
+    // GET /api/restaurants/:id/tables/reservations - Get all reservations for tables in a restaurant on a specific date
+    CROW_ROUTE(app, "/api/restaurants/<int>/tables/reservations")
+        .methods(crow::HTTPMethod::GET)
+        ([&db](const crow::request& req, int restaurantId) {
+            RestaurantService restaurantService(db);
+            
+            try {
+                // Check if restaurant exists
+                auto restaurantOpt = restaurantService.getRestaurantById(restaurantId);
+                if (!restaurantOpt.has_value()) {
+                    return crow::response(404, "Restaurant not found");
+                }
+                
+                // Get required parameters
+                std::string date = req.url_params.get("date") ? req.url_params.get("date") : "";
+                
+                if (date.empty()) {
+                    return crow::response(400, "Date parameter is required");
+                }
+                
+                // Get all table reservations for the specified date
+                auto tableReservations = restaurantService.getTableReservationsForDate(restaurantId, date);
+                
+                // Convert to JSON
+                crow::json::wvalue reservationsJson;
+                
+                for (const auto& [tableId, timeSlots] : tableReservations) {
+                    crow::json::wvalue timeSlotsJson = crow::json::wvalue::list();
+                    
+                    for (size_t i = 0; i < timeSlots.size(); i++) {
+                        crow::json::wvalue timeSlotJson;
+                        timeSlotJson["startTime"] = timeSlots[i].first;
+                        timeSlotJson["endTime"] = timeSlots[i].second;
+                        timeSlotsJson[i] = std::move(timeSlotJson);
+                    }
+                    
+                    // Convert table ID to string for use as JSON key
+                    reservationsJson[std::to_string(tableId)] = std::move(timeSlotsJson);
+                }
+                
+                return crow::response(reservationsJson);
             } catch (const std::exception& e) {
                 return crow::response(500, std::string("Internal server error: ") + e.what());
             }

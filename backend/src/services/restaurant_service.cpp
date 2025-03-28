@@ -502,4 +502,38 @@ bool RestaurantService::hasAvailableTables(int restaurantId, const std::string& 
     }
     
     return false;
+}
+
+std::map<int, std::vector<std::pair<std::string, std::string>>> RestaurantService::getTableReservationsForDate(
+    int restaurantId, const std::string& date) {
+    
+    std::map<int, std::vector<std::pair<std::string, std::string>>> tableReservations;
+    
+    try {
+        // Query for reserved tables during the specified date
+        std::ostringstream sql;
+        sql << "SELECT r.table_id, r.start_time, r.end_time "
+            << "FROM reservations r "
+            << "INNER JOIN restaurant_tables rt ON r.table_id = rt.table_id "
+            << "WHERE rt.restaurant_id = " << restaurantId
+            << " AND r.reservation_date = '" << date << "'"
+            << " AND r.status IN ('confirmed', 'pending')";
+        
+        auto result = db.query(sql.str());
+        
+        // Group reservations by table ID
+        while (result.next()) {
+            int tableId = result.get<int>("table_id");
+            std::string startTime = result.get<std::string>("start_time");
+            std::string endTime = result.get<std::string>("end_time");
+            
+            // Add reservation time slot to the table's list
+            tableReservations[tableId].push_back(std::make_pair(startTime, endTime));
+        }
+    } catch (const std::exception& e) {
+        std::cerr << "Error fetching table reservations for restaurant " << restaurantId 
+                  << " on date " << date << ": " << e.what() << std::endl;
+    }
+    
+    return tableReservations;
 } 
