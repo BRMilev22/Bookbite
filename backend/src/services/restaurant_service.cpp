@@ -536,4 +536,22 @@ std::map<int, std::vector<std::pair<std::string, std::string>>> RestaurantServic
     }
     
     return tableReservations;
+}
+
+std::optional<std::string> RestaurantService::getRestaurantImageById(int restaurantId) {
+    try {
+        std::ostringstream sql;
+        sql << "SELECT image_url FROM restaurants WHERE restaurant_id = " << restaurantId;
+        
+        auto result = db.query(sql.str());
+        
+        if (result.next()) {
+            std::string imageUrl = result.get<std::string>("image_url");
+            return imageUrl;
+        }
+    } catch (const std::exception& e) {
+        std::cerr << "Error in getRestaurantImageById: " << e.what() << std::endl;
+    }
+    
+    return std::nullopt;
 } 

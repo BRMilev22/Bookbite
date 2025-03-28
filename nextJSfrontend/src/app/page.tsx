@@ -6,6 +6,7 @@ import { StarIcon } from '@heroicons/react/24/solid';
 import { ArrowRightIcon } from '@heroicons/react/24/outline';
 import { useEffect, useState } from 'react';
 import { Restaurant, getRestaurants } from '@/lib/api';
+import RestaurantImage from '@/components/RestaurantImage';
 
 // Unsplash restaurant images - must match EXACTLY with the array in restaurants/[id]/page.tsx
 const restaurantImages = [
@@ -18,12 +19,11 @@ const restaurantImages = [
 
 // Cuisine types
 const cuisineTypes = [
-  { name: "Italian", image: "https://images.unsplash.com/photo-1595295333158-4742f28fbd85?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=600&q=80" },
-  { name: "Seafood", image: "https://images.unsplash.com/photo-1579617385447-e27d2ccfed18?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=600&q=80" },
-  { name: "Mexican", image: "https://images.unsplash.com/photo-1615870216519-2f9fa575fa36?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=600&q=80" },
-  { name: "Steakhouse", image: "https://images.unsplash.com/photo-1588168333986-5078d3ae3976?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=600&q=80" },
+  { name: "Italian", image: "https://images.unsplash.com/photo-1534649643822-e7431de08af6?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=600&q=80" },
+  { name: "Seafood", image: "https://images.unsplash.com/photo-1448043552756-e747b7a2b2b8?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=600&q=80" },
   { name: "Vegetarian", image: "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=600&q=80" },
-  { name: "Asian Fusion", image: "https://images.unsplash.com/photo-1563245372-f21724e3856d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=600&q=80" },
+  { name: "Asian Fusion", image: "https://images.unsplash.com/photo-1498654896293-37aacf113fd9?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=600&q=80" },
+  { name: "Steakhouse", image: "https://images.unsplash.com/photo-1594041680534-e8c8cdebd659?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=600&q=80" },
 ];
 
 // Rating component
@@ -133,22 +133,36 @@ const RestaurantCard = ({
 
 // Category card component
 const CategoryCard = ({ image, name }: { image: string; name: string }) => {
+  // Navigate to filtered restaurant results using Next.js router
+  const handleCategoryClick = () => {
+    // Use Next.js Router instead of window.location for better navigation
+    // But since we're in a client component and not in a React function component
+    // we'll use window.location until we can refactor this to use router hooks
+    window.location.href = `/restaurants?category=${encodeURIComponent(name)}`;
+  };
+
   return (
-    <div className="relative rounded-xl overflow-hidden group shadow-xl hover:shadow-2xl transition-all duration-300 border border-gray-700 transform hover:-translate-y-1 bg-tableease-darkgray backdrop-blur-sm bg-opacity-80">
-      <Image
-        src={image}
+    <div 
+      className="relative h-56 rounded-xl overflow-hidden group shadow-xl hover:shadow-2xl transition-all duration-300 border border-gray-700 transform hover:-translate-y-1 cursor-pointer"
+      onClick={handleCategoryClick}
+    >
+      {/* Use img element directly instead of background for better compatibility */}
+      <img 
+        src={image} 
         alt={name}
-        fill
-        style={{ objectFit: 'cover' }}
-        className="w-full h-56 object-cover transition-transform duration-500 group-hover:scale-110 brightness-75 hover:brightness-90"
+        className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+        style={{ filter: "brightness(0.8)" }}
         onError={(e) => {
           // If image fails to load, use fallback
           const target = e.target as HTMLImageElement;
           target.onerror = null; // Prevent infinite error loop
-          target.src = cuisineTypes[0].image; // Use first cuisine image as fallback
+          target.src = "https://images.unsplash.com/photo-1559925393-8be0ec4767c8?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=600&q=80"; // Generic food image fallback
         }}
       />
-      <div className="absolute inset-0 bg-gradient-to-t from-black to-transparent opacity-80"></div>
+      
+      {/* Dark overlay with reduced opacity */}
+      <div className="absolute inset-0 bg-gradient-to-t from-black to-transparent opacity-60"></div>
+      
       <div className="absolute bottom-0 left-0 p-4 w-full">
         <span className="bg-tableease-primary text-tableease-dark text-xs font-medium px-3 py-1 rounded-full mb-2 inline-block shadow-lg">
           Category
@@ -190,70 +204,82 @@ export default function Home() {
     <div className="bg-gradient-to-b from-tableease-dark to-gray-900 text-white">
       {/* Hero Section */}
       <section className="relative">
-        <div className="relative bg-black">
-          <Image
-            src="https://images.unsplash.com/photo-1555396273-367ea4eb4db5?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1920&q=80"
-            alt="Restaurant atmosphere"
-            fill
-            style={{ objectFit: 'cover' }}
+        <div className="relative h-[400px] md:h-[450px] overflow-hidden">
+          {/* Background image - direct img tag instead of Next.js Image for reliability */}
+          <div 
+            className="absolute inset-0 bg-cover bg-center"
+            style={{
+              backgroundImage: "url('https://images.unsplash.com/photo-1414235077428-338989a2e8c0?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1920&q=80')",
+              filter: "brightness(0.85)"
+            }}
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-tableease-dark to-transparent opacity-80"></div>
-          <div className="absolute inset-0 bg-gradient-to-r from-tableease-dark to-transparent opacity-40"></div>
-          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-center w-full max-w-4xl px-4">
-            <h1 className="text-4xl md:text-6xl font-bold mb-4 text-white drop-shadow-lg">
-              Find Your Perfect Table
-            </h1>
-            <p className="text-xl text-gray-200 mb-8 max-w-2xl mx-auto drop-shadow-md">
-              Discover the best dining experience with BookBite - instant reservations for your next memorable meal
-            </p>
-            
-            {/* Reservation Form */}
-            <div className="bg-tableease-darkgray backdrop-blur-sm bg-opacity-80 rounded-xl p-6 shadow-xl border border-gray-700">
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">Location</label>
-                  <select className="w-full p-3 bg-tableease-darkergray text-black border border-gray-600 rounded-lg focus:ring-tableease-primary focus:border-tableease-primary transition-all duration-200 hover:border-gray-500">
-                    <option>Select Restaurant</option>
-                    {restaurants && restaurants.length > 0 ? (
-                      restaurants.map(restaurant => (
-                        <option key={restaurant.id} value={restaurant.id}>{restaurant.name}</option>
-                      ))
-                    ) : (
-                      <option disabled>Loading restaurants...</option>
-                    )}
-                  </select>
+          
+          {/* Dark overlay with reduced opacity */}
+          <div className="absolute inset-0 bg-black opacity-30"></div>
+          
+          <div className="absolute inset-0 flex items-center justify-center px-4">
+            <div className="max-w-4xl text-center">
+              <h1 className="text-3xl md:text-5xl font-bold mb-3 text-white drop-shadow-lg">
+                Find Your Perfect Table
+              </h1>
+              <p className="text-base md:text-lg text-white mb-6 max-w-2xl mx-auto drop-shadow-md">
+                Discover the best dining experience with BookBite - instant reservations for your next memorable meal
+              </p>
+              
+              {/* Reservation Form */}
+              <div className="bg-tableease-darkgray backdrop-blur-sm bg-opacity-80 rounded-xl p-4 shadow-xl border border-gray-700">
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-1">Location</label>
+                    <select className="w-full p-2 bg-tableease-darkergray text-black border border-gray-600 rounded-lg focus:ring-tableease-primary focus:border-tableease-primary transition-all duration-200 hover:border-gray-500">
+                      <option>Select Restaurant</option>
+                      {restaurants && restaurants.length > 0 ? (
+                        restaurants.map(restaurant => (
+                          <option key={restaurant.id} value={restaurant.id}>{restaurant.name}</option>
+                        ))
+                      ) : (
+                        <option disabled>Loading restaurants...</option>
+                      )}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-1">Date</label>
+                    <input type="date" className="w-full p-2 bg-tableease-darkergray text-black border border-gray-600 rounded-lg focus:ring-tableease-primary focus:border-tableease-primary transition-all duration-200 hover:border-gray-500" placeholder="Pick Date" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-1">Time</label>
+                    <select className="w-full p-2 bg-tableease-darkergray text-black border border-gray-600 rounded-lg focus:ring-tableease-primary focus:border-tableease-primary transition-all duration-200 hover:border-gray-500">
+                      <option>Select Time</option>
+                      {Array.from({ length: 17 }, (_, i) => {
+                        const hour = i + 7; // Start from 7:00 AM
+                        const formattedHour = hour < 10 ? `0${hour}` : `${hour}`;
+                        return (
+                          <>
+                            <option key={`${formattedHour}:00`} value={`${formattedHour}:00`}>{`${hour > 12 ? hour - 12 : hour}:00 ${hour >= 12 ? 'PM' : 'AM'}`}</option>
+                            <option key={`${formattedHour}:30`} value={`${formattedHour}:30`}>{`${hour > 12 ? hour - 12 : hour}:30 ${hour >= 12 ? 'PM' : 'AM'}`}</option>
+                          </>
+                        );
+                      })}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-1">Guests</label>
+                    <select className="w-full p-2 bg-tableease-darkergray text-black border border-gray-600 rounded-lg focus:ring-tableease-primary focus:border-tableease-primary transition-all duration-200 hover:border-gray-500">
+                      <option>Number of Guests</option>
+                      {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(num => (
+                        <option key={num} value={num}>{num} {num === 1 ? 'Guest' : 'Guests'}</option>
+                      ))}
+                    </select>
+                  </div>
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">Date</label>
-                  <input type="date" className="w-full p-3 bg-tableease-darkergray text-black border border-gray-600 rounded-lg focus:ring-tableease-primary focus:border-tableease-primary transition-all duration-200 hover:border-gray-500" placeholder="Pick Date" />
+                <div className="mt-4 flex justify-center md:justify-end">
+                  <Button 
+                    className="bg-tableease-primary hover:bg-tableease-secondary text-tableease-dark font-medium px-6 py-2 rounded-full flex items-center transition-all duration-300"
+                  >
+                    <span className="mr-2">Find a Table</span>
+                    <ArrowRightIcon className="h-4 w-4" />
+                  </Button>
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">Time</label>
-                  <select className="w-full p-3 bg-tableease-darkergray text-black border border-gray-600 rounded-lg focus:ring-tableease-primary focus:border-tableease-primary transition-all duration-200 hover:border-gray-500">
-                    <option>Select Time</option>
-                    {Array.from({ length: 24 }, (_, i) => {
-                      const hour = i < 10 ? `0${i}` : `${i}`;
-                      return <option key={hour} value={`${hour}:00`}>{`${hour}:00`}</option>;
-                    })}
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">Guests</label>
-                  <select className="w-full p-3 bg-tableease-darkergray text-black border border-gray-600 rounded-lg focus:ring-tableease-primary focus:border-tableease-primary transition-all duration-200 hover:border-gray-500">
-                    <option>Number of Guests</option>
-                    {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(num => (
-                      <option key={num} value={num}>{num} {num === 1 ? 'Guest' : 'Guests'}</option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-              <div className="mt-6 flex justify-end">
-                <Button 
-                  className="bg-tableease-primary hover:bg-tableease-secondary text-tableease-dark font-medium px-8 py-3 rounded-full flex items-center transition-all duration-300"
-                >
-                  <span className="mr-2">Find a Table</span>
-                  <ArrowRightIcon className="h-5 w-5" />
-                </Button>
               </div>
             </div>
           </div>
@@ -273,8 +299,8 @@ export default function Home() {
             </h2>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {cuisineTypes.slice(0, 4).map((category, index) => (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
+            {cuisineTypes.map((category, index) => (
               <CategoryCard key={index} {...category} />
             ))}
           </div>
@@ -307,17 +333,47 @@ export default function Home() {
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-6">
-              {restaurants.map((restaurant) => (
-                <RestaurantCard 
-                  key={restaurant.id} 
-                  id={restaurant.id}
-                  name={restaurant.name}
-                  image={restaurant.image}
-                  rating={restaurant.rating}
-                  priceRange={restaurant.priceRange}
-                  location={restaurant.location}
-                  category={restaurant.category}
-                />
+              {/* Filter to ensure unique restaurants by ID */}
+              {restaurants
+                .filter((restaurant, index, self) => 
+                  index === self.findIndex(r => r.id === restaurant.id)
+                )
+                .slice(0, 5) // Limit to 5 restaurants for the grid
+                .map((restaurant) => (
+                <div key={restaurant.id} className="rounded-xl overflow-hidden bg-tableease-darkgray border border-gray-700 shadow-lg relative">
+                  <div className="h-48 md:h-64 relative">
+                    <RestaurantImage
+                      restaurantId={restaurant.id}
+                      initialImageUrl={restaurant.image}
+                      width={600}
+                      height={400}
+                      className="w-full h-full object-cover"
+                    />
+                    {restaurant.isSpecial && (
+                      <div className="absolute top-3 left-3 bg-tableease-primary text-xs text-white font-semibold px-2 py-1 rounded">
+                        Special Offer
+                      </div>
+                    )}
+                    <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/80 to-transparent">
+                      <h3 className="text-xl md:text-2xl font-bold text-white">{restaurant.name}</h3>
+                    </div>
+                  </div>
+                  <div className="p-4">
+                    <div className="mb-3 text-gray-300">
+                      <span>{restaurant.category}</span>
+                      <span className="mx-2">•</span>
+                      <span>{restaurant.priceRange}</span>
+                    </div>
+                    
+                    <Link 
+                      href={`/restaurants/${restaurant.id}`}
+                      className="bg-tableease-primary hover:bg-tableease-secondary text-tableease-dark font-medium px-4 py-2 rounded-md text-sm inline-flex items-center transition-all duration-300"
+                    >
+                      View Details
+                      <ArrowRightIcon className="h-4 w-4 ml-1" />
+                    </Link>
+                  </div>
+                </div>
               ))}
             </div>
           )}

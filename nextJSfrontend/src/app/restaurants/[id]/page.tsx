@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
+import RestaurantImage from '@/components/RestaurantImage';
 
 // Type definitions
 interface RestaurantFeature {
@@ -242,7 +243,7 @@ export default function RestaurantDetailPage() {
   
   // Helper function to check if a table is reserved at the selected time
   const isTableReservedAtTime = (tableId: number, selectedTime: string) => {
-    if (!tableReservations[tableId]) return false;
+    if (!tableReservations || !tableReservations[tableId]) return false;
     
     // Convert the selected time to a comparable format (in minutes since midnight)
     const [selectedHours, selectedMinutes] = selectedTime.split(':').map(Number);
@@ -364,21 +365,13 @@ export default function RestaurantDetailPage() {
                     </div>
                   </div>
                   
-                  <Image
-                    src={restaurant.imageUrl && !restaurant.imageUrl.includes('placeholder.com') 
-                      ? restaurant.imageUrl 
-                      : fallbackImage}
-                    alt={restaurant.name}
-                    fill
-                    style={{ objectFit: 'cover' }}
-                    className="brightness-75 hover:brightness-90 transition-all duration-300"
-                    onError={(e) => {
-                      // If image fails to load, use fallback
-                      const target = e.target as HTMLImageElement;
-                      target.onerror = null; // Prevent infinite error loop
-                      target.src = fallbackImage; // Use main fallback image for consistency
-                    }}
-                    priority // Add priority to ensure image loads first
+                  <RestaurantImage
+                    restaurantId={restaurant.id}
+                    initialImageUrl={restaurant.imageUrl}
+                    width={1920}
+                    height={1080}
+                    className="w-full h-full object-cover brightness-75"
+                    priority
                   />
                   <div className="absolute top-4 right-4">
                     <div className="flex items-center bg-tableease-primary text-white px-3 py-1 rounded-full shadow-lg">
@@ -682,7 +675,7 @@ export default function RestaurantDetailPage() {
                     </div>
                     
                     {/* Show reservation information if the table is reserved */}
-                    {!selectedTable.isAvailable && tableReservations[selectedTable.id] && (
+                    {!selectedTable.isAvailable && tableReservations && tableReservations[selectedTable.id] && (
                       <div className="mb-4 bg-tableease-darkergray/50 rounded-lg p-4 border-l-4 border-yellow-500">
                         <h4 className="text-white font-medium mb-3 flex items-center">
                           <svg className="w-4 h-4 mr-2 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">

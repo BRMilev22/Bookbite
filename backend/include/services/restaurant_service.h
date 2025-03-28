@@ -59,6 +59,9 @@ public:
     std::map<int, std::vector<std::pair<std::string, std::string>>> getTableReservationsForDate(
         int restaurantId, const std::string& date);
 
+    // Get restaurant image by ID
+    std::optional<std::string> getRestaurantImageById(int restaurantId);
+
     // Create a new restaurant
     int createRestaurant(const Restaurant& restaurant);
 

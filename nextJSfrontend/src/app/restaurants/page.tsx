@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import Image from 'next/image';
+import RestaurantImage from '@/components/RestaurantImage';
 
 // Restaurant type definition
 interface RestaurantFeature {
@@ -54,6 +54,7 @@ export default function RestaurantsPage() {
   const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [initialLoadDone, setInitialLoadDone] = useState(false);
   
   // Filter state
   const [filters, setFilters] = useState<FilterOptions>({
@@ -68,8 +69,56 @@ export default function RestaurantsPage() {
     },
   });
 
-  // Fetch restaurants based on filters
+  // Extract query parameters from URL when component mounts
   useEffect(() => {
+    // Get the URL search params
+    const queryParams = new URLSearchParams(window.location.search);
+    let filtersChanged = false;
+    
+    // Extract category from URL if present
+    const categoryParam = queryParams.get('category');
+    if (categoryParam) {
+      setFilters(prev => {
+        filtersChanged = true;
+        return {
+          ...prev,
+          category: categoryParam
+        };
+      });
+    }
+    
+    // Extract other potential params
+    const locationParam = queryParams.get('location');
+    if (locationParam) {
+      setFilters(prev => {
+        filtersChanged = true;
+        return {
+          ...prev,
+          location: locationParam
+        };
+      });
+    }
+    
+    const ratingParam = queryParams.get('minRating');
+    if (ratingParam && !isNaN(parseFloat(ratingParam))) {
+      setFilters(prev => {
+        filtersChanged = true;
+        return {
+          ...prev,
+          rating: parseFloat(ratingParam)
+        };
+      });
+    }
+
+    // Mark initial load as done, even if no filters were changed
+    setInitialLoadDone(true);
+  }, []);
+
+  // Fetch restaurants based on filters - only trigger after initialLoadDone
+  useEffect(() => {
+    // Skip the first render if we need to load filters from URL
+    if (!initialLoadDone) return;
+
     const fetchRestaurants = async () => {
       setLoading(true);
       try {
@@ -119,7 +168,7 @@ export default function RestaurantsPage() {
     };
 
     fetchRestaurants();
-  }, [filters]);
+  }, [filters, initialLoadDone]);
 
   // Handle filter changes
   const handleFilterChange = (field: string, value: string | number) => {
@@ -280,51 +329,33 @@ export default function RestaurantsPage() {
               </div>
             ) : (
               restaurants.map((restaurant) => (
-                <div 
-                  key={restaurant.id} 
-                  className="bg-tableease-darkgray backdrop-blur-sm bg-opacity-80 border border-gray-700 rounded-xl overflow-hidden cursor-pointer hover:shadow-xl transition-all duration-300 hover:transform hover:scale-[1.02]"
+                <div
+                  key={restaurant.id}
                   onClick={() => handleRestaurantClick(restaurant.id)}
+                  className="bg-tableease-darkgray border border-gray-700 rounded-xl overflow-hidden shadow-lg hover:shadow-tableease-primary hover:shadow-md cursor-pointer transform transition duration-300 hover:-translate-y-1"
                 >
-                  <div className="relative h-56 w-full bg-tableease-darkergray">
-                    {/* Show a loading placeholder */}
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <div className="animate-pulse">
-                        <svg className="h-16 w-16 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                        </svg>
-                      </div>
-                    </div>
-                    
-                    <Image
-                      src={restaurant.imageUrl}
-                      alt={restaurant.name}
-                      fill
-                      style={{ objectFit: 'cover' }}
-                      className="brightness-75 hover:brightness-90 transition-all duration-300"
-                      onError={(e) => {
-                        // If image fails to load, use fallback
-                        const target = e.target as HTMLImageElement;
-                        target.onerror = null; // Prevent infinite error loop
-                        target.src = restaurantImages[0]; // Use first image as fallback
-                      }}
+                  <div className="relative h-48 overflow-hidden">
+                    <RestaurantImage
+                      restaurantId={restaurant.id}
+                      initialImageUrl={restaurant.imageUrl}
+                      width={600}
+                      height={400}
+                      className="w-full h-full object-cover"
                     />
-                    <div className="absolute top-4 right-4">
-                      <div className="flex items-center bg-tableease-primary text-white px-3 py-1 rounded-full shadow-lg">
-                        <span className="font-bold mr-1">{restaurant.rating}</span>
-                        <span>{restaurant.ratingLabel}</span>
+                    {restaurant.isSpecial && (
+                      <div className="absolute top-3 left-3 bg-tableease-primary text-black text-xs font-bold px-2 py-1 rounded">
+                        Special Offer
                       </div>
-                    </div>
-                    <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/80 to-transparent">
-                      <h3 className="text-2xl font-bold text-white mb-1 drop-shadow-md">{restaurant.name}</h3>
-                      <div className="flex items-center text-gray-200">
-                        <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                          <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
-                        </svg>
-                        <span>{restaurant.location} • {restaurant.distance}</span>
-                      </div>
-                    </div>
+                    )}
                   </div>
                   <div className="p-4">
+                    <h3 className="text-xl font-bold text-tableease-primary mb-2">{restaurant.name}</h3>
+                    <div className="flex items-center text-gray-400 mb-2">
+                      <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
+                      </svg>
+                      <span>{restaurant.location} • {restaurant.distance}</span>
+                    </div>
                     <div className="flex items-center text-gray-400 mb-2">
                       <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
                         <path fillRule="evenodd" d="M18 5v8a2 2 0 01-2 2h-5l-5 4v-4H4a2 2 0 01-2-2V5a2 2 0 012-2h12a2 2 0 012 2zM7 8H5v2h2V8zm2 0h2v2H9V8zm6 0h-2v2h2V8z" clipRule="evenodd" />

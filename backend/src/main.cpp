@@ -201,6 +201,28 @@ int main() {
             }
         });
     
+    // Restaurant image by ID route
+    CROW_ROUTE(app, "/api/restaurants/<int>/image")
+        .methods(crow::HTTPMethod::GET)
+        ([&db](const crow::request& req, int restaurantId) {
+            RestaurantService restaurantService(db);
+            
+            try {
+                auto imageUrlOpt = restaurantService.getRestaurantImageById(restaurantId);
+                
+                if (!imageUrlOpt.has_value()) {
+                    return crow::response(404, "Restaurant image not found");
+                }
+                
+                crow::json::wvalue responseJson;
+                responseJson["imageUrl"] = imageUrlOpt.value();
+                
+                return crow::response(responseJson);
+            } catch (const std::exception& e) {
+                return crow::response(500, std::string("Internal server error: ") + e.what());
+            }
+        });
+    
     // Tables route - updated to include restaurant information
     CROW_ROUTE(app, "/api/tables")
         .methods("GET"_method)
