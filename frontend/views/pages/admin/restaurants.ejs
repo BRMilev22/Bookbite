@@ -55,11 +55,11 @@
                 <p class="content-subtitle">Monitor and manage restaurant listings on your platform</p>
             </div>
             <div class="header-actions">
-                <a href="/admin/restaurants/add" class="modern-btn primary">
+                <button class="modern-btn primary" onclick="showAddRestaurantModal()">
                     <i class="fas fa-plus"></i>
                     Add Restaurant
-                </a>
-                <button class="modern-btn secondary">
+                </button>
+                <button class="modern-btn secondary" onclick="exportRestaurants()">
                     <i class="fas fa-download"></i>
                     Export
                 </button>
@@ -179,7 +179,7 @@
     </main>
 </div>
 
-<!-- Restaurant Details Modal -->
+<!-- Restaurant Details/Add/Edit Modal -->
 <div class="modal fade" id="restaurantDetailsModal" tabindex="-1" aria-labelledby="restaurantDetailsModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-xl">
         <div class="modal-content">
@@ -194,7 +194,7 @@
                     <div class="spinner-border text-primary" role="status">
                         <span class="visually-hidden">Loading...</span>
                     </div>
-                    <p class="mt-2">Loading restaurant details...</p>
+                    <p class="mt-2">Loading...</p>
                 </div>
             </div>
             <div class="modal-footer">

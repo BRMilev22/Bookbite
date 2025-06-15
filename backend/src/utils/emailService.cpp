@@ -75,6 +75,73 @@ bool EmailService::sendReservationConfirmed(
     return sendEmail(toEmail, subject, htmlBody);
 }
 
+bool EmailService::sendEmailVerification(
+    const std::string& toEmail,
+    const std::string& username,
+    const std::string& verificationToken
+) {
+    std::string verificationUrl = "http://localhost:3000/verify-email?token=" + verificationToken;
+    
+    std::string subject = "Verify Your BookBite Account";
+    
+    std::string htmlBody = R"(
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verify Your BookBite Account</title>
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
+        .content { background: #f9f9f9; padding: 30px; border-radius: 0 0 10px 10px; }
+        .button { display: inline-block; background: #667eea; color: white; padding: 15px 30px; text-decoration: none; border-radius: 5px; margin: 20px 0; }
+        .footer { text-align: center; margin-top: 20px; color: #666; font-size: 14px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🍽️ Welcome to BookBite!</h1>
+        </div>
+        <div class="content">
+            <h2>Hello )" + username + R"(,</h2>
+            <p>Thank you for signing up for BookBite! To complete your registration and start making restaurant reservations, please verify your email address.</p>
+            
+            <p>Click the button below to verify your email:</p>
+            
+            <a href=")" + verificationUrl + R"(" class="button">Verify Email Address</a>
+            
+            <p>Or copy and paste this link into your browser:</p>
+            <p style="word-break: break-all; background: #eee; padding: 10px; border-radius: 5px;">)" + verificationUrl + R"(</p>
+            
+            <p><strong>This verification link will expire in 24 hours.</strong></p>
+            
+            <p>If you didn't create an account with BookBite, you can safely ignore this email.</p>
+            
+            <p>Welcome to the BookBite community!</p>
+            <p>The BookBite Team</p>
+        </div>
+        <div class="footer">
+            <p>(c) 2025 BookBite. All rights reserved.</p>
+        </div>
+    </div>
+</body>
+</html>
+)";
+
+    std::string textBody = "Hello " + username + ",\n\n"
+        "Thank you for signing up for BookBite! To complete your registration, please verify your email address by visiting:\n\n"
+        + verificationUrl + "\n\n"
+        "This verification link will expire in 24 hours.\n\n"
+        "If you didn't create an account with BookBite, you can safely ignore this email.\n\n"
+        "Welcome to the BookBite community!\n"
+        "The BookBite Team";
+
+    return sendEmail(toEmail, subject, htmlBody, textBody);
+}
+
 bool EmailService::sendEmail(
     const std::string& toEmail,
     const std::string& subject,

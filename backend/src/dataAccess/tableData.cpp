@@ -96,7 +96,7 @@ std::optional<Table> TableData::getTableById(int id) {
     return std::nullopt;
 }
 
-bool TableData::addTable(const Table& table) {
+int TableData::addTable(const Table& table) {
     try {
         nanodbc::connection conn = dbConnection.getConnection();
         nanodbc::statement stmt(conn);
@@ -111,6 +111,16 @@ bool TableData::addTable(const Table& table) {
         stmt.bind(2, &isAvailable);
         
         nanodbc::execute(stmt);
+        
+        // Get the last inserted ID
+        nanodbc::statement idStmt(conn);
+        nanodbc::prepare(idStmt, "SELECT LAST_INSERT_ID()");
+        nanodbc::result idResult = nanodbc::execute(idStmt);
+        
+        int tableId = 0;
+        if (idResult.next()) {
+            tableId = idResult.get<int>(0);
+        }
         
         // Update the table_count in the restaurants table
         nanodbc::statement countStmt(conn);
@@ -127,10 +137,10 @@ bool TableData::addTable(const Table& table) {
             nanodbc::execute(updateStmt);
         }
         
-        return true;
+        return tableId;
     } catch (const nanodbc::database_error& e) {
         std::cerr << "Database error in addTable: " << e.what() << std::endl;
-        return false;
+        return 0;
     }
 }
 

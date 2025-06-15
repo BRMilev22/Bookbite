@@ -9,6 +9,7 @@
 #include "dataAccess/userData.h"
 #include "dataAccess/restaurantData.h"
 #include "dataAccess/reservationData.h"
+#include "utils/emailService.h"
 
 class ApiController {
 public:
@@ -23,6 +24,7 @@ private:
     UserData userData;
     RestaurantData restaurantData;
     ReservationData reservationData;
+    EmailService emailService;
 
     void setupAuthRoutes(crow::App<>& app);
     void setupRestaurantRoutes(crow::App<>& app);

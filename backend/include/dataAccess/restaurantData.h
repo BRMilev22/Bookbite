@@ -11,7 +11,7 @@ public:
     RestaurantData();
     std::vector<Restaurant> getAllRestaurants();
     std::optional<Restaurant> getRestaurantById(int id);
-    bool addRestaurant(const Restaurant& restaurant);
+    int addRestaurant(const Restaurant& restaurant);
     bool updateRestaurant(const Restaurant& restaurant);
     bool deleteRestaurant(int id);
 

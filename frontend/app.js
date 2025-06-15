@@ -282,7 +282,8 @@ app.get('/register', (req, res) => {
   }
   res.render('pages/register', {
     title: 'Register - BookBite',
-    isAuthenticated: false
+    isAuthenticated: false,
+    pageScripts: ['/js/register.js']
   });
 });
 
@@ -294,6 +295,15 @@ app.get('/login', (req, res) => {
   res.render('pages/login', {
     title: 'Login - BookBite',
     isAuthenticated: false
+  });
+});
+
+// Email verification page
+app.get('/verify-email', (req, res) => {
+  res.render('pages/verify-email', {
+    title: 'Verify Email - BookBite',
+    isAuthenticated: false,
+    pageScripts: ['/js/verify-email.js']
   });
 });
 
@@ -332,7 +342,7 @@ app.get('/confirm-reservation', async (req, res) => {
 // Register handler
 app.post('/register', async (req, res) => {
   try {
-    const { username, email, password, confirmPassword } = req.body;
+    const { firstName, lastName, username, email, password, confirmPassword } = req.body;
     
     if (password !== confirmPassword) {
       req.session.error = 'Passwords do not match';
@@ -340,6 +350,8 @@ app.post('/register', async (req, res) => {
     }
     
     const response = await apiClient.post('/auth/register', {
+      firstName,
+      lastName,
       username,
       email,
       password
@@ -762,13 +774,20 @@ app.get('/admin', isAdmin, async (req, res) => {
     ]);
     
     console.log('✅ API calls successful');
-    console.log('📊 Restaurants count:', restaurantsRes.data.length);
-    console.log('👥 Users count:', usersRes.data.length);
-    console.log('📅 Reservations count:', reservationsRes.data.length);
     
-    const restaurants = restaurantsRes.data;
-    const users = usersRes.data;
-    const reservations = reservationsRes.data;
+    // Debug: Log actual response structures
+    console.log('🔍 Users response structure:', JSON.stringify(usersRes.data, null, 2));
+    console.log('🔍 Users response type:', typeof usersRes.data);
+    console.log('🔍 Users response isArray:', Array.isArray(usersRes.data));
+    
+    // Handle different response formats - some APIs return direct arrays, others return {success: true, data: []}
+    const restaurants = Array.isArray(restaurantsRes.data) ? restaurantsRes.data : restaurantsRes.data.data || [];
+    const users = Array.isArray(usersRes.data) ? usersRes.data : usersRes.data.data || [];
+    const reservations = Array.isArray(reservationsRes.data) ? reservationsRes.data : reservationsRes.data.data || [];
+    
+    console.log('📊 Restaurants count:', restaurants.length);
+    console.log('👥 Users count:', users.length);
+    console.log('📅 Reservations count:', reservations.length);
     
     // Calculate stats
     const totalRestaurants = restaurants.length;
@@ -863,8 +882,9 @@ app.get('/admin/users', isAdmin, async (req, res) => {
       authenticatedClient.get('/admin/roles')
     ]);
     
-    const users = usersRes.data;
-    const roles = rolesRes.data;
+    // Handle different response formats - some APIs return direct arrays, others return {success: true, data: []}
+    const users = Array.isArray(usersRes.data) ? usersRes.data : usersRes.data.data || [];
+    const roles = Array.isArray(rolesRes.data) ? rolesRes.data : rolesRes.data.data || [];
     
     res.locals.layout = 'layouts/admin';
     res.render('pages/admin/users', {

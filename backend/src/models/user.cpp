@@ -1,15 +1,15 @@
 #include "models/user.h"
 #include <algorithm>
 
-User::User() : id(0), roleId(1), active(true) {}
+User::User() : id(0), roleId(1), active(true), emailVerified(false) {}
 
 User::User(int id, const std::string& username, const std::string& email, const std::string& passwordHash)
-    : id(id), username(username), email(email), passwordHash(passwordHash), roleId(1), active(true) {}
+    : id(id), username(username), email(email), passwordHash(passwordHash), roleId(1), active(true), emailVerified(false) {}
 
 User::User(int id, const std::string& username, const std::string& email, const std::string& passwordHash, 
            int roleId, const std::string& roleName, const std::vector<std::string>& permissions)
     : id(id), username(username), email(email), passwordHash(passwordHash), 
-      roleId(roleId), roleName(roleName), permissions(permissions), active(true) {}
+      roleId(roleId), roleName(roleName), permissions(permissions), active(true), emailVerified(false) {}
 
 int User::getId() const {
     return id;
@@ -53,6 +53,18 @@ std::string User::getPhoneNumber() const {
 
 bool User::isActive() const {
     return active;
+}
+
+bool User::isEmailVerified() const {
+    return emailVerified;
+}
+
+std::string User::getEmailVerificationToken() const {
+    return emailVerificationToken;
+}
+
+std::string User::getEmailVerificationExpires() const {
+    return emailVerificationExpires;
 }
 
 std::string User::getCreatedAt() const {
@@ -101,6 +113,18 @@ void User::setPhoneNumber(const std::string& phoneNumber) {
 
 void User::setActive(bool active) {
     this->active = active;
+}
+
+void User::setEmailVerified(bool verified) {
+    this->emailVerified = verified;
+}
+
+void User::setEmailVerificationToken(const std::string& token) {
+    this->emailVerificationToken = token;
+}
+
+void User::setEmailVerificationExpires(const std::string& expires) {
+    this->emailVerificationExpires = expires;
 }
 
 void User::setCreatedAt(const std::string& createdAt) {

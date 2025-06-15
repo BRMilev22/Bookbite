@@ -1,0 +1,279 @@
+<!-- Edit Reservation #<%= reservation.id %> -->
+<div class="admin-header">
+    <div class="d-flex justify-content-between align-items-center">
+        <div>
+            <h2 class="admin-title">Edit Reservation #<%= reservation.id %></h2>
+            <p class="admin-subtitle">Modify reservation details for <%= reservation.customerName || 'Test User' %></p>
+        </div>
+        <div>
+            <a href="/admin" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="admin-content">
+    <div class="row">
+        <!-- Main Edit Form -->
+        <div class="col-lg-8">
+            <form action="/admin/reservations/<%= reservation.id %>" method="POST" id="editReservationForm">
+                <!-- Reservation Details Card -->
+                <div class="admin-card">
+                    <div class="admin-card-header">
+                        <h5 class="card-title">
+                            <i class="fas fa-edit me-2 text-primary"></i>
+                            Reservation Details
+                        </h5>
+                    </div>
+                    <div class="admin-card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="date" class="form-label">Date</label>
+                                    <input type="date" class="form-control" id="date" name="date" 
+                                           value="<%= reservation.date %>" required>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <label for="startTime" class="form-label">Start Time</label>
+                                    <input type="time" class="form-control" id="startTime" name="startTime" 
+                                           value="<%= reservation.startTime %>" required>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <label for="endTime" class="form-label">End Time</label>
+                                    <input type="time" class="form-control" id="endTime" name="endTime" 
+                                           value="<%= reservation.endTime %>" required>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="tableId" class="form-label">Table</label>
+                                    <select class="form-control" id="tableId" name="tableId" required>
+                                        <% if (tables && tables.length > 0) { %>
+                                            <% tables.forEach(table => { %>
+                                                <option value="<%= table.id %>" 
+                                                        <%= table.id == reservation.tableId ? 'selected' : '' %>>
+                                                    Table <%= table.id %> (Seats <%= table.seatCount %>)
+                                                </option>
+                                            <% }); %>
+                                        <% } else { %>
+                                            <option value="<%= reservation.tableId %>" selected>
+                                                Table <%= reservation.tableId %>
+                                            </option>
+                                        <% } %>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="guestCount" class="form-label">Number of Guests</label>
+                                    <select class="form-control" id="guestCount" name="guestCount" required>
+                                        <% for(let i = 1; i <= 12; i++) { %>
+                                            <option value="<%= i %>" <%= i == reservation.guestCount ? 'selected' : '' %>>
+                                                <%= i %> Guest<%= i > 1 ? 's' : '' %>
+                                            </option>
+                                        <% } %>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="status" class="form-label">Status</label>
+                                    <select class="form-control" id="status" name="status" required>
+                                        <option value="pending" <%= reservation.status === 'pending' ? 'selected' : '' %>>Pending</option>
+                                        <option value="confirmed" <%= reservation.status === 'confirmed' ? 'selected' : '' %>>Confirmed</option>
+                                        <option value="cancelled" <%= reservation.status === 'cancelled' ? 'selected' : '' %>>Cancelled</option>
+                                        <option value="completed" <%= reservation.status === 'completed' ? 'selected' : '' %>>Completed</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Customer Information Card -->
+                <div class="admin-card">
+                    <div class="admin-card-header">
+                        <h5 class="card-title">
+                            <i class="fas fa-user me-2 text-success"></i>
+                            Customer Information
+                        </h5>
+                    </div>
+                    <div class="admin-card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="email" class="form-label">Email Address</label>
+                                    <input type="email" class="form-control" id="email" name="email" 
+                                           value="<%= reservation.email || '' %>" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="phoneNumber" class="form-label">Phone Number</label>
+                                    <input type="tel" class="form-control" id="phoneNumber" name="phoneNumber" 
+                                           value="<%= reservation.phoneNumber || '' %>">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-12">
+                                <div class="form-group">
+                                    <label for="specialRequests" class="form-label">Special Requests</label>
+                                    <textarea class="form-control" id="specialRequests" name="specialRequests" 
+                                              rows="3" placeholder="Any special dietary requirements or requests..."><%= reservation.specialRequests || '' %></textarea>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="d-flex justify-content-between">
+                    <a href="/admin" class="btn btn-secondary">
+                        <i class="fas fa-times me-2"></i>Cancel
+                    </a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save me-2"></i>Update Reservation
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Reservation Summary Sidebar -->
+        <div class="col-lg-4">
+            <div class="admin-card">
+                <div class="admin-card-header">
+                    <h5 class="card-title">
+                        <i class="fas fa-info-circle me-2 text-info"></i>
+                        Reservation Summary
+                    </h5>
+                </div>
+                <div class="admin-card-body">
+                    <div class="summary-item">
+                        <strong>Reservation ID:</strong>
+                        <span class="text-primary">#<%= reservation.id %></span>
+                    </div>
+                    
+                    <div class="summary-item">
+                        <strong>Current Status:</strong>
+                        <span class="badge status-badge-<%= reservation.status %>">
+                            <%= reservation.status.toUpperCase() %>
+                        </span>
+                    </div>
+
+                    <div class="summary-item">
+                        <strong>Current Date:</strong>
+                        <span><%= new Date(reservation.date).toLocaleDateString() %></span>
+                    </div>
+
+                    <div class="summary-item">
+                        <strong>Current Time:</strong>
+                        <span><%= reservation.startTime %> - <%= reservation.endTime %></span>
+                    </div>
+
+                    <div class="summary-item">
+                        <strong>Current Table:</strong>
+                        <span>Table <%= reservation.tableId %></span>
+                    </div>
+
+                    <div class="summary-item">
+                        <strong>Guests:</strong>
+                        <span><%= reservation.guestCount %></span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="admin-card">
+                <div class="admin-card-header">
+                    <h5 class="card-title">
+                        <i class="fas fa-credit-card me-2 text-warning"></i>
+                        Payment Information
+                    </h5>
+                </div>
+                <div class="admin-card-body">
+                    <div class="summary-item">
+                        <strong>Total Amount:</strong>
+                        <span class="text-success">$<%= (reservation.totalAmount || 0).toFixed(2) %></span>
+                    </div>
+                    
+                    <div class="summary-item">
+                        <strong>Payment Status:</strong>
+                        <span class="badge payment-status-<%= reservation.paymentStatus %>">
+                            <%= (reservation.paymentStatus || 'pending').toUpperCase() %>
+                        </span>
+                    </div>
+
+                    <div class="summary-item">
+                        <strong>Payment Method:</strong>
+                        <span><%= reservation.paymentMethod || 'cash' %></span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="admin-card">
+                <div class="admin-card-header">
+                    <h5 class="card-title">
+                        <i class="fas fa-utensils me-2 text-success"></i>
+                        Restaurant Information
+                    </h5>
+                </div>
+                <div class="admin-card-body">
+                    <div class="summary-item">
+                        <strong>Restaurant:</strong>
+                        <span><%= restaurant.name %></span>
+                    </div>
+                    
+                    <div class="summary-item">
+                        <strong>Restaurant ID:</strong>
+                        <span><%= restaurant.id %></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.summary-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px solid #eee;
+}
+
+.summary-item:last-child {
+    border-bottom: none;
+}
+
+.status-badge-pending { background-color: #ffc107; color: #000; }
+.status-badge-confirmed { background-color: #28a745; color: #fff; }
+.status-badge-cancelled { background-color: #dc3545; color: #fff; }
+.status-badge-completed { background-color: #17a2b8; color: #fff; }
+
+.payment-status-pending { background-color: #ffc107; color: #000; }
+.payment-status-paid { background-color: #28a745; color: #fff; }
+.payment-status-refunded { background-color: #6c757d; color: #fff; }
+
+.form-group {
+    margin-bottom: 1rem;
+}
+
+.form-label {
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 0.5rem;
+}
+</style>

@@ -102,13 +102,13 @@ std::optional<Restaurant> RestaurantData::getRestaurantById(int id) {
     return std::nullopt;
 }
 
-bool RestaurantData::addRestaurant(const Restaurant& restaurant) {
+int RestaurantData::addRestaurant(const Restaurant& restaurant) {
     try {
         nanodbc::connection conn = dbConnection.getConnection();
         nanodbc::statement stmt(conn);
         nanodbc::prepare(stmt, "INSERT INTO restaurants (name, address, phone_number, description, table_count, "
-                           "cuisine_type, rating, is_featured, price_range, opening_time, closing_time, image_url) "
-                           "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+                           "cuisine_type, rating, is_featured, price_range, opening_time, closing_time, image_url, reservation_fee, is_active) "
+                           "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
         
         std::string name = restaurant.getName();
         std::string address = restaurant.getAddress();
@@ -124,6 +124,9 @@ bool RestaurantData::addRestaurant(const Restaurant& restaurant) {
         std::string openingTime = restaurant.getOpeningTime();
         std::string closingTime = restaurant.getClosingTime();
         std::string imageUrl = restaurant.getImageUrl();
+        double reservationFee = restaurant.getReservationFee();
+        bool boolIsActive = restaurant.getIsActive();
+        int isActive = boolIsActive ? 1 : 0;
         
         stmt.bind(0, name.c_str());
         stmt.bind(1, address.c_str());
@@ -137,12 +140,24 @@ bool RestaurantData::addRestaurant(const Restaurant& restaurant) {
         stmt.bind(9, openingTime.c_str());
         stmt.bind(10, closingTime.c_str());
         stmt.bind(11, imageUrl.c_str());
+        stmt.bind(12, &reservationFee);
+        stmt.bind(13, &isActive);
         
         nanodbc::execute(stmt);
-        return true;
+        
+        // Get the last inserted ID
+        nanodbc::statement idStmt(conn);
+        nanodbc::prepare(idStmt, "SELECT LAST_INSERT_ID()");
+        nanodbc::result idResult = nanodbc::execute(idStmt);
+        
+        if (idResult.next()) {
+            return idResult.get<int>(0);
+        } else {
+            return 0;
+        }
     } catch (const nanodbc::database_error& e) {
         std::cerr << "Database error in addRestaurant: " << e.what() << std::endl;
-        return false;
+        return 0;
     }
 }
 

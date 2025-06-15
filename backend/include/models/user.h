@@ -22,6 +22,9 @@ public:
     std::string getLastName() const;
     std::string getPhoneNumber() const;
     bool isActive() const;
+    bool isEmailVerified() const;
+    std::string getEmailVerificationToken() const;
+    std::string getEmailVerificationExpires() const;
     std::string getCreatedAt() const;
     
     void setId(int id);
@@ -35,6 +38,9 @@ public:
     void setLastName(const std::string& lastName);
     void setPhoneNumber(const std::string& phoneNumber);
     void setActive(bool active);
+    void setEmailVerified(bool verified);
+    void setEmailVerificationToken(const std::string& token);
+    void setEmailVerificationExpires(const std::string& expires);
     void setCreatedAt(const std::string& createdAt);
     
     bool hasPermission(const std::string& permission) const;
@@ -52,6 +58,9 @@ private:
     std::string lastName;
     std::string phoneNumber;
     bool active;
+    bool emailVerified;
+    std::string emailVerificationToken;
+    std::string emailVerificationExpires;
     std::string createdAt;
 };
 

@@ -9,6 +9,13 @@ class EmailService {
 public:
     EmailService();
     
+    // Send email verification
+    bool sendEmailVerification(
+        const std::string& toEmail,
+        const std::string& username,
+        const std::string& verificationToken
+    );
+    
     // Send reservation confirmation email
     bool sendReservationConfirmation(
         const std::string& toEmail,

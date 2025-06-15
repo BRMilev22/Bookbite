@@ -9,11 +9,20 @@
 class AuthService {
 public:
     AuthService();
-    bool registerUser(const std::string& username, const std::string& email, const std::string& password);
+    bool registerUser(const std::string& username, const std::string& email, const std::string& password, 
+                     const std::string& firstName = "", const std::string& lastName = "");
     std::string loginUser(const std::string& username, const std::string& password);
     bool validateToken(const std::string& token);
     int getUserIdFromToken(const std::string& token);
     void logoutUser(const std::string& token);
+    
+    // Email verification methods
+    bool verifyEmailToken(const std::string& token);
+    std::string generateEmailVerificationToken();
+    
+    // Password validation
+    bool isPasswordStrong(const std::string& password);
+    std::string getPasswordRequirements();
 
 private:
     UserData userData;

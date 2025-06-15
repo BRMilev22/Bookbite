@@ -14,7 +14,7 @@ public:
     std::vector<Table> getAvailableTablesByRestaurantId(int restaurantId);
     std::vector<Table> getTablesWithReservationsByRestaurantId(int restaurantId);
     std::optional<Table> getTableById(int id);
-    bool addTable(const Table& table);
+    int addTable(const Table& table);
     bool updateTable(const Table& table);
     bool deleteTable(int id);
     bool updateTableAvailability(int id, bool isAvailable);

@@ -1,5 +1,329 @@
 // Admin Restaurant Management JavaScript
 
+// Show add restaurant modal
+function showAddRestaurantModal() {
+    const modal = new bootstrap.Modal(document.getElementById('restaurantDetailsModal'));
+    const modalTitle = document.getElementById('restaurantDetailsModalLabel');
+    const modalContent = document.getElementById('restaurantDetailsContent');
+    const editBtn = document.getElementById('editRestaurantBtn');
+    
+    // Update modal title
+    modalTitle.innerHTML = '<i class="fas fa-plus me-2"></i>Add New Restaurant';
+    
+    // Hide edit button
+    editBtn.style.display = 'none';
+    
+    // Show add restaurant form
+    modalContent.innerHTML = generateAddRestaurantHTML();
+    
+    // Setup form submission
+    const form = document.getElementById('addRestaurantForm');
+    form.onsubmit = function(e) {
+        e.preventDefault();
+        submitNewRestaurant();
+    };
+    
+    // Show modal
+    modal.show();
+}
+
+// Generate add restaurant form HTML
+function generateAddRestaurantHTML() {
+    return `
+        <form id="addRestaurantForm">
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="form-section">
+                        <h6 class="form-section-title">Basic Information</h6>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label class="form-label">Restaurant Name *</label>
+                                    <input type="text" class="form-control" name="name" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label class="form-label">Cuisine Type *</label>
+                                    <select class="form-select" name="cuisineType" required>
+                                        <option value="">Select cuisine type</option>
+                                        <option value="Italian">Italian</option>
+                                        <option value="Chinese">Chinese</option>
+                                        <option value="Mexican">Mexican</option>
+                                        <option value="Indian">Indian</option>
+                                        <option value="American">American</option>
+                                        <option value="French">French</option>
+                                        <option value="Japanese">Japanese</option>
+                                        <option value="Mediterranean">Mediterranean</option>
+                                        <option value="Other">Other</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label class="form-label">Price Range *</label>
+                                    <select class="form-select" name="priceRange" required>
+                                        <option value="">Select price range</option>
+                                        <option value="Budget">Budget ($)</option>
+                                        <option value="Moderate">Moderate ($$)</option>
+                                        <option value="Expensive">Expensive ($$$)</option>
+                                        <option value="Fine Dining">Fine Dining ($$$$)</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label class="form-label">Image URL</label>
+                                    <input type="url" class="form-control" name="imageUrl" placeholder="https://example.com/image.jpg">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Description</label>
+                            <textarea class="form-control" name="description" rows="3" placeholder="Brief description of the restaurant"></textarea>
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        <h6 class="form-section-title">Contact & Location</h6>
+                        <div class="form-group">
+                            <label class="form-label">Address *</label>
+                            <input type="text" class="form-control" name="address" required placeholder="Full restaurant address">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Phone Number *</label>
+                            <input type="tel" class="form-control" name="phoneNumber" required placeholder="+1 (555) 123-4567">
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label class="form-label">Opening Time *</label>
+                                    <input type="time" class="form-control" name="openingTime" value="09:00" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label class="form-label">Closing Time *</label>
+                                    <input type="time" class="form-control" name="closingTime" value="22:00" required>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        <h6 class="form-section-title">Business Settings</h6>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label class="form-label">Reservation Fee ($)</label>
+                                    <input type="number" class="form-control" name="reservationFee" value="0" min="0" step="0.01">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label class="form-label">Initial Rating</label>
+                                    <input type="number" class="form-control" name="rating" value="4.0" min="0" max="5" step="0.1">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Restaurant Status</label>
+                            <div class="mt-2">
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input" type="checkbox" name="isFeatured" value="1">
+                                    <label class="form-check-label">Featured Restaurant</label>
+                                </div>
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input" type="checkbox" name="isActive" value="1" checked>
+                                    <label class="form-check-label">Active</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        <h6 class="form-section-title">Initial Tables Setup</h6>
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle me-2"></i>
+                            You can add tables after creating the restaurant, or create some initial tables now.
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <p class="mb-0">Add initial tables (optional)</p>
+                            <button type="button" class="btn btn-sm btn-outline-primary" onclick="addInitialTableRow()">
+                                <i class="fas fa-plus me-1"></i>Add Table
+                            </button>
+                        </div>
+                        <div id="initialTablesContainer">
+                            <div class="table-responsive">
+                                <table class="table table-sm">
+                                    <thead>
+                                        <tr>
+                                            <th>Capacity</th>
+                                            <th>Status</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="initialTablesTableBody">
+                                        <!-- Initial tables will be populated here -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="d-flex justify-content-end gap-2 mt-4">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-1"></i>Cancel
+                </button>
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save me-1"></i>Create Restaurant
+                </button>
+            </div>
+        </form>
+    `;
+}
+
+// Submit new restaurant
+function submitNewRestaurant() {
+    const form = document.getElementById('addRestaurantForm');
+    const formData = new FormData(form);
+    const submitBtn = form.querySelector('button[type="submit"]');
+    
+    // Create JSON object from form data
+    const restaurantData = {};
+    
+    // Handle text/number fields
+    for (let [key, value] of formData.entries()) {
+        if (key.startsWith('initialTables[')) {
+            // Skip initial table data for now, we'll handle it separately
+            continue;
+        } else if (key === 'isFeatured' || key === 'isActive') {
+            restaurantData[key] = true; // Checkbox present means true
+        } else if (key === 'reservationFee' || key === 'rating') {
+            restaurantData[key] = parseFloat(value) || 0;
+        } else {
+            restaurantData[key] = value;
+        }
+    }
+    
+    // Handle checkboxes that aren't checked (they won't be in formData)
+    if (!formData.has('isFeatured')) restaurantData.isFeatured = false;
+    if (!formData.has('isActive')) restaurantData.isActive = false;
+    
+    // Handle initial tables data
+    const initialTables = [];
+    const tableRows = document.querySelectorAll('#initialTablesTableBody tr');
+    
+    tableRows.forEach(row => {
+        const capacityInput = row.querySelector('input[name*="[capacity]"]');
+        const availableInput = row.querySelector('input[name*="[available]"]');
+        
+        if (capacityInput && capacityInput.value) {
+            const table = {
+                capacity: parseInt(capacityInput.value),
+                isAvailable: availableInput ? availableInput.checked : true
+            };
+            initialTables.push(table);
+        }
+    });
+    
+    restaurantData.initialTables = initialTables;
+    
+    // Disable submit button
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Creating...';
+    
+    fetch('/api/admin/restaurants', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(restaurantData)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Show success message
+            document.getElementById('restaurantDetailsContent').innerHTML = `
+                <div class="alert alert-success">
+                    <i class="fas fa-check-circle me-2"></i>
+                    Restaurant created successfully!
+                </div>
+            `;
+            
+            // Close modal after delay and reload page
+            setTimeout(() => {
+                const modal = bootstrap.Modal.getInstance(document.getElementById('restaurantDetailsModal'));
+                modal.hide();
+                window.location.reload();
+            }, 2000);
+        } else {
+            throw new Error(data.error || 'Failed to create restaurant');
+        }
+    })
+    .catch(error => {
+        console.error('Error creating restaurant:', error);
+        
+        // Show error message
+        const errorDiv = document.createElement('div');
+        errorDiv.className = 'alert alert-danger mt-3';
+        errorDiv.innerHTML = `
+            <i class="fas fa-exclamation-triangle me-2"></i>
+            Error creating restaurant: ${error.message}
+        `;
+        form.appendChild(errorDiv);
+        
+        // Re-enable submit button
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = '<i class="fas fa-save me-1"></i>Create Restaurant';
+    });
+}
+
+// Add initial table row for new restaurant
+let initialTableCounter = 0;
+
+function addInitialTableRow() {
+    const tableBody = document.getElementById('initialTablesTableBody');
+    const row = document.createElement('tr');
+    const rowId = `initial-table-row-${++initialTableCounter}`;
+    row.id = rowId;
+    
+    row.innerHTML = `
+        <td>
+            <input type="number" class="form-control form-control-sm" 
+                   name="initialTables[${initialTableCounter}][capacity]" 
+                   placeholder="Capacity" 
+                   min="1" max="20" required>
+        </td>
+        <td>
+            <div class="form-check">
+                <input class="form-check-input" type="checkbox" 
+                       name="initialTables[${initialTableCounter}][available]" 
+                       checked>
+                <label class="form-check-label">Available</label>
+            </div>
+        </td>
+        <td>
+            <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeInitialTableRow('${rowId}')">
+                <i class="fas fa-trash"></i>
+            </button>
+        </td>
+    `;
+    
+    tableBody.appendChild(row);
+}
+
+function removeInitialTableRow(rowId) {
+    const row = document.getElementById(rowId);
+    if (row) {
+        row.remove();
+    }
+}
+
 // View restaurant details in modal
 function viewRestaurantDetails(restaurantId) {
     const modal = new bootstrap.Modal(document.getElementById('restaurantDetailsModal'));
@@ -452,20 +776,39 @@ function toggleFeatured(restaurantId, newFeaturedStatus) {
         return;
     }
     
-    // Note: This function expects a backend route for toggling featured status
-    // For now, we'll use a form submission approach since the route may not exist yet
-    const form = document.createElement('form');
-    form.method = 'POST';
-    form.action = `/admin/restaurants/${restaurantId}/featured`;
-    
-    const featuredInput = document.createElement('input');
-    featuredInput.type = 'hidden';
-    featuredInput.name = 'isFeatured';
-    featuredInput.value = newFeaturedStatus;
-    
-    form.appendChild(featuredInput);
-    document.body.appendChild(form);
-    form.submit();
+    // First get the current restaurant data, then update only the featured status
+    fetch(`/api/admin/restaurants/${restaurantId}`)
+        .then(response => response.json())
+        .then(restaurant => {
+            if (restaurant.error) {
+                throw new Error(restaurant.error);
+            }
+            
+            // Update only the featured status
+            restaurant.isFeatured = newFeaturedStatus;
+            
+            // Send complete restaurant data with updated featured status
+            return fetch(`/api/admin/restaurants/${restaurantId}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(restaurant)
+            });
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert(`Restaurant ${action}d successfully!`);
+                window.location.reload();
+            } else {
+                throw new Error(data.error || `Failed to ${action} restaurant`);
+            }
+        })
+        .catch(error => {
+            console.error(`Error ${action}ing restaurant:`, error);
+            alert(`Error ${action}ing restaurant: ` + error.message);
+        });
 }
 
 // Confirm delete restaurant function
@@ -612,7 +955,69 @@ function removeNewTableRow(rowId) {
     }
 }
 
+// Export restaurants data
+function exportRestaurants() {
+    // Fetch all restaurants data
+    fetch('/api/admin/restaurants')
+        .then(response => response.json())
+        .then(restaurants => {
+            // Create CSV content
+            const csvContent = generateRestaurantsCSV(restaurants);
+            
+            // Create and download file
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            const url = URL.createObjectURL(blob);
+            link.setAttribute('href', url);
+            link.setAttribute('download', `restaurants-export-${new Date().toISOString().split('T')[0]}.csv`);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        })
+        .catch(error => {
+            console.error('Error exporting restaurants:', error);
+            alert('Error exporting restaurants: ' + error.message);
+        });
+}
+
+// Generate CSV content from restaurants data
+function generateRestaurantsCSV(restaurants) {
+    const headers = [
+        'ID', 'Name', 'Address', 'Phone', 'Cuisine Type', 'Price Range',
+        'Rating', 'Featured', 'Active', 'Table Count', 'Reservation Fee',
+        'Opening Time', 'Closing Time', 'Description'
+    ];
+    
+    let csvContent = headers.join(',') + '\n';
+    
+    restaurants.forEach(restaurant => {
+        const row = [
+            restaurant.id,
+            `"${restaurant.name || ''}"`,
+            `"${restaurant.address || ''}"`,
+            `"${restaurant.phoneNumber || ''}"`,
+            `"${restaurant.cuisineType || ''}"`,
+            `"${restaurant.priceRange || ''}"`,
+            restaurant.rating || 0,
+            restaurant.isFeatured ? 'Yes' : 'No',
+            restaurant.isActive ? 'Yes' : 'No',
+            restaurant.tableCount || 0,
+            restaurant.reservationFee || 0,
+            `"${restaurant.openingTime || ''}"`,
+            `"${restaurant.closingTime || ''}"`,
+            `"${(restaurant.description || '').replace(/"/g, '""')}"`
+        ];
+        csvContent += row.join(',') + '\n';
+    });
+    
+    return csvContent;
+}
+
 // Make functions globally available
+window.showAddRestaurantModal = showAddRestaurantModal;
+window.addInitialTableRow = addInitialTableRow;
+window.removeInitialTableRow = removeInitialTableRow;
 window.viewRestaurantDetails = viewRestaurantDetails;
 window.editRestaurant = editRestaurant;
 window.toggleFeatured = toggleFeatured;
@@ -620,3 +1025,4 @@ window.confirmDeleteRestaurant = confirmDeleteRestaurant;
 window.addTableRow = addTableRow;
 window.removeExistingTable = removeExistingTable;
 window.removeNewTableRow = removeNewTableRow;
+window.exportRestaurants = exportRestaurants;

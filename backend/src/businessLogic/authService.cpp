@@ -38,7 +38,13 @@ std::string AuthService::generateToken(int userId) {
     return ss.str();
 }
 
-bool AuthService::registerUser(const std::string& username, const std::string& email, const std::string& password) {
+bool AuthService::registerUser(const std::string& username, const std::string& email, const std::string& password, 
+                               const std::string& firstName, const std::string& lastName) {
+    // Validate password strength
+    if (!isPasswordStrong(password)) {
+        return false; // Password doesn't meet requirements
+    }
+    
     // Check if username or email already exists
     auto existingUsername = userData.getUserByUsername(username);
     auto existingEmail = userData.getUserByEmail(email);
@@ -52,6 +58,18 @@ bool AuthService::registerUser(const std::string& username, const std::string& e
     newUser.setUsername(username);
     newUser.setEmail(email);
     newUser.setPasswordHash(hashPassword(password));
+    newUser.setFirstName(firstName);
+    newUser.setLastName(lastName);
+    newUser.setEmailVerified(false); // Email not verified by default
+    
+    // Generate email verification token
+    std::string verificationToken = generateEmailVerificationToken();
+    newUser.setEmailVerificationToken(verificationToken);
+    
+    // Set expiration to 24 hours from now
+    std::time_t now = std::time(nullptr);
+    std::time_t expires = now + (24 * 60 * 60); // 24 hours
+    newUser.setEmailVerificationExpires(std::to_string(expires));
 
     return userData.addUser(newUser);
 }
@@ -62,10 +80,15 @@ std::string AuthService::loginUser(const std::string& username, const std::strin
         return ""; // Invalid credentials
     }
 
-    // Get user ID
+    // Get user and check email verification
     auto user = userData.getUserByUsername(username);
     if (!user) {
         return ""; // User not found (shouldn't happen if validateUser passed)
+    }
+    
+    // Check if email is verified
+    if (!user->isEmailVerified()) {
+        return "EMAIL_NOT_VERIFIED"; // Special return value to indicate email verification needed
     }
 
     std::string token = generateToken(user->getId());
@@ -168,5 +191,91 @@ void AuthService::cleanupExpiredTokens() {
         nanodbc::execute(stmt);
     } catch (const nanodbc::database_error& e) {
         std::cerr << "Database error cleaning up expired tokens: " << e.what() << std::endl;
+    }
+}
+
+bool AuthService::isPasswordStrong(const std::string& password) {
+    // Password requirements:
+    // - At least 8 characters long
+    // - Contains at least one uppercase letter
+    // - Contains at least one lowercase letter
+    // - Contains at least one digit
+    // - Contains at least one special character
+    
+    if (password.length() < 8) {
+        return false;
+    }
+    
+    bool hasUpper = false;
+    bool hasLower = false;
+    bool hasDigit = false;
+    bool hasSpecial = false;
+    
+    for (char c : password) {
+        if (c >= 'A' && c <= 'Z') {
+            hasUpper = true;
+        } else if (c >= 'a' && c <= 'z') {
+            hasLower = true;
+        } else if (c >= '0' && c <= '9') {
+            hasDigit = true;
+        } else if (c == '!' || c == '@' || c == '#' || c == '$' || c == '%' || 
+                   c == '^' || c == '&' || c == '*' || c == '(' || c == ')' ||
+                   c == '-' || c == '_' || c == '+' || c == '=' || c == '{' ||
+                   c == '}' || c == '[' || c == ']' || c == '|' || c == '\\' ||
+                   c == ':' || c == ';' || c == '"' || c == '\'' || c == '<' ||
+                   c == '>' || c == ',' || c == '.' || c == '?' || c == '/') {
+            hasSpecial = true;
+        }
+    }
+    
+    return hasUpper && hasLower && hasDigit && hasSpecial;
+}
+
+std::string AuthService::getPasswordRequirements() {
+    return "Password must be at least 8 characters long and contain at least one uppercase letter, one lowercase letter, one digit, and one special character.";
+}
+
+std::string AuthService::generateEmailVerificationToken() {
+    unsigned char random[32];
+    RAND_bytes(random, sizeof(random));
+
+    std::stringstream ss;
+    for (int i = 0; i < sizeof(random); i++) {
+        ss << std::hex << std::setw(2) << std::setfill('0') << (int)random[i];
+    }
+
+    return ss.str();
+}
+
+bool AuthService::verifyEmailToken(const std::string& token) {
+    try {
+        nanodbc::connection conn = dbConnection.getConnection();
+        nanodbc::statement stmt(conn);
+
+        // Find user with this verification token that hasn't expired
+        nanodbc::prepare(stmt, 
+            "SELECT id FROM users WHERE email_verification_token = ? AND email_verification_expires > NOW() AND email_verified = 0");
+        
+        stmt.bind(0, token.c_str());
+        auto result = nanodbc::execute(stmt);
+
+        if (result.next()) {
+            int userId = result.get<int>(0);
+            
+            // Update user to mark email as verified and clear token
+            nanodbc::statement updateStmt(conn);
+            nanodbc::prepare(updateStmt,
+                "UPDATE users SET email_verified = 1, email_verification_token = NULL, email_verification_expires = NULL WHERE id = ?");
+            
+            updateStmt.bind(0, &userId);
+            nanodbc::execute(updateStmt);
+            
+            return true;
+        }
+        
+        return false;
+    } catch (const std::exception& e) {
+        std::cerr << "Error verifying email token: " << e.what() << std::endl;
+        return false;
     }
 }

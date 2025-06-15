@@ -96,17 +96,36 @@ void ApiController::setupAuthRoutes(crow::App<>& app) {
             std::string username = data["username"];
             std::string email = data["email"];
             std::string password = data["password"];
+            std::string firstName = data.contains("firstName") ? data["firstName"] : "";
+            std::string lastName = data.contains("lastName") ? data["lastName"] : "";
             
-            bool success = authService.registerUser(username, email, password);
+            // Check password strength first
+            if (!authService.isPasswordStrong(password)) {
+                json response;
+                response["success"] = false;
+                response["message"] = authService.getPasswordRequirements();
+                return createResponse(400, response.dump());
+            }
+            
+            bool success = authService.registerUser(username, email, password, firstName, lastName);
             if (success) {
+                // Get the user to retrieve the verification token that was generated during registration
+                auto userData = UserData();
+                auto user = userData.getUserByEmail(email);
+                
+                if (user && !user->getEmailVerificationToken().empty()) {
+                    // Send verification email with the token that was generated during registration
+                    emailService.sendEmailVerification(email, username, user->getEmailVerificationToken());
+                }
+                
                 json response;
                 response["success"] = true;
-                response["message"] = "User registered successfully";
+                response["message"] = "User registered successfully! Please check your email to verify your account.";
                 return createResponse(201, response.dump());
             } else {
                 json response;
                 response["success"] = false;
-                response["message"] = "Username or email already exists";
+                response["message"] = "Username or email already exists, or password doesn't meet requirements";
                 return createResponse(400, response.dump());
             }
         } catch (const std::exception& e) {
@@ -115,6 +134,50 @@ void ApiController::setupAuthRoutes(crow::App<>& app) {
             response["message"] = "Invalid request data";
             return createResponse(400, response.dump());
         }
+    });
+    
+    // Email verification route
+    app.route_dynamic("/api/auth/verify-email")
+    .methods("GET"_method)
+    ([this](const crow::request& req) {
+        try {
+            auto params = req.url_params;
+            std::string token = params.get("token") ? params.get("token") : "";
+            
+            if (token.empty()) {
+                json response;
+                response["success"] = false;
+                response["message"] = "Verification token is required";
+                return createResponse(400, response.dump());
+            }
+            
+            bool verified = authService.verifyEmailToken(token);
+            if (verified) {
+                json response;
+                response["success"] = true;
+                response["message"] = "Email verified successfully! You can now log in.";
+                return createResponse(200, response.dump());
+            } else {
+                json response;
+                response["success"] = false;
+                response["message"] = "Invalid or expired verification token";
+                return createResponse(400, response.dump());
+            }
+        } catch (const std::exception& e) {
+            json response;
+            response["success"] = false;
+            response["message"] = "Verification failed";
+            return createResponse(500, response.dump());
+        }
+    });
+    
+    // Password requirements route
+    app.route_dynamic("/api/auth/password-requirements")
+    .methods("GET"_method)
+    ([this](const crow::request& req) {
+        json response;
+        response["requirements"] = authService.getPasswordRequirements();
+        return createResponse(200, response.dump());
     });
     
     // Login route
@@ -127,7 +190,7 @@ void ApiController::setupAuthRoutes(crow::App<>& app) {
             std::string password = data["password"];
             
             std::string token = authService.loginUser(username, password);
-            if (!token.empty()) {
+            if (!token.empty() && token != "EMAIL_NOT_VERIFIED") {
                 // Get user information with role data
                 int userId = authService.getUserIdFromToken(token);
                 auto user = userData.getUserById(userId);
@@ -154,6 +217,12 @@ void ApiController::setupAuthRoutes(crow::App<>& app) {
                     response["message"] = "User data not found";
                     return createResponse(401, response.dump());
                 }
+            } else if (token == "EMAIL_NOT_VERIFIED") {
+                json response;
+                response["success"] = false;
+                response["message"] = "Please verify your email address before logging in. Check your email for the verification link.";
+                response["error_type"] = "email_not_verified";
+                return createResponse(401, response.dump());
             } else {
                 json response;
                 response["success"] = false;
@@ -1075,7 +1144,7 @@ void ApiController::setupAdminRoutes(crow::App<>& app) {
         
         try {
             auto users = userData.getAllUsers();
-            json response = json::array();
+            json userArray = json::array();
             
             for (const auto& user : users) {
                 json userJson;
@@ -1090,12 +1159,17 @@ void ApiController::setupAdminRoutes(crow::App<>& app) {
                 userJson["isActive"] = user.isActive();
                 userJson["createdAt"] = user.getCreatedAt();
                 userJson["permissions"] = user.getPermissions();
-                response.push_back(userJson);
+                userArray.push_back(userJson);
             }
+            
+            json response;
+            response["success"] = true;
+            response["data"] = userArray;
             
             return createResponse(200, response.dump());
         } catch (const std::exception& e) {
             json error;
+            error["success"] = false;
             error["error"] = "Failed to fetch users";
             return createResponse(500, error.dump());
         }
@@ -1413,6 +1487,146 @@ void ApiController::setupAdminRoutes(crow::App<>& app) {
         }
     });
     
+    // GET /api/admin/restaurants - Get all restaurants (admin only)
+    app.route_dynamic("/api/admin/restaurants")
+    .methods("GET"_method)
+    ([this](const crow::request& req) {
+        if (!isAdmin(req)) {
+            json error;
+            error["error"] = "Admin access required";
+            return createResponse(403, error.dump());
+        }
+        
+        try {
+            RestaurantData restaurantData;
+            auto restaurants = restaurantData.getAllRestaurants();
+            
+            json restaurantsArray = json::array();
+            for (const auto& restaurant : restaurants) {
+                json restaurantJson;
+                restaurantJson["id"] = restaurant.getId();
+                restaurantJson["name"] = restaurant.getName();
+                restaurantJson["address"] = restaurant.getAddress();
+                restaurantJson["phoneNumber"] = restaurant.getPhoneNumber();
+                restaurantJson["description"] = restaurant.getDescription();
+                restaurantJson["tableCount"] = restaurant.getTableCount();
+                restaurantJson["cuisineType"] = restaurant.getCuisineType();
+                restaurantJson["rating"] = restaurant.getRating();
+                restaurantJson["isFeatured"] = restaurant.getIsFeatured();
+                restaurantJson["priceRange"] = restaurant.getPriceRange();
+                restaurantJson["openingTime"] = restaurant.getOpeningTime();
+                restaurantJson["closingTime"] = restaurant.getClosingTime();
+                restaurantJson["imageUrl"] = restaurant.getImageUrl();
+                restaurantJson["reservationFee"] = restaurant.getReservationFee();
+                restaurantJson["isActive"] = restaurant.getIsActive();
+                
+                restaurantsArray.push_back(restaurantJson);
+            }
+            
+            return createResponse(200, restaurantsArray.dump());
+            
+        } catch (const std::exception& e) {
+            json error;
+            error["error"] = "Failed to get restaurants: " + std::string(e.what());
+            return createResponse(500, error.dump());
+        }
+    });
+
+    // POST /api/admin/restaurants - Create new restaurant (admin only)
+    app.route_dynamic("/api/admin/restaurants")
+    .methods("POST"_method)
+    ([this](const crow::request& req) {
+        if (!isAdmin(req)) {
+            json error;
+            error["error"] = "Admin access required";
+            return createResponse(403, error.dump());
+        }
+        
+        try {
+            json data = json::parse(req.body);
+            
+            // Validate required fields
+            if (!data.contains("name") || !data.contains("address") || 
+                !data.contains("phoneNumber") || !data.contains("cuisineType")) {
+                json error;
+                error["error"] = "Missing required fields: name, address, phoneNumber, cuisineType";
+                return createResponse(400, error.dump());
+            }
+            
+            RestaurantData restaurantData;
+            
+            // Create new restaurant object
+            Restaurant restaurant;
+            restaurant.setName(data["name"]);
+            restaurant.setAddress(data["address"]);
+            restaurant.setPhoneNumber(data["phoneNumber"]);
+            restaurant.setDescription(data.value("description", ""));
+            restaurant.setTableCount(data.value("tableCount", 0)); // Will be updated after adding tables
+            restaurant.setCuisineType(data["cuisineType"]);
+            restaurant.setRating(data.value("rating", 4.0));
+            restaurant.setIsFeatured(data.value("isFeatured", false));
+            restaurant.setPriceRange(data.value("priceRange", "Moderate"));
+            restaurant.setOpeningTime(data.value("openingTime", "09:00"));
+            restaurant.setClosingTime(data.value("closingTime", "22:00"));
+            restaurant.setImageUrl(data.value("imageUrl", ""));
+            restaurant.setReservationFee(data.value("reservationFee", 0.0));
+            restaurant.setIsActive(data.value("isActive", true));
+            
+            int restaurantId = restaurantData.addRestaurant(restaurant);
+            
+            if (restaurantId > 0) {
+                // Handle initial tables if provided
+                if (data.contains("initialTables") && data["initialTables"].is_array()) {
+                    TableData tableData;
+                    int tableCount = 0;
+                    
+                    for (const auto& tableJson : data["initialTables"]) {
+                        if (tableJson.contains("capacity")) {
+                            Table table;
+                            table.setRestaurantId(restaurantId);
+                            table.setSeatCount(tableJson["capacity"]);
+                            table.setIsAvailable(tableJson.value("isAvailable", true));
+                            
+                            if (tableData.addTable(table) > 0) {
+                                tableCount++;
+                            }
+                        }
+                    }
+                    
+                    // Update restaurant with actual table count
+                    if (tableCount > 0) {
+                        restaurant.setId(restaurantId);
+                        restaurant.setTableCount(tableCount);
+                        restaurantData.updateRestaurant(restaurant);
+                    }
+                }
+                
+                int adminUserId = getUserIdFromRequest(req);
+                userData.logAdminAction(adminUserId, "CREATE_RESTAURANT", "restaurant", restaurantId, 
+                                      "Created restaurant: " + restaurant.getName());
+                
+                json response;
+                response["success"] = true;
+                response["message"] = "Restaurant created successfully";
+                response["restaurantId"] = restaurantId;
+                return createResponse(201, response.dump());
+            } else {
+                json error;
+                error["error"] = "Failed to create restaurant";
+                return createResponse(500, error.dump());
+            }
+            
+        } catch (const json::parse_error& e) {
+            json error;
+            error["error"] = "Invalid JSON format";
+            return createResponse(400, error.dump());
+        } catch (const std::exception& e) {
+            json error;
+            error["error"] = "Failed to create restaurant: " + std::string(e.what());
+            return createResponse(500, error.dump());
+        }
+    });
+
     // GET /api/admin/restaurants/:id - Get restaurant details (admin only)
     app.route_dynamic("/api/admin/restaurants/<int>")
     .methods("GET"_method)

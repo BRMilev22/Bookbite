@@ -133,7 +133,7 @@ std::optional<User> UserData::getUserByUsername(const std::string& username) {
     try {
         nanodbc::connection conn = dbConnection.getConnection();
         nanodbc::statement stmt(conn);
-        nanodbc::prepare(stmt, "SELECT id, username, email, password_hash, is_active FROM users WHERE username = ?");
+        nanodbc::prepare(stmt, "SELECT id, username, email, password_hash, is_active, email_verified, email_verification_token, email_verification_expires FROM users WHERE username = ?");
         stmt.bind(0, username.c_str());
         nanodbc::result result = nanodbc::execute(stmt);
         
@@ -144,6 +144,9 @@ std::optional<User> UserData::getUserByUsername(const std::string& username) {
             user.setEmail(result.get<nanodbc::string>("email", ""));
             user.setPasswordHash(result.get<nanodbc::string>("password_hash", ""));
             user.setActive(result.get<int>("is_active", 1) == 1);
+            user.setEmailVerified(result.get<int>("email_verified", 0) == 1);
+            user.setEmailVerificationToken(result.get<nanodbc::string>("email_verification_token", ""));
+            user.setEmailVerificationExpires(result.get<nanodbc::string>("email_verification_expires", ""));
             return user;
         }
     } catch (const nanodbc::database_error& e) {
@@ -156,7 +159,7 @@ std::optional<User> UserData::getUserByEmail(const std::string& email) {
     try {
         nanodbc::connection conn = dbConnection.getConnection();
         nanodbc::statement stmt(conn);
-        nanodbc::prepare(stmt, "SELECT id, username, email, password_hash FROM users WHERE email = ?");
+        nanodbc::prepare(stmt, "SELECT id, username, email, password_hash, email_verified, email_verification_token, email_verification_expires FROM users WHERE email = ?");
         stmt.bind(0, email.c_str());
         nanodbc::result result = nanodbc::execute(stmt);
         
@@ -166,6 +169,9 @@ std::optional<User> UserData::getUserByEmail(const std::string& email) {
             user.setUsername(result.get<nanodbc::string>("username", ""));
             user.setEmail(result.get<nanodbc::string>("email", ""));
             user.setPasswordHash(result.get<nanodbc::string>("password_hash", ""));
+            user.setEmailVerified(result.get<int>("email_verified", 0) == 1);
+            user.setEmailVerificationToken(result.get<nanodbc::string>("email_verification_token", ""));
+            user.setEmailVerificationExpires(result.get<nanodbc::string>("email_verification_expires", ""));
             return user;
         }
     } catch (const nanodbc::database_error& e) {
@@ -178,15 +184,28 @@ bool UserData::addUser(const User& user) {
     try {
         nanodbc::connection conn = dbConnection.getConnection();
         nanodbc::statement stmt(conn);
-        nanodbc::prepare(stmt, "INSERT INTO users (username, email, password_hash) VALUES (?, ?, ?)");
+        nanodbc::prepare(stmt, 
+            "INSERT INTO users (username, email, password_hash, first_name, last_name, email_verified, email_verification_token, email_verification_expires) VALUES (?, ?, ?, ?, ?, ?, ?, FROM_UNIXTIME(?))");
         
         std::string username = user.getUsername();
         std::string email = user.getEmail();
         std::string passwordHash = user.getPasswordHash();
+        std::string firstName = user.getFirstName();
+        std::string lastName = user.getLastName();
+        std::string verificationToken = user.getEmailVerificationToken();
+        std::string expiresStr = user.getEmailVerificationExpires();
+        
+        int emailVerified = user.isEmailVerified() ? 1 : 0;  // Convert bool to int
+        long long expires = !expiresStr.empty() ? std::stoll(expiresStr) : 0;
         
         stmt.bind(0, username.c_str());
         stmt.bind(1, email.c_str());
         stmt.bind(2, passwordHash.c_str());
+        stmt.bind(3, firstName.c_str());
+        stmt.bind(4, lastName.c_str());
+        stmt.bind(5, &emailVerified);
+        stmt.bind(6, verificationToken.c_str());
+        stmt.bind(7, &expires);
         
         nanodbc::execute(stmt);
         return true;
