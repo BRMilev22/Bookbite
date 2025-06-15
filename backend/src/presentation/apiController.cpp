@@ -1088,6 +1088,7 @@ void ApiController::setupAdminRoutes(crow::App<>& app) {
                 userJson["lastName"] = user.getLastName();
                 userJson["phoneNumber"] = user.getPhoneNumber();
                 userJson["isActive"] = user.isActive();
+                userJson["createdAt"] = user.getCreatedAt();
                 userJson["permissions"] = user.getPermissions();
                 response.push_back(userJson);
             }
@@ -1273,6 +1274,8 @@ void ApiController::setupAdminRoutes(crow::App<>& app) {
                 reservationJson["totalAmount"] = reservation.getTotalAmount();
                 reservationJson["paymentStatus"] = reservation.getPaymentStatus();
                 reservationJson["paymentMethod"] = reservation.getPaymentMethod();
+                reservationJson["restaurantName"] = reservation.getRestaurantName();
+                reservationJson["customerName"] = reservation.getCustomerName();
                 response.push_back(reservationJson);
             }
             
@@ -1283,11 +1286,54 @@ void ApiController::setupAdminRoutes(crow::App<>& app) {
             return createResponse(500, error.dump());
         }
     });
-    
-    // Create restaurant (admin only)
-    app.route_dynamic("/api/admin/restaurants")
-    .methods("POST"_method)
-    ([this](const crow::request& req) {
+
+    // Get single reservation for admin (admin only)
+    app.route_dynamic("/api/admin/reservations/<int>")
+    .methods("GET"_method)
+    ([this](const crow::request& req, int reservationId) {
+        if (!isAdmin(req)) {
+            return createResponse(403, "{\"error\": \"Access denied\"}");
+        }
+        
+        try {
+            auto reservation = reservationData.getReservationByIdWithDetails(reservationId);
+            if (!reservation.has_value()) {
+                json error;
+                error["error"] = "Reservation not found";
+                return createResponse(404, error.dump());
+            }
+            
+            json reservationJson;
+            reservationJson["id"] = reservation->getId();
+            reservationJson["userId"] = reservation->getUserId();
+            reservationJson["tableId"] = reservation->getTableId();
+            reservationJson["restaurantId"] = reservation->getRestaurantId();
+            reservationJson["date"] = reservation->getDate();
+            reservationJson["startTime"] = reservation->getStartTime();
+            reservationJson["endTime"] = reservation->getEndTime();
+            reservationJson["guestCount"] = reservation->getGuestCount();
+            reservationJson["status"] = reservation->getStatus();
+            reservationJson["phoneNumber"] = reservation->getPhoneNumber();
+            reservationJson["email"] = reservation->getEmail();
+            reservationJson["specialRequests"] = reservation->getSpecialRequests();
+            reservationJson["totalAmount"] = reservation->getTotalAmount();
+            reservationJson["paymentStatus"] = reservation->getPaymentStatus();
+            reservationJson["paymentMethod"] = reservation->getPaymentMethod();
+            reservationJson["restaurantName"] = reservation->getRestaurantName();
+            reservationJson["customerName"] = reservation->getCustomerName();
+            
+            return createResponse(200, reservationJson.dump());
+        } catch (const std::exception& e) {
+            json error;
+            error["error"] = "Failed to fetch reservation details";
+            return createResponse(500, error.dump());
+        }
+    });
+
+    // Update reservation (admin only)
+    app.route_dynamic("/api/admin/reservations/<int>")
+    .methods("PUT"_method)
+    ([this](const crow::request& req, int reservationId) {
         if (!isAdmin(req)) {
             return createResponse(403, "{\"error\": \"Access denied\"}");
         }
@@ -1295,34 +1341,70 @@ void ApiController::setupAdminRoutes(crow::App<>& app) {
         try {
             auto data = json::parse(req.body);
             
-            Restaurant restaurant;
-            restaurant.setName(data["name"]);
-            restaurant.setAddress(data["address"]);
-            restaurant.setPhoneNumber(data["phoneNumber"]);
-            restaurant.setDescription(data.value("description", ""));
-            restaurant.setCuisineType(data["cuisineType"]);
-            restaurant.setPriceRange(data["priceRange"]);
-            restaurant.setOpeningTime(data["openingTime"]);
-            restaurant.setClosingTime(data["closingTime"]);
-            restaurant.setImageUrl(data.value("imageUrl", ""));
-            restaurant.setReservationFee(data.value("reservationFee", 25.0));
-            restaurant.setIsFeatured(data.value("isFeatured", false));
+            // Get the existing reservation
+            auto existingReservation = reservationData.getReservationById(reservationId);
+            if (!existingReservation) {
+                json error;
+                error["error"] = "Reservation not found";
+                return createResponse(404, error.dump());
+            }
             
-            bool success = restaurantData.addRestaurant(restaurant);
+            // Create updated reservation object
+            Reservation reservation = *existingReservation;
+            
+            // Update fields if provided
+            if (data.contains("date")) {
+                reservation.setDate(data["date"]);
+            }
+            if (data.contains("startTime")) {
+                reservation.setStartTime(data["startTime"]);
+            }
+            if (data.contains("endTime")) {
+                reservation.setEndTime(data["endTime"]);
+            }
+            if (data.contains("guestCount")) {
+                reservation.setGuestCount(data["guestCount"]);
+            }
+            if (data.contains("phoneNumber")) {
+                reservation.setPhoneNumber(data["phoneNumber"]);
+            }
+            if (data.contains("email")) {
+                reservation.setEmail(data["email"]);
+            }
+            if (data.contains("specialRequests")) {
+                reservation.setSpecialRequests(data["specialRequests"]);
+            }
+            if (data.contains("status")) {
+                reservation.setStatus(data["status"]);
+            }
+            if (data.contains("tableId")) {
+                reservation.setTableId(data["tableId"]);
+            }
+            if (data.contains("totalAmount")) {
+                reservation.setTotalAmount(data["totalAmount"]);
+            }
+            if (data.contains("paymentStatus")) {
+                reservation.setPaymentStatus(data["paymentStatus"]);
+            }
+            if (data.contains("paymentMethod")) {
+                reservation.setPaymentMethod(data["paymentMethod"]);
+            }
+            
+            bool success = reservationService.updateReservation(reservation);
             
             if (success) {
                 int adminUserId = getUserIdFromRequest(req);
-                userData.logAdminAction(adminUserId, "CREATE_RESTAURANT", "restaurant", 0, 
-                                      "Created restaurant: " + restaurant.getName());
+                userData.logAdminAction(adminUserId, "UPDATE_RESERVATION", "reservation", reservationId, 
+                                      "Updated reservation for customer: " + reservation.getEmail());
                 
                 json response;
                 response["success"] = true;
-                response["message"] = "Restaurant created successfully";
-                return createResponse(201, response.dump());
+                response["message"] = "Reservation updated successfully";
+                return createResponse(200, response.dump());
             } else {
                 json error;
-                error["error"] = "Failed to create restaurant";
-                return createResponse(500, error.dump());
+                error["error"] = "Failed to update reservation. Check if the table is available for the new time slot.";
+                return createResponse(400, error.dump());
             }
         } catch (const std::exception& e) {
             json error;
@@ -1331,43 +1413,153 @@ void ApiController::setupAdminRoutes(crow::App<>& app) {
         }
     });
     
-    // Update restaurant (admin only)
+    // GET /api/admin/restaurants/:id - Get restaurant details (admin only)
     app.route_dynamic("/api/admin/restaurants/<int>")
-    .methods("PUT"_method)
+    .methods("GET"_method)
     ([this](const crow::request& req, int restaurantId) {
         if (!isAdmin(req)) {
-            return createResponse(403, "{\"error\": \"Access denied\"}");
+            json error;
+            error["error"] = "Admin access required";
+            return createResponse(403, error.dump());
         }
         
         try {
-            auto data = json::parse(req.body);
-            
+            RestaurantData restaurantData;
             auto restaurant = restaurantData.getRestaurantById(restaurantId);
+            
             if (!restaurant) {
                 json error;
                 error["error"] = "Restaurant not found";
                 return createResponse(404, error.dump());
             }
             
-            // Update restaurant fields
-            restaurant->setName(data["name"]);
-            restaurant->setAddress(data["address"]);
-            restaurant->setPhoneNumber(data["phoneNumber"]);
-            restaurant->setDescription(data.value("description", ""));
-            restaurant->setCuisineType(data["cuisineType"]);
-            restaurant->setPriceRange(data["priceRange"]);
-            restaurant->setOpeningTime(data["openingTime"]);
-            restaurant->setClosingTime(data["closingTime"]);
-            restaurant->setImageUrl(data.value("imageUrl", ""));
-            restaurant->setReservationFee(data.value("reservationFee", 25.0));
-            restaurant->setIsFeatured(data.value("isFeatured", false));
+            json restaurantJson;
+            restaurantJson["id"] = restaurant->getId();
+            restaurantJson["name"] = restaurant->getName();
+            restaurantJson["address"] = restaurant->getAddress();
+            restaurantJson["phoneNumber"] = restaurant->getPhoneNumber();
+            restaurantJson["description"] = restaurant->getDescription();
+            restaurantJson["tableCount"] = restaurant->getTableCount();
+            restaurantJson["cuisineType"] = restaurant->getCuisineType();
+            restaurantJson["rating"] = restaurant->getRating();
+            restaurantJson["isFeatured"] = restaurant->getIsFeatured();
+            restaurantJson["priceRange"] = restaurant->getPriceRange();
+            restaurantJson["openingTime"] = restaurant->getOpeningTime();
+            restaurantJson["closingTime"] = restaurant->getClosingTime();
+            restaurantJson["imageUrl"] = restaurant->getImageUrl();
+            restaurantJson["reservationFee"] = restaurant->getReservationFee();
+            restaurantJson["isActive"] = restaurant->getIsActive();
             
-            bool success = restaurantData.updateRestaurant(*restaurant);
+            return createResponse(200, restaurantJson.dump());
+            
+        } catch (const std::exception& e) {
+            json error;
+            error["error"] = "Failed to get restaurant details: " + std::string(e.what());
+            return createResponse(500, error.dump());
+        }
+    });
+    
+    // PUT /api/admin/restaurants/:id - Update restaurant (admin only)
+    app.route_dynamic("/api/admin/restaurants/<int>")
+    .methods("PUT"_method)
+    ([this](const crow::request& req, int restaurantId) {
+        if (!isAdmin(req)) {
+            json error;
+            error["error"] = "Admin access required";
+            return createResponse(403, error.dump());
+        }
+        
+        try {
+            json data = json::parse(req.body);
+            
+            // Validate required fields
+            if (!data.contains("name") || !data.contains("address") || 
+                !data.contains("phoneNumber") || !data.contains("cuisineType")) {
+                json error;
+                error["error"] = "Missing required fields";
+                return createResponse(400, error.dump());
+            }
+            
+            RestaurantData restaurantData;
+            auto existingRestaurant = restaurantData.getRestaurantById(restaurantId);
+            
+            if (!existingRestaurant) {
+                json error;
+                error["error"] = "Restaurant not found";
+                return createResponse(404, error.dump());
+            }
+            
+            // Create updated restaurant object
+            Restaurant restaurant;
+            restaurant.setId(restaurantId);
+            restaurant.setName(data["name"]);
+            restaurant.setAddress(data["address"]);
+            restaurant.setPhoneNumber(data["phoneNumber"]);
+            restaurant.setDescription(data.value("description", ""));
+            restaurant.setTableCount(data.value("tableCount", 10));
+            restaurant.setCuisineType(data["cuisineType"]);
+            restaurant.setRating(data.value("rating", 4.0));
+            restaurant.setIsFeatured(data.value("isFeatured", false));
+            restaurant.setPriceRange(data.value("priceRange", "Moderate"));
+            restaurant.setOpeningTime(data.value("openingTime", "09:00"));
+            restaurant.setClosingTime(data.value("closingTime", "22:00"));
+            restaurant.setImageUrl(data.value("imageUrl", ""));
+            restaurant.setReservationFee(data.value("reservationFee", 0.0));
+            restaurant.setIsActive(data.value("isActive", true));
+            
+            bool success = restaurantData.updateRestaurant(restaurant);
+            
+            // Handle table updates if provided
+            if (success && data.contains("tableOperations")) {
+                TableData tableData;
+                const auto& operations = data["tableOperations"];
+                
+                // Handle existing table updates
+                if (operations.contains("existing") && operations["existing"].is_array()) {
+                    for (const auto& tableJson : operations["existing"]) {
+                        if (tableJson.contains("id") && tableJson.contains("capacity")) {
+                            auto existingTable = tableData.getTableById(tableJson["id"]);
+                            if (existingTable.has_value()) {
+                                Table table = existingTable.value();
+                                table.setSeatCount(tableJson["capacity"]);
+                                tableData.updateTable(table);
+                            }
+                        }
+                    }
+                }
+                
+                // Handle new tables
+                if (operations.contains("new") && operations["new"].is_array()) {
+                    for (const auto& tableJson : operations["new"]) {
+                        if (tableJson.contains("capacity")) {
+                            Table table;
+                            table.setRestaurantId(restaurantId);
+                            table.setSeatCount(tableJson["capacity"]);
+                            table.setIsAvailable(true);
+                            tableData.addTable(table);
+                        }
+                    }
+                }
+                
+                // Handle table deletions
+                if (operations.contains("delete") && operations["delete"].is_array()) {
+                    for (const auto& tableId : operations["delete"]) {
+                        if (tableId.is_number_integer()) {
+                            tableData.deleteTable(tableId);
+                        }
+                    }
+                }
+                
+                // Update table count in restaurant to reflect current tables
+                auto updatedTables = tableData.getTablesByRestaurantId(restaurantId);
+                restaurant.setTableCount(updatedTables.size());
+                restaurantData.updateRestaurant(restaurant);
+            }
             
             if (success) {
                 int adminUserId = getUserIdFromRequest(req);
                 userData.logAdminAction(adminUserId, "UPDATE_RESTAURANT", "restaurant", restaurantId, 
-                                      "Updated restaurant: " + restaurant->getName());
+                                      "Updated restaurant: " + restaurant.getName());
                 
                 json response;
                 response["success"] = true;
@@ -1378,10 +1570,15 @@ void ApiController::setupAdminRoutes(crow::App<>& app) {
                 error["error"] = "Failed to update restaurant";
                 return createResponse(500, error.dump());
             }
+            
+        } catch (const json::parse_error& e) {
+            json error;
+            error["error"] = "Invalid JSON format";
+            return createResponse(400, error.dump());
         } catch (const std::exception& e) {
             json error;
-            error["error"] = "Invalid request data";
-            return createResponse(400, error.dump());
+            error["error"] = "Failed to update restaurant: " + std::string(e.what());
+            return createResponse(500, error.dump());
         }
     });
     

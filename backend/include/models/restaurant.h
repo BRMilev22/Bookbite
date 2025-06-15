@@ -26,6 +26,7 @@ public:
     std::string getClosingTime() const;
     std::string getImageUrl() const;
     double getReservationFee() const;
+    bool getIsActive() const;
     
     void setId(int id);
     void setName(const std::string& name);
@@ -41,6 +42,7 @@ public:
     void setClosingTime(const std::string& closingTime);
     void setImageUrl(const std::string& imageUrl);
     void setReservationFee(double reservationFee);
+    void setIsActive(bool isActive);
 
 private:
     int id;
@@ -57,6 +59,7 @@ private:
     std::string closingTime;
     std::string imageUrl;
     double reservationFee;
+    bool isActive;
 };
 
 #endif // RESTAURANT_H

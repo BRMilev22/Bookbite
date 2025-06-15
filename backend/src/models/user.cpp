@@ -55,6 +55,10 @@ bool User::isActive() const {
     return active;
 }
 
+std::string User::getCreatedAt() const {
+    return createdAt;
+}
+
 void User::setId(int id) {
     this->id = id;
 }
@@ -97,6 +101,10 @@ void User::setPhoneNumber(const std::string& phoneNumber) {
 
 void User::setActive(bool active) {
     this->active = active;
+}
+
+void User::setCreatedAt(const std::string& createdAt) {
+    this->createdAt = createdAt;
 }
 
 bool User::hasPermission(const std::string& permission) const {

@@ -125,20 +125,20 @@
 /* Main Content Area */
 .modern-admin-content {
     margin-left: 260px;
-    flex: 1;
     padding: 2rem;
     background-color: var(--light-color);
     min-height: 100vh;
+    width: calc(100% - 260px);
 }
 
 /* Content Header */
 .content-header {
     display: flex;
     justify-content: space-between;
-    align-items: center;
+    align-items: flex-start;
     margin-bottom: 2rem;
-    flex-wrap: wrap;
-    gap: 1rem;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid var(--border-color);
 }
 
 .content-title {
@@ -158,6 +158,75 @@
     display: flex;
     gap: 0.75rem;
     align-items: center;
+}
+
+/* Statistics Grid */
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.stat-card {
+    background: white;
+    border-radius: var(--border-radius);
+    padding: 1.5rem;
+    box-shadow: var(--shadow);
+    transition: var(--transition);
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.stat-card:hover {
+    box-shadow: var(--shadow-lg);
+    transform: translateY(-3px);
+}
+
+.stat-icon {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    color: white;
+}
+
+.stat-icon.users {
+    background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+}
+
+.stat-icon.restaurants {
+    background: linear-gradient(135deg, var(--success-color), #1e7e34);
+}
+
+.stat-icon.reservations {
+    background: linear-gradient(135deg, var(--warning-color), #e0a800);
+}
+
+.stat-icon.today {
+    background: linear-gradient(135deg, var(--info-color), #117a8b);
+}
+
+.stat-content {
+    flex: 1;
+}
+
+.stat-number {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--dark-color);
+    line-height: 1;
+}
+
+.stat-label {
+    font-size: 0.875rem;
+    color: #6c757d;
+    margin-top: 0.25rem;
+    font-weight: 500;
 }
 
 /* Modern Cards */
@@ -403,39 +472,121 @@
     border-radius: var(--border-radius);
 }
 
-.dropdown-item {
-    padding: 0.75rem 1rem;
-    transition: var(--transition);
+/* Edit Reservation Form Styles */
+.form-section {
+    margin-bottom: 2rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid var(--border-color);
 }
 
-.dropdown-item:hover {
-    background-color: var(--light-color);
+.form-section:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+}
+
+.form-section-title {
     color: var(--primary-color);
+    font-weight: 600;
+    font-size: 1.1rem;
+    margin-bottom: 1rem;
+    padding-left: 0.5rem;
+    border-left: 3px solid var(--primary-color);
 }
 
-/* Empty State */
-.empty-state {
-    text-align: center;
-    padding: 3rem 1rem;
-}
-
-.empty-content i {
-    font-size: 3rem;
-    color: #6c757d;
+.form-group {
     margin-bottom: 1rem;
 }
 
-.empty-content h4 {
-    color: var(--dark-color);
+.form-label {
+    font-weight: 600;
+    color: #495057;
     margin-bottom: 0.5rem;
 }
 
-.empty-content p {
-    color: #6c757d;
-    margin: 0;
+.form-control, .form-select {
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    padding: 0.75rem;
+    transition: var(--transition);
+    font-size: 0.9rem;
 }
 
-/* Stats Cards */
+.form-control:focus, .form-select:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 0.2rem rgba(67, 97, 238, 0.25);
+}
+
+.form-control-lg,
+.form-select-lg {
+    padding: 0.75rem 1rem;
+    font-size: 1rem;
+    border-radius: 0.5rem;
+    border: 1px solid #dee2e6;
+    transition: all 0.15s ease-in-out;
+}
+
+.form-control-lg:focus,
+.form-select-lg:focus {
+    border-color: #86b7fe;
+    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+}
+
+.info-card {
+    padding: 1.25rem;
+    border-radius: var(--border-radius);
+    border: 1px solid var(--border-color);
+    margin-bottom: 1rem;
+}
+
+.info-card-title {
+    font-weight: 600;
+    margin-bottom: 1rem;
+    color: var(--dark-color);
+}
+
+.info-item {
+    margin-bottom: 0.75rem;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid rgba(0,0,0,0.05);
+}
+
+.info-item:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+}
+
+.summary-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid #eee;
+    font-size: 0.9rem;
+}
+
+.summary-item:last-child,
+.summary-item.border-0 {
+    border-bottom: none;
+}
+
+.summary-item .fw-bold {
+    color: #495057;
+}
+
+.restaurant-header-image {
+    position: relative;
+    overflow: hidden;
+}
+
+.restaurant-header-image img {
+    transition: transform 0.3s ease;
+}
+
+.restaurant-header-image:hover img {
+    transform: scale(1.05);
+}
+
+/* Stats Grid */
 .stats-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
@@ -445,34 +596,19 @@
 
 .stat-card {
     background: white;
-    padding: 2rem;
+    padding: 1.5rem;
     border-radius: var(--border-radius);
     box-shadow: var(--shadow);
+    display: flex;
+    align-items: center;
+    gap: 1rem;
     transition: var(--transition);
-    position: relative;
-    overflow: hidden;
-}
-
-.stat-card::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 4px;
-    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    border: 1px solid var(--border-color);
 }
 
 .stat-card:hover {
-    transform: translateY(-5px);
+    transform: translateY(-2px);
     box-shadow: var(--shadow-lg);
-}
-
-.stat-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 1rem;
 }
 
 .stat-icon {
@@ -491,178 +627,43 @@
 }
 
 .stat-icon.restaurants {
-    background: linear-gradient(135deg, var(--success-color), #20c997);
+    background: linear-gradient(135deg, var(--success-color), #218838);
 }
 
 .stat-icon.reservations {
-    background: linear-gradient(135deg, var(--warning-color), #fd7e14);
-}
-
-.stat-icon.today {
     background: linear-gradient(135deg, var(--info-color), #138496);
 }
 
+.stat-icon.today {
+    background: linear-gradient(135deg, var(--warning-color), #e0a800);
+}
+
+.stat-content {
+    flex: 1;
+}
+
 .stat-number {
-    font-size: 2.5rem;
+    font-size: 2rem;
     font-weight: 700;
     color: var(--dark-color);
-    margin: 0;
+    line-height: 1;
+    margin-bottom: 0.25rem;
 }
 
 .stat-label {
     color: #6c757d;
     font-size: 0.875rem;
-    margin: 0;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
 
-/* Grid Layout */
-.row {
-    display: flex;
-    flex-wrap: wrap;
-    margin-left: -0.75rem;
-    margin-right: -0.75rem;
-}
-
-.row > * {
-    padding-left: 0.75rem;
-    padding-right: 0.75rem;
-}
-
-.col-lg-4 {
-    flex: 0 0 auto;
-    width: 33.33333333%;
-}
-
-.col-lg-8 {
-    flex: 0 0 auto;
-    width: 66.66666667%;
-}
-
-.g-4 > * {
-    margin-bottom: 1.5rem;
-}
-
-/* User Items */
+/* User List in Sidebar */
 .user-item {
     display: flex;
     align-items: center;
-    gap: 1rem;
-    padding: 1rem 0;
-    border-bottom: 1px solid var(--border-color);
-}
-
-.user-item:last-child {
-    border-bottom: none;
-}
-
-.user-details {
-    flex: 1;
-}
-
-.user-email {
-    color: var(--primary-color);
-    font-size: 0.875rem;
-    margin-bottom: 0.25rem;
-}
-
-.user-meta {
-    font-size: 0.75rem;
-    color: #6c757d;
-}
-
-.user-meta i {
-    margin-right: 0.25rem;
-}
-
-/* Table Info */
-.table-info {
-    font-size: 0.875rem;
-    color: #6c757d;
-}
-
-.date-info {
-    text-align: left;
-}
-
-.reservation-date {
-    font-weight: 600;
-    color: var(--dark-color);
-    margin-bottom: 0.25rem;
-}
-
-.reservation-time {
-    font-size: 0.875rem;
-    color: #6c757d;
-}
-
-/* Status badges variations */
-.status-badge.confirmed {
-    background: var(--success-color);
-    color: white;
-}
-
-.status-badge.cancelled {
-    background: var(--danger-color);
-    color: white;
-}
-
-.status-badge.pending {
-    background: var(--warning-color);
-    color: white;
-}
-
-/* Responsive Design */
-@media (max-width: 768px) {
-    .modern-admin-sidebar {
-        transform: translateX(-100%);
-        width: 280px;
-    }
-    
-    .modern-admin-sidebar.show {
-        transform: translateX(0);
-    }
-    
-    .modern-admin-content {
-        margin-left: 0;
-        padding: 1rem;
-    }
-    
-    .content-header {
-        flex-direction: column;
-        align-items: stretch;
-    }
-    
-    .stats-grid {
-        grid-template-columns: 1fr;
-    }
-    
-    .action-buttons {
-        flex-wrap: wrap;
-    }
-}
-
-@media (max-width: 992px) {
-    .col-lg-4, .col-lg-8 {
-        width: 100%;
-    }
-    
-    .row {
-        margin-left: 0;
-        margin-right: 0;
-    }
-    
-    .row > * {
-        padding-left: 0;
-        padding-right: 0;
-    }
-}
-
-/* User Items in Sidebar */
-.user-item {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    padding: 1rem;
+    gap: 0.75rem;
+    padding: 0.875rem;
     border-bottom: 1px solid var(--border-color);
     transition: var(--transition);
 }
@@ -672,7 +673,7 @@
 }
 
 .user-item:hover {
-    background-color: rgba(67, 97, 238, 0.05);
+    background-color: #f8f9fa;
 }
 
 .user-details {
@@ -683,80 +684,121 @@
 .user-details .user-name {
     font-weight: 600;
     color: var(--dark-color);
-    margin: 0 0 0.25rem 0;
+    margin-bottom: 0.25rem;
     font-size: 0.875rem;
 }
 
 .user-details .user-email {
     color: #6c757d;
     font-size: 0.75rem;
-    margin: 0 0 0.25rem 0;
+    margin-bottom: 0.25rem;
     word-break: break-word;
 }
 
 .user-details .user-meta {
-    color: #6c757d;
-    font-size: 0.7rem;
     display: flex;
     align-items: center;
     gap: 0.25rem;
+    color: #8e8e93;
+    font-size: 0.7rem;
 }
 
 .user-details .user-meta i {
-    font-size: 0.625rem;
+    font-size: 0.6rem;
 }
 
-/* Restaurant and Date Info */
-.restaurant-info {
-    display: flex;
-    flex-direction: column;
-    gap: 0.25rem;
+.user-avatar.success {
+    background: linear-gradient(135deg, var(--success-color), #218838);
 }
 
-.restaurant-name {
+/* Restaurant info styling */
+.restaurant-info .restaurant-name {
     font-weight: 600;
     color: var(--dark-color);
-    margin: 0;
-    font-size: 0.875rem;
+    margin-bottom: 0.25rem;
 }
 
-.table-info {
+.restaurant-info .table-info {
     color: #6c757d;
     font-size: 0.75rem;
-    margin: 0;
 }
 
-.date-info {
-    display: flex;
-    flex-direction: column;
-    gap: 0.25rem;
-}
-
-.reservation-date {
+/* Date info styling */
+.date-info .reservation-date {
     font-weight: 600;
     color: var(--dark-color);
-    margin: 0;
-    font-size: 0.875rem;
+    margin-bottom: 0.25rem;
 }
 
-.reservation-time {
+.date-info .reservation-time {
     color: #6c757d;
     font-size: 0.75rem;
-    margin: 0;
 }
 
-/* Status Badges for Reservations */
+/* Status badges */
 .status-badge.confirmed {
-    background: linear-gradient(135deg, var(--success-color), #20c997);
-    color: white;
-}
-
-.status-badge.cancelled {
-    background: linear-gradient(135deg, var(--danger-color), #e74c3c);
+    background: linear-gradient(135deg, var(--success-color), #218838);
     color: white;
 }
 
 .status-badge.pending {
-    background: linear-gradient(135deg, var(--warning-color), #fd7e14);
+    background: linear-gradient(135deg, var(--warning-color), #e0a800);
+    color: #212529;
+}
+
+.status-badge.cancelled {
+    background: linear-gradient(135deg, var(--danger-color), #c82333);
     color: white;
+}
+
+/* Empty content styling */
+.empty-content {
+    text-align: center;
+    padding: 2rem 1rem;
+    color: #6c757d;
+}
+
+.empty-content i {
+    font-size: 2.5rem;
+    margin-bottom: 1rem;
+    color: #dee2e6;
+}
+
+.empty-content h4 {
+    color: #495057;
+    margin-bottom: 0.5rem;
+}
+
+.empty-content p {
+    margin-bottom: 0;
+    font-size: 0.875rem;
+}
+
+/* Content spacing */
+.content-body {
+    padding: 1.5rem 0;
+}
+
+.page-title {
+    color: #2c3e50;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+}
+
+.page-subtitle {
+    color: #6c757d;
+    margin-bottom: 0;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .summary-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.25rem;
+    }
+    
+    .summary-item .fw-bold {
+        margin-bottom: 0.25rem;
+    }
 }

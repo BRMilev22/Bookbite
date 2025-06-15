@@ -1,6 +1,6 @@
 #include "models/restaurant.h"
 
-Restaurant::Restaurant() : id(0), tableCount(0), rating(0.0), isFeatured(false), reservationFee(25.0) {}
+Restaurant::Restaurant() : id(0), tableCount(0), rating(0.0), isFeatured(false), reservationFee(25.0), isActive(true) {}
 
 Restaurant::Restaurant(int id, const std::string& name, const std::string& address, 
                      const std::string& phoneNumber, const std::string& description, int tableCount,
@@ -10,7 +10,7 @@ Restaurant::Restaurant(int id, const std::string& name, const std::string& addre
     : id(id), name(name), address(address), phoneNumber(phoneNumber), 
       description(description), tableCount(tableCount), cuisineType(cuisineType),
       rating(rating), isFeatured(isFeatured), priceRange(priceRange),
-      openingTime(openingTime), closingTime(closingTime), imageUrl(imageUrl) {}
+      openingTime(openingTime), closingTime(closingTime), imageUrl(imageUrl), isActive(true) {}
 
 int Restaurant::getId() const {
     return id;
@@ -88,6 +88,10 @@ std::string Restaurant::getImageUrl() const {
     return imageUrl;
 }
 
+bool Restaurant::getIsActive() const {
+    return isActive;
+}
+
 void Restaurant::setCuisineType(const std::string& cuisineType) {
     this->cuisineType = cuisineType;
 }
@@ -122,4 +126,8 @@ double Restaurant::getReservationFee() const {
 
 void Restaurant::setReservationFee(double reservationFee) {
     this->reservationFee = reservationFee;
+}
+
+void Restaurant::setIsActive(bool isActive) {
+    this->isActive = isActive;
 }

@@ -121,26 +121,25 @@
                                                 <%= restaurant.isFeatured ? 'Featured' : 'Regular' %>
                                             </span>
                                         </td>
-                                        <td>
-                                            <div class="action-buttons">
-                                                <!-- View Restaurant -->
-                                                <a href="/restaurants/<%= restaurant.id %>" 
-                                                   class="action-btn info" 
-                                                   target="_blank"
-                                                   title="View Restaurant">
+                                        <td>                                            <div class="action-buttons">
+                                                <!-- View Restaurant Details -->
+                                                <button class="action-btn info" 
+                                                        onclick="viewRestaurantDetails(<%= restaurant.id %>)" 
+                                                        title="View Details">
                                                     <i class="fas fa-eye"></i>
-                                                </a>
+                                                </button>
                                                 
-                                                <!-- Edit Restaurant -->
-                                                <a href="/admin/restaurants/<%= restaurant.id %>/edit" 
-                                                   class="action-btn warning" 
-                                                   title="Edit Restaurant">
-                                                    <i class="fas fa-edit"></i>
+                                                <!-- View on Site -->
+                                                <a href="/restaurants/<%= restaurant.id %>" 
+                                                   class="action-btn success" 
+                                                   target="_blank"
+                                                   title="View on Site">
+                                                    <i class="fas fa-external-link-alt"></i>
                                                 </a>
                                                 
                                                 <!-- Toggle Featured -->
                                                 <button type="button" 
-                                                        class="action-btn <%= restaurant.isFeatured ? 'secondary' : 'success' %>" 
+                                                        class="action-btn <%= restaurant.isFeatured ? 'warning' : 'secondary' %>" 
                                                         onclick="toggleFeatured(<%= restaurant.id %>, <%= !restaurant.isFeatured %>)"
                                                         title="<%= restaurant.isFeatured ? 'Remove from Featured' : 'Make Featured' %>">
                                                     <i class="fas fa-<%= restaurant.isFeatured ? 'star' : 'star' %>"></i>
@@ -148,7 +147,7 @@
                                                 
                                                 <!-- Delete Restaurant -->
                                                 <button type="button" 
-                                                        class="action-btn danger" 
+                                                        class="action-btn danger"
                                                         onclick="confirmDeleteRestaurant(<%= restaurant.id %>, '<%= restaurant.name %>')"
                                                         title="Delete Restaurant">
                                                     <i class="fas fa-trash"></i>
@@ -178,4 +177,32 @@
             </div>
         </div>
     </main>
+</div>
+
+<!-- Restaurant Details Modal -->
+<div class="modal fade" id="restaurantDetailsModal" tabindex="-1" aria-labelledby="restaurantDetailsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="restaurantDetailsModalLabel">
+                    <i class="fas fa-utensils me-2"></i>Restaurant Details
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="restaurantDetailsContent">
+                <div class="text-center">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p class="mt-2">Loading restaurant details...</p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" id="editRestaurantBtn" style="display: none;">
+                    <i class="fas fa-edit me-1"></i>Edit Restaurant
+                </button>
+            </div>
+        </div>
+    </div>
 </div>

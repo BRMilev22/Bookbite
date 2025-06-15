@@ -29,7 +29,7 @@ std::vector<User> UserData::getAllUsers() {
         nanodbc::statement stmt(conn);
         nanodbc::prepare(stmt, R"(
             SELECT u.id, u.username, u.email, u.password_hash, u.role_id, u.first_name, u.last_name, 
-                   u.phone_number, u.is_active, ur.name as role_name, ur.permissions
+                   u.phone_number, u.is_active, u.created_at, ur.name as role_name, ur.permissions
             FROM users u 
             LEFT JOIN user_roles ur ON u.role_id = ur.id
         )");
@@ -46,6 +46,7 @@ std::vector<User> UserData::getAllUsers() {
             user.setLastName(result.get<nanodbc::string>("last_name", ""));
             user.setPhoneNumber(result.get<nanodbc::string>("phone_number", ""));
             user.setActive(result.get<int>("is_active", 1) == 1);
+            user.setCreatedAt(result.get<nanodbc::string>("created_at", ""));
             user.setRoleName(result.get<nanodbc::string>("role_name", "user"));
             
             // Parse permissions JSON (simplified)
@@ -77,7 +78,7 @@ std::optional<User> UserData::getUserById(int id) {
         nanodbc::statement stmt(conn);
         nanodbc::prepare(stmt, R"(
             SELECT u.id, u.username, u.email, u.password_hash, u.role_id, u.first_name, u.last_name, 
-                   u.phone_number, u.is_active, ur.name as role_name, ur.permissions
+                   u.phone_number, u.is_active, u.created_at, ur.name as role_name, ur.permissions
             FROM users u 
             LEFT JOIN user_roles ur ON u.role_id = ur.id
             WHERE u.id = ?
@@ -99,6 +100,7 @@ std::optional<User> UserData::getUserById(int id) {
             user.setLastName(result.get<nanodbc::string>("last_name", ""));
             user.setPhoneNumber(result.get<nanodbc::string>("phone_number", ""));
             user.setActive(result.get<int>("is_active", 1) == 1);
+            user.setCreatedAt(result.get<nanodbc::string>("created_at", ""));
             user.setRoleName(result.get<nanodbc::string>("role_name", "user"));
             
             // Parse permissions JSON (simplified)

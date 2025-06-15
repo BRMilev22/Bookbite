@@ -110,7 +110,7 @@ app.use('/api', (req, res, next) => {
   const options = {
     hostname: 'localhost',
     port: 8080,
-    path: req.url,
+    path: `/api${req.url}`, // Prepend /api to restore the full path
     method: req.method,
     headers
   };
@@ -789,7 +789,8 @@ app.get('/admin', isAdmin, async (req, res) => {
       totalReservations,
       todayReservations,
       recentReservations: reservations.slice(0, 5),
-      recentUsers: users.slice(-5)
+      recentUsers: users.slice(-5),
+      pageScripts: ['/js/admin-dashboard.js']
     });
   } catch (error) {
     console.error('Admin dashboard error:', error.message);
@@ -1031,6 +1032,40 @@ app.post('/admin/users/:id/delete', isAdmin, async (req, res) => {
     console.error('Delete user error:', error.message);
     req.session.error = 'Failed to delete user';
     res.redirect('/admin/users');
+  }
+});
+
+// Admin Update Reservation (API endpoint for modal)
+app.post('/admin/reservations/:id', isAdmin, async (req, res) => {
+  try {
+    const { 
+      date, startTime, endTime, guestCount, 
+      phoneNumber, email, specialRequests, status,
+      tableId
+    } = req.body;
+    
+    const updateData = {
+      id: parseInt(req.params.id),
+      date,
+      startTime,
+      endTime,
+      guestCount: parseInt(guestCount, 10),
+      phoneNumber: phoneNumber || '',
+      email: email || '',
+      specialRequests: specialRequests || '',
+      status: status || 'confirmed',
+      tableId: parseInt(tableId)
+    };
+    
+    const authenticatedClient = createApiClient(req.session.token);
+    await authenticatedClient.put(`/api/admin/reservations/${req.params.id}`, updateData);
+    
+    req.session.success = 'Reservation updated successfully!';
+    res.redirect('/admin');
+  } catch (error) {
+    console.error('Error updating reservation:', error.message);
+    req.session.error = 'Failed to update reservation';
+    res.redirect('/admin');
   }
 });
 

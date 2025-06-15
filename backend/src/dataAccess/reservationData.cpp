@@ -9,7 +9,16 @@ std::vector<Reservation> ReservationData::getAllReservations() {
     try {
         nanodbc::connection conn = dbConnection.getConnection();
         nanodbc::statement stmt(conn);
-        nanodbc::prepare(stmt, "SELECT id, user_id, table_id, restaurant_id, date, start_time, end_time, guest_count, status, special_requests, phone_number, email, total_amount, payment_status, payment_method FROM reservations");
+        nanodbc::prepare(stmt, R"(
+            SELECT r.id, r.user_id, r.table_id, r.restaurant_id, r.date, r.start_time, r.end_time, 
+                   r.guest_count, r.status, r.special_requests, r.phone_number, r.email, 
+                   r.total_amount, r.payment_status, r.payment_method,
+                   rest.name as restaurant_name,
+                   CONCAT(u.first_name, ' ', u.last_name) as customer_name
+            FROM reservations r
+            LEFT JOIN restaurants rest ON r.restaurant_id = rest.id
+            LEFT JOIN users u ON r.user_id = u.id
+        )");
         nanodbc::result result = nanodbc::execute(stmt);
         
         while (result.next()) {
@@ -29,6 +38,8 @@ std::vector<Reservation> ReservationData::getAllReservations() {
             reservation.setTotalAmount(result.get<double>("total_amount", 0.0));
             reservation.setPaymentStatus(result.get<nanodbc::string>("payment_status", ""));
             reservation.setPaymentMethod(result.get<nanodbc::string>("payment_method", ""));
+            reservation.setRestaurantName(result.get<nanodbc::string>("restaurant_name", ""));
+            reservation.setCustomerName(result.get<nanodbc::string>("customer_name", ""));
             reservations.push_back(reservation);
         }
     } catch (const nanodbc::database_error& e) {
@@ -163,6 +174,51 @@ std::optional<Reservation> ReservationData::getReservationById(int id) {
     return std::nullopt;
 }
 
+std::optional<Reservation> ReservationData::getReservationByIdWithDetails(int id) {
+    try {
+        nanodbc::connection conn = dbConnection.getConnection();
+        nanodbc::statement stmt(conn);
+        nanodbc::prepare(stmt, R"(
+            SELECT r.id, r.user_id, r.table_id, r.restaurant_id, r.date, r.start_time, r.end_time, 
+                   r.guest_count, r.status, r.special_requests, r.phone_number, r.email,
+                   r.total_amount, r.payment_status, r.payment_method,
+                   rest.name as restaurant_name,
+                   CONCAT(u.first_name, ' ', u.last_name) as customer_name
+            FROM reservations r
+            LEFT JOIN restaurants rest ON r.restaurant_id = rest.id
+            LEFT JOIN users u ON r.user_id = u.id
+            WHERE r.id = ?
+        )");
+        stmt.bind(0, &id);
+        nanodbc::result result = nanodbc::execute(stmt);
+        
+        if (result.next()) {
+            Reservation reservation;
+            reservation.setId(result.get<int>("id"));
+            reservation.setUserId(result.get<int>("user_id"));
+            reservation.setTableId(result.get<int>("table_id"));
+            reservation.setRestaurantId(result.get<int>("restaurant_id"));
+            reservation.setDate(result.get<nanodbc::string>("date", ""));
+            reservation.setStartTime(result.get<nanodbc::string>("start_time", ""));
+            reservation.setEndTime(result.get<nanodbc::string>("end_time", ""));
+            reservation.setGuestCount(result.get<int>("guest_count"));
+            reservation.setStatus(result.get<nanodbc::string>("status", ""));
+            reservation.setSpecialRequests(result.get<nanodbc::string>("special_requests", ""));
+            reservation.setPhoneNumber(result.get<nanodbc::string>("phone_number", ""));
+            reservation.setEmail(result.get<nanodbc::string>("email", ""));
+            reservation.setTotalAmount(result.get<double>("total_amount", 0.0));
+            reservation.setPaymentStatus(result.get<nanodbc::string>("payment_status", ""));
+            reservation.setPaymentMethod(result.get<nanodbc::string>("payment_method", ""));
+            reservation.setRestaurantName(result.get<nanodbc::string>("restaurant_name", ""));
+            reservation.setCustomerName(result.get<nanodbc::string>("customer_name", ""));
+            return reservation;
+        }
+    } catch (const nanodbc::database_error& e) {
+        std::cerr << "Database error in getReservationByIdWithDetails: " << e.what() << std::endl;
+    }
+    return std::nullopt;
+}
+
 bool ReservationData::addReservation(const Reservation& reservation) {
     try {
         nanodbc::connection conn = dbConnection.getConnection();
@@ -213,7 +269,7 @@ bool ReservationData::updateReservation(const Reservation& reservation) {
     try {
         nanodbc::connection conn = dbConnection.getConnection();
         nanodbc::statement stmt(conn);
-        nanodbc::prepare(stmt, "UPDATE reservations SET user_id = ?, table_id = ?, restaurant_id = ?, date = ?, start_time = ?, end_time = ?, guest_count = ?, status = ?, special_requests = ?, phone_number = ?, email = ? WHERE id = ?");
+        nanodbc::prepare(stmt, "UPDATE reservations SET user_id = ?, table_id = ?, restaurant_id = ?, date = ?, start_time = ?, end_time = ?, guest_count = ?, status = ?, special_requests = ?, phone_number = ?, email = ?, total_amount = ?, payment_status = ?, payment_method = ? WHERE id = ?");
         
         int userId = reservation.getUserId();
         int tableId = reservation.getTableId();
@@ -226,6 +282,9 @@ bool ReservationData::updateReservation(const Reservation& reservation) {
         std::string specialRequests = reservation.getSpecialRequests();
         std::string phoneNumber = reservation.getPhoneNumber();
         std::string email = reservation.getEmail();
+        double totalAmount = reservation.getTotalAmount();
+        std::string paymentStatus = reservation.getPaymentStatus();
+        std::string paymentMethod = reservation.getPaymentMethod();
         int id = reservation.getId();
         
         stmt.bind(0, &userId);
@@ -239,7 +298,10 @@ bool ReservationData::updateReservation(const Reservation& reservation) {
         stmt.bind(8, specialRequests.c_str());
         stmt.bind(9, phoneNumber.c_str());
         stmt.bind(10, email.c_str());
-        stmt.bind(11, &id);
+        stmt.bind(11, &totalAmount);
+        stmt.bind(12, paymentStatus.c_str());
+        stmt.bind(13, paymentMethod.c_str());
+        stmt.bind(14, &id);
         
         nanodbc::execute(stmt);
         return true;

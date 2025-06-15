@@ -22,6 +22,7 @@ public:
     std::string getLastName() const;
     std::string getPhoneNumber() const;
     bool isActive() const;
+    std::string getCreatedAt() const;
     
     void setId(int id);
     void setUsername(const std::string& username);
@@ -34,6 +35,7 @@ public:
     void setLastName(const std::string& lastName);
     void setPhoneNumber(const std::string& phoneNumber);
     void setActive(bool active);
+    void setCreatedAt(const std::string& createdAt);
     
     bool hasPermission(const std::string& permission) const;
     bool isAdmin() const;
@@ -50,6 +52,7 @@ private:
     std::string lastName;
     std::string phoneNumber;
     bool active;
+    std::string createdAt;
 };
 
 #endif // USER_H

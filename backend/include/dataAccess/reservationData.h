@@ -14,6 +14,7 @@ public:
     std::vector<Reservation> getReservationsByRestaurantId(int restaurantId);
     std::vector<Reservation> getReservationsByTableId(int tableId);
     std::optional<Reservation> getReservationById(int id);
+    std::optional<Reservation> getReservationByIdWithDetails(int id);
     bool addReservation(const Reservation& reservation);
     bool updateReservation(const Reservation& reservation);
     bool deleteReservation(int id);

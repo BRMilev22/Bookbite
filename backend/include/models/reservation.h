@@ -26,6 +26,8 @@ public:
     std::string getPaymentStatus() const;
     std::string getPaymentMethod() const;
     std::string getConfirmationToken() const;
+    std::string getRestaurantName() const;
+    std::string getCustomerName() const;
     
     void setId(int id);
     void setUserId(int userId);
@@ -43,6 +45,8 @@ public:
     void setPaymentStatus(const std::string& paymentStatus);
     void setPaymentMethod(const std::string& paymentMethod);
     void setConfirmationToken(const std::string& confirmationToken);
+    void setRestaurantName(const std::string& restaurantName);
+    void setCustomerName(const std::string& customerName);
 
 private:
     int id;
@@ -61,6 +65,8 @@ private:
     std::string paymentStatus; // "pending", "paid", "refunded"
     std::string paymentMethod; // "card", "cash"
     std::string confirmationToken;
+    std::string restaurantName;
+    std::string customerName;
 };
 
 

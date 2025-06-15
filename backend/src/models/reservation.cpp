@@ -72,6 +72,14 @@ std::string Reservation::getConfirmationToken() const {
     return confirmationToken;
 }
 
+std::string Reservation::getRestaurantName() const {
+    return restaurantName;
+}
+
+std::string Reservation::getCustomerName() const {
+    return customerName;
+}
+
 void Reservation::setId(int id) {
     this->id = id;
 }
@@ -134,4 +142,12 @@ void Reservation::setPaymentMethod(const std::string& paymentMethod) {
 
 void Reservation::setConfirmationToken(const std::string& confirmationToken) {
     this->confirmationToken = confirmationToken;
+}
+
+void Reservation::setRestaurantName(const std::string& restaurantName) {
+    this->restaurantName = restaurantName;
+}
+
+void Reservation::setCustomerName(const std::string& customerName) {
+    this->customerName = customerName;
 }
