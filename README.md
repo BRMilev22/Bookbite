@@ -28,6 +28,28 @@ BookBite is a comprehensive restaurant reservation system featuring email confir
 - System analytics and audit logs
 - Table management for restaurants
 
+## 📸 Application Screenshots
+
+### Main Page
+![Main Page](pictures/main-page.png)
+
+### Restaurant Browsing
+![Restaurants Page](pictures/restaurants-page.png)
+
+### Restaurant Details & Reviews
+![Restaurant Details](pictures/restaurant-details.png)
+![Restaurant Reviews](pictures/restaurant-reviews.png)
+
+### Reservation System
+![Available Tables](pictures/avaliable-tables.png)
+![Make Reservation](pictures/make-reservation.png)
+![My Reservations](pictures/my-reservations-page.png)
+
+### Admin Dashboard
+![Admin Dashboard](pictures/admin-dashboard.png)
+![Manage Restaurants](pictures/admin-manage-restaurants.png)
+![Manage Users](pictures/admin-manage-users.png)
+
 ## 🏗️ Project Structure
 
 ```
