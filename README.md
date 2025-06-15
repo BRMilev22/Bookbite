@@ -318,24 +318,9 @@ The project follows a clean architecture pattern:
 - **Firewall**: Ensure SMTP port 587 is not blocked
 - **Email Delivery**: Check spam folders for confirmation emails
 
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Test thoroughly
-5. Submit a pull request
-
 ## 📄 License
 
 This project is licensed under the MIT License - see the LICENSE file for details.
-
-## 🙏 Acknowledgments
-
-- Crow C++ framework for the robust backend
-- Bootstrap for the responsive UI components
-- Unsplash for restaurant imagery
-- Font Awesome for icons
 
 ---
 
@@ -343,4 +328,4 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 ---
 
-Made with ❤️
+Made with ❤️ by Boris Milev
