@@ -19,107 +19,25 @@
 CREATE DATABASE IF NOT EXISTS `bookbite` /*!40100 DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci */;
 USE `bookbite`;
 
--- Dumping structure for table bookbite.user_roles
-CREATE TABLE IF NOT EXISTS `user_roles` (
+-- Dumping structure for table bookbite.admin_audit_log
+CREATE TABLE IF NOT EXISTS `admin_audit_log` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
-  `name` varchar(50) NOT NULL,
-  `description` text DEFAULT NULL,
-  `permissions` json DEFAULT NULL,
+  `admin_user_id` int(11) NOT NULL,
+  `action` varchar(100) NOT NULL,
+  `target_type` varchar(50) DEFAULT NULL,
+  `target_id` int(11) DEFAULT NULL,
+  `details` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`details`)),
+  `ip_address` varchar(45) DEFAULT NULL,
+  `user_agent` text DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT current_timestamp(),
   PRIMARY KEY (`id`),
-  UNIQUE KEY `name` (`name`)
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+  KEY `admin_user_id` (`admin_user_id`),
+  KEY `idx_action` (`action`),
+  KEY `idx_created_at` (`created_at`),
+  CONSTRAINT `admin_audit_log_ibfk_1` FOREIGN KEY (`admin_user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Dumping data for table bookbite.user_roles
-INSERT INTO `user_roles` (`id`, `name`, `description`, `permissions`, `created_at`) VALUES
-	(1, 'user', 'Regular user with basic permissions', '["make_reservation", "view_reservations", "cancel_reservation", "write_review"]', '2025-06-11 10:00:00'),
-	(2, 'admin', 'Administrator with full permissions', '["make_reservation", "view_reservations", "cancel_reservation", "write_review", "manage_restaurants", "manage_users", "view_admin_panel", "promote_users"]', '2025-06-11 10:00:00');
-
--- Dumping structure for table bookbite.users (updated with role_id)
-CREATE TABLE IF NOT EXISTS `users` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
-  `username` varchar(50) NOT NULL,
-  `email` varchar(100) NOT NULL,
-  `password_hash` varchar(64) NOT NULL,
-  `role_id` int(11) NOT NULL DEFAULT 1,
-  `first_name` varchar(50) DEFAULT NULL,
-  `last_name` varchar(50) DEFAULT NULL,
-  `phone_number` varchar(20) DEFAULT NULL,
-  `is_active` tinyint(1) DEFAULT 1,
-  `created_at` timestamp NULL DEFAULT current_timestamp(),
-  `updated_at` timestamp NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `username` (`username`),
-  UNIQUE KEY `email` (`email`),
-  KEY `role_id` (`role_id`),
-  CONSTRAINT `users_ibfk_1` FOREIGN KEY (`role_id`) REFERENCES `user_roles` (`id`) ON DELETE RESTRICT
-) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
--- Dumping data for table bookbite.users (with role assignments)
-INSERT INTO `users` (`id`, `username`, `email`, `password_hash`, `role_id`, `first_name`, `last_name`, `is_active`, `created_at`) VALUES
-	(1, 'admin', 'admin@bookbite.com', '8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918', 2, 'Admin', 'User', 1, '2025-06-11 10:00:00'),
-	(4, 'test', 'test@test.com', '9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08', 1, 'Test', 'User', 1, '2025-06-10 10:51:17');
-
--- Dumping structure for table bookbite.reservations
-CREATE TABLE IF NOT EXISTS `reservations` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
-  `user_id` int(11) NOT NULL,
-  `table_id` int(11) NOT NULL,
-  `restaurant_id` int(11) NOT NULL,
-  `date` date NOT NULL,
-  `start_time` time NOT NULL,
-  `end_time` time NOT NULL,
-  `guest_count` int(11) NOT NULL,
-  `status` varchar(20) NOT NULL DEFAULT 'confirmed',
-  `phone_number` varchar(20) DEFAULT NULL,
-  `email` varchar(255) DEFAULT NULL,
-  `special_requests` text DEFAULT NULL,
-  `total_amount` decimal(10,2) NOT NULL DEFAULT 0.00,
-  `payment_status` varchar(20) NOT NULL DEFAULT 'pending',
-  `payment_method` varchar(20) DEFAULT NULL,
-  `created_at` timestamp NULL DEFAULT current_timestamp(),
-  PRIMARY KEY (`id`),
-  KEY `user_id` (`user_id`),
-  KEY `table_id` (`table_id`),
-  KEY `restaurant_id` (`restaurant_id`),
-  CONSTRAINT `reservations_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE,
-  CONSTRAINT `reservations_ibfk_2` FOREIGN KEY (`table_id`) REFERENCES `tables` (`id`) ON DELETE CASCADE,
-  CONSTRAINT `reservations_ibfk_3` FOREIGN KEY (`restaurant_id`) REFERENCES `restaurants` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
--- Dumping data for table bookbite.reservations: ~3 rows (approximately)
-INSERT INTO `reservations` (`id`, `user_id`, `table_id`, `restaurant_id`, `date`, `start_time`, `end_time`, `guest_count`, `status`, `phone_number`, `email`, `special_requests`, `total_amount`, `payment_status`, `payment_method`, `created_at`) VALUES
-	(1, 2, 1, 1, '2025-05-28', '19:00:00', '21:00:00', 2, 'cancelled', '(555) 123-4567', 'test@test.com', '', 50.00, 'refunded', 'card', '2025-05-27 15:28:02'),
-	(2, 2, 2, 1, '2025-05-29', '12:30:00', '14:30:00', 2, 'confirmed', '(555) 123-4567', 'test@test.com', 'Window seat preferred', 50.00, 'paid', 'card', '2025-05-27 15:34:29'),
-	(3, 2, 22, 3, '2025-06-04', '12:00:00', '14:00:00', 2, 'confirmed', '(555) 123-4567', 'test@test.com', '', 30.00, 'paid', 'cash', '2025-06-01 12:46:25');
-
--- Dumping structure for table bookbite.restaurants
-CREATE TABLE IF NOT EXISTS `restaurants` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
-  `name` varchar(100) NOT NULL,
-  `address` varchar(255) NOT NULL,
-  `phone_number` varchar(20) NOT NULL,
-  `description` text DEFAULT NULL,
-  `table_count` int(11) NOT NULL DEFAULT 0,
-  `cuisine_type` varchar(50) DEFAULT NULL,
-  `rating` decimal(3,1) DEFAULT 0.0,
-  `is_featured` tinyint(1) DEFAULT 0,
-  `price_range` varchar(20) DEFAULT NULL,
-  `opening_time` time DEFAULT NULL,
-  `closing_time` time DEFAULT NULL,
-  `image_url` varchar(255) DEFAULT NULL,
-  `reservation_fee` decimal(10,2) NOT NULL DEFAULT 25.00,
-  `is_active` tinyint(1) DEFAULT 1,
-  `created_at` timestamp NULL DEFAULT current_timestamp(),
-  `updated_at` timestamp NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
--- Dumping data for table bookbite.restaurants: ~3 rows (approximately)
-INSERT INTO `restaurants` (`id`, `name`, `address`, `phone_number`, `description`, `table_count`, `cuisine_type`, `rating`, `is_featured`, `price_range`, `opening_time`, `closing_time`, `image_url`, `reservation_fee`, `is_active`, `created_at`) VALUES
-	(1, 'Italian Delight', '123 Main St, Cityville', '555-1234', 'Discover authentic Italian restaurants with the finest pasta and pizza.', 10, 'Italian', 3.5, 1, 'Moderate', '11:00:00', '22:00:00', 'https://images.unsplash.com/photo-1579027989536-b7b1f875659b?q=80&w=3870&auto=format&fit=crop', 25.00, 1, '2025-05-27 10:29:13'),
-	(2, 'Sushi Haven', '456 Oak Ave, Townsville', '555-5678', 'Explore the rich flavors of Asian cuisine from sushi to spicy curries.', 8, 'Asian', 4.5, 1, 'Expensive', '12:00:00', '23:00:00', 'https://images.unsplash.com/photo-1551632436-cbf8dd35adfa?q=80&w=3871&auto=format&fit=crop', 40.00, 1, '2025-05-27 10:29:13'),
-	(3, 'BBQ Masters', '789 Pine Rd, Villageton', '555-9012', 'Enjoy classic American fare from gourmet burgers to steakhouses.', 12, 'American', 5.0, 1, 'Budget', '11:30:00', '22:30:00', 'https://images.unsplash.com/photo-1498654896293-37aacf113fd9?q=80&w=3870&auto=format&fit=crop', 15.00, 1, '2025-05-27 10:29:13');
+-- Dumping data for table bookbite.admin_audit_log: ~0 rows (approximately)
 
 -- Dumping structure for table bookbite.payments
 CREATE TABLE IF NOT EXISTS `payments` (
@@ -143,10 +61,76 @@ CREATE TABLE IF NOT EXISTS `payments` (
   CONSTRAINT `payments_ibfk_2` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Sample payment data
-INSERT INTO `payments` (`reservation_id`, `user_id`, `amount`, `payment_method`, `payment_status`, `transaction_id`, `card_last_four`, `card_type`, `cardholder_name`) VALUES
-	(2, 2, 50.00, 'card', 'completed', 'tx_1234567890', '1234', 'Visa', 'Test User'),
-	(3, 2, 30.00, 'cash', 'pending', NULL, NULL, NULL, NULL);
+-- Dumping data for table bookbite.payments: ~0 rows (approximately)
+
+-- Dumping structure for table bookbite.reservations
+CREATE TABLE IF NOT EXISTS `reservations` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `user_id` int(11) NOT NULL,
+  `table_id` int(11) NOT NULL,
+  `restaurant_id` int(11) NOT NULL,
+  `date` date NOT NULL,
+  `start_time` time NOT NULL,
+  `end_time` time NOT NULL,
+  `guest_count` int(11) NOT NULL,
+  `status` varchar(20) NOT NULL DEFAULT 'confirmed',
+  `phone_number` varchar(20) DEFAULT NULL,
+  `email` varchar(255) DEFAULT NULL,
+  `special_requests` text DEFAULT NULL,
+  `total_amount` decimal(10,2) NOT NULL DEFAULT 0.00,
+  `payment_status` varchar(20) NOT NULL DEFAULT 'pending',
+  `payment_method` varchar(20) DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT current_timestamp(),
+  `confirmation_token` varchar(255) DEFAULT NULL,
+  `confirmed_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `user_id` (`user_id`),
+  KEY `table_id` (`table_id`),
+  KEY `restaurant_id` (`restaurant_id`),
+  KEY `idx_confirmation_token` (`confirmation_token`),
+  CONSTRAINT `reservations_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `reservations_ibfk_2` FOREIGN KEY (`table_id`) REFERENCES `tables` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `reservations_ibfk_3` FOREIGN KEY (`restaurant_id`) REFERENCES `restaurants` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=15 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Dumping data for table bookbite.reservations: ~6 rows (approximately)
+INSERT INTO `reservations` (`id`, `user_id`, `table_id`, `restaurant_id`, `date`, `start_time`, `end_time`, `guest_count`, `status`, `phone_number`, `email`, `special_requests`, `total_amount`, `payment_status`, `payment_method`, `created_at`, `confirmation_token`, `confirmed_at`) VALUES
+	(9, 4, 7, 1, '2025-06-16', '11:00:00', '14:00:00', 6, 'cancelled', '0893414442', 'zvarazoku99@gmail.com', '', 4.00, 'refunded', 'cash', '2025-06-15 15:01:39', NULL, '2025-06-15 15:02:18'),
+	(10, 4, 1, 1, '2025-06-16', '11:00:00', '14:00:00', 2, 'confirmed', '0893414446', 'zvarazoku99@gmail.com', '', 4.00, 'pending', 'cash', '2025-06-15 15:38:39', NULL, '2025-06-15 15:39:16'),
+	(11, 4, 26, 3, '2025-06-20', '20:00:00', '22:30:00', 8, 'confirmed', '0893414446', '1321@gmail.com', '', 12.00, 'pending', 'cash', '2025-06-15 15:47:44', NULL, '2025-06-15 15:47:57'),
+	(12, 4, 10, 1, '2025-06-27', '19:00:00', '22:00:00', 12, 'cancelled', '0893414446', 'zvarazoku99@gmail.com', 'Family gathering', 12.00, 'paid', 'card', '2025-06-15 16:11:29', 'ee1a99555035e14bf3299f2fac4cbd95', NULL),
+	(13, 4, 27, 3, '2025-06-30', '19:00:00', '22:00:00', 8, 'confirmed', '0893414446', 'zvarazoku99@gmail.com', '', 12.00, 'pending', 'cash', '2025-06-15 16:12:47', NULL, '2025-06-15 16:13:09'),
+	(14, 4, 32, 4, '2025-06-20', '16:00:00', '19:00:00', 5, 'confirmed', '0893414446', 'zvarazoku99@gmail.com', 'test', 9.00, 'pending', 'cash', '2025-06-15 18:27:18', NULL, '2025-06-15 18:27:31');
+
+-- Dumping structure for table bookbite.restaurants
+CREATE TABLE IF NOT EXISTS `restaurants` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `name` varchar(100) NOT NULL,
+  `address` varchar(255) NOT NULL,
+  `phone_number` varchar(20) NOT NULL,
+  `description` text DEFAULT NULL,
+  `table_count` int(11) NOT NULL DEFAULT 0,
+  `cuisine_type` varchar(50) DEFAULT NULL,
+  `rating` decimal(3,1) DEFAULT 0.0,
+  `is_featured` tinyint(1) DEFAULT 0,
+  `price_range` varchar(20) DEFAULT NULL,
+  `opening_time` time DEFAULT NULL,
+  `closing_time` time DEFAULT NULL,
+  `image_url` varchar(255) DEFAULT NULL,
+  `reservation_fee` decimal(10,2) NOT NULL DEFAULT 25.00,
+  `is_active` tinyint(1) DEFAULT 1,
+  `created_at` timestamp NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Dumping data for table bookbite.restaurants: ~5 rows (approximately)
+INSERT INTO `restaurants` (`id`, `name`, `address`, `phone_number`, `description`, `table_count`, `cuisine_type`, `rating`, `is_featured`, `price_range`, `opening_time`, `closing_time`, `image_url`, `reservation_fee`, `is_active`, `created_at`, `updated_at`) VALUES
+	(1, 'Italian Delight', '123 Main St, Cityville', '555-1234', 'Discover authentic Italian restaurants with the finest pasta and pizza.', 10, 'Italian', 3.5, 1, 'Moderate', '11:00:00', '22:00:00', 'https://images.unsplash.com/photo-1579027989536-b7b1f875659b?q=80&w=3870&auto=format&fit=crop', 25.00, 1, '2025-05-27 10:29:13', '2025-06-15 18:01:32'),
+	(2, 'Sushi Haven', '456 Oak Ave, Townsville', '555-5678', 'Explore the rich flavors of Asian cuisine from sushi to spicy curries.', 8, 'Asian', 4.5, 1, 'Expensive', '12:00:00', '23:00:00', 'https://images.unsplash.com/photo-1551632436-cbf8dd35adfa?q=80&w=3871&auto=format&fit=crop', 40.00, 1, '2025-05-27 10:29:13', '2025-06-11 11:33:26'),
+	(3, 'BBQ Masters', '789 Pine Rd, Villageton', '555-9012', 'Enjoy classic American fare from gourmet burgers to steakhouses.', 12, 'American', 4.0, 1, 'Budget', '11:30:00', '22:30:00', 'https://images.unsplash.com/photo-1498654896293-37aacf113fd9?q=80&w=3870&auto=format&fit=crop', 15.00, 1, '2025-05-27 10:29:13', '2025-06-15 16:13:32'),
+	(4, 'Cherniq', '12 Street, NY', '0893414446', 'Pri cherniq', 2, 'Italian', 0.0, 0, 'Fine Dining', '08:00:00', '20:00:00', 'https://images.unsplash.com/photo-1498654896293-37aacf113fd9?q=80&w=3870&auto=format&fit=crop', 25.00, 1, '2025-06-11 15:05:45', '2025-06-15 18:40:16'),
+	(6, 'Pri Pa4et0', 'Maksim Gorki 18', '0885546176', 'Pa4et0 predlaga nai dobrata iaponska kuhnq v balgaria', 4, 'Japanese', 5.0, 1, 'Expensive', '09:00:00', '09:00:00', 'https://images.unsplash.com/photo-1579027989536-b7b1f875659b?q=80&w=3870&auto=format&fit=crop', 30.00, 1, '2025-06-15 18:48:52', '2025-06-15 18:49:11');
 
 -- Dumping structure for table bookbite.reviews
 CREATE TABLE IF NOT EXISTS `reviews` (
@@ -162,15 +146,17 @@ CREATE TABLE IF NOT EXISTS `reviews` (
   CONSTRAINT `reviews_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE,
   CONSTRAINT `reviews_ibfk_2` FOREIGN KEY (`restaurant_id`) REFERENCES `restaurants` (`id`) ON DELETE CASCADE,
   CONSTRAINT `reviews_chk_1` CHECK (`rating` between 1 and 5)
-) ENGINE=InnoDB AUTO_INCREMENT=18 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=20 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Dumping data for table bookbite.reviews: ~5 rows (approximately)
+-- Dumping data for table bookbite.reviews: ~7 rows (approximately)
 INSERT INTO `reviews` (`id`, `user_id`, `restaurant_id`, `rating`, `comment`, `created_at`) VALUES
 	(1, 1, 1, 5, 'Absolutely amazing Italian food! The pasta was freshly made and the service was impeccable.', '2025-05-27 10:29:13'),
 	(2, 1, 2, 4, 'Great sushi selection and friendly staff. The ambience could be better.', '2025-05-27 10:29:13'),
 	(3, 1, 3, 5, 'Best BBQ I\'ve had in years! Highly recommend the brisket and ribs.', '2025-05-27 10:29:13'),
 	(16, 2, 2, 5, '', '2025-05-27 15:31:14'),
-	(17, 4, 1, 2, 'sasda', '2025-06-10 11:23:02');
+	(17, 4, 1, 2, 'sasda', '2025-06-10 11:23:02'),
+	(18, 4, 3, 3, 'Test Review system!', '2025-06-15 16:13:32'),
+	(19, 1, 6, 5, 'Gotvi dobre mom4eto', '2025-06-15 18:49:06');
 
 -- Dumping structure for table bookbite.sessions
 CREATE TABLE IF NOT EXISTS `sessions` (
@@ -179,6 +165,11 @@ CREATE TABLE IF NOT EXISTS `sessions` (
   `data` mediumtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL,
   PRIMARY KEY (`session_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Dumping data for table bookbite.sessions: ~2 rows (approximately)
+INSERT INTO `sessions` (`session_id`, `expires`, `data`) VALUES
+	('4-UaNYKdUDOfc2Vdl-5WsBiIHQqSenZn', 1750106152, '{"cookie":{"originalMaxAge":86400000,"expires":"2025-06-16T20:35:22.296Z","secure":false,"httpOnly":true,"path":"/","sameSite":"lax"},"token":"1_78d33b19fa0cb5f88ea3e0a974b18be2_684f2e84","user":{"email":"admin@bookbite.com","firstName":"Admin","id":1,"isActive":true,"lastName":"User","permissions":["make_reservation","view_reservations","cancel_reservation","write_review","manage_restaurants","manage_users","view_admin_panel","promote_users"],"phoneNumber":"","roleId":2,"roleName":"admin","username":"admin"}}'),
+	('9zE9mASz53Oe-J8ghN2dsCRrtrWANV2c', 1750088938, '{"cookie":{"originalMaxAge":86399998,"expires":"2025-06-16T15:48:28.400Z","secure":false,"httpOnly":true,"path":"/","sameSite":"lax"},"token":"4_42644c08fe584aad033d7dc44b1b4c19_684ee044","user":{"email":"test@test.com","firstName":"Test","id":4,"isActive":true,"lastName":"User","permissions":["make_reservation","view_reservations","cancel_reservation","write_review"],"phoneNumber":"","roleId":1,"roleName":"user","username":"test"}}');
 
 -- Dumping structure for table bookbite.tables
 CREATE TABLE IF NOT EXISTS `tables` (
@@ -190,9 +181,9 @@ CREATE TABLE IF NOT EXISTS `tables` (
   PRIMARY KEY (`id`),
   KEY `restaurant_id` (`restaurant_id`),
   CONSTRAINT `tables_ibfk_1` FOREIGN KEY (`restaurant_id`) REFERENCES `restaurants` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=32 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=38 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Dumping data for table bookbite.tables: ~31 rows (approximately)
+-- Dumping data for table bookbite.tables: ~37 rows (approximately)
 INSERT INTO `tables` (`id`, `restaurant_id`, `seat_count`, `is_available`, `created_at`) VALUES
 	(1, 1, 2, 1, '2025-05-27 10:29:13'),
 	(2, 1, 2, 0, '2025-05-27 10:29:13'),
@@ -224,7 +215,58 @@ INSERT INTO `tables` (`id`, `restaurant_id`, `seat_count`, `is_available`, `crea
 	(28, 3, 10, 1, '2025-05-27 10:29:13'),
 	(29, 3, 10, 1, '2025-05-27 10:29:13'),
 	(30, 3, 12, 1, '2025-05-27 10:29:13'),
-	(31, 3, 12, 1, '2025-05-27 10:29:13');
+	(31, 3, 12, 1, '2025-05-27 10:29:13'),
+	(32, 4, 5, 1, '2025-06-15 18:14:24'),
+	(33, 4, 10, 1, '2025-06-15 18:14:35'),
+	(34, 6, 10, 1, '2025-06-15 18:48:52'),
+	(35, 6, 6, 1, '2025-06-15 18:48:52'),
+	(36, 6, 8, 1, '2025-06-15 18:48:52'),
+	(37, 6, 4, 1, '2025-06-15 18:48:52');
+
+-- Dumping structure for table bookbite.users
+CREATE TABLE IF NOT EXISTS `users` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `username` varchar(50) NOT NULL,
+  `email` varchar(100) NOT NULL,
+  `password_hash` varchar(64) NOT NULL,
+  `role_id` int(11) NOT NULL DEFAULT 1,
+  `first_name` varchar(50) DEFAULT NULL,
+  `last_name` varchar(50) DEFAULT NULL,
+  `phone_number` varchar(20) DEFAULT NULL,
+  `is_active` tinyint(1) DEFAULT 1,
+  `email_verified` tinyint(1) DEFAULT 0,
+  `email_verification_token` varchar(255) DEFAULT NULL,
+  `email_verification_expires` timestamp NULL DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `username` (`username`),
+  UNIQUE KEY `email` (`email`),
+  KEY `role_id` (`role_id`),
+  KEY `idx_email_verification_token` (`email_verification_token`),
+  CONSTRAINT `users_ibfk_1` FOREIGN KEY (`role_id`) REFERENCES `user_roles` (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=12 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Dumping data for table bookbite.users: ~2 rows (approximately)
+INSERT INTO `users` (`id`, `username`, `email`, `password_hash`, `role_id`, `first_name`, `last_name`, `phone_number`, `is_active`, `email_verified`, `email_verification_token`, `email_verification_expires`, `created_at`, `updated_at`) VALUES
+	(1, 'admin', 'admin@bookbite.com', '8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918', 2, 'Admin', 'User', NULL, 1, 1, NULL, NULL, '2025-06-11 10:00:00', '2025-06-15 19:42:49'),
+	(4, 'test', 'test@test.com', '9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08', 1, 'Test', 'User', NULL, 1, 1, NULL, NULL, '2025-06-10 10:51:17', '2025-06-15 19:42:49');
+
+-- Dumping structure for table bookbite.user_roles
+CREATE TABLE IF NOT EXISTS `user_roles` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `name` varchar(50) NOT NULL,
+  `description` text DEFAULT NULL,
+  `permissions` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`permissions`)),
+  `created_at` timestamp NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `name` (`name`)
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Dumping data for table bookbite.user_roles: ~2 rows (approximately)
+INSERT INTO `user_roles` (`id`, `name`, `description`, `permissions`, `created_at`) VALUES
+	(1, 'user', 'Regular user with basic permissions', '["make_reservation", "view_reservations", "cancel_reservation", "write_review"]', '2025-06-11 10:00:00'),
+	(2, 'admin', 'Administrator with full permissions', '["make_reservation", "view_reservations", "cancel_reservation", "write_review", "manage_restaurants", "manage_users", "view_admin_panel", "promote_users"]', '2025-06-11 10:00:00');
 
 -- Dumping structure for table bookbite.user_tokens
 CREATE TABLE IF NOT EXISTS `user_tokens` (
@@ -240,25 +282,27 @@ CREATE TABLE IF NOT EXISTS `user_tokens` (
   KEY `idx_user_id` (`user_id`),
   KEY `idx_active` (`is_active`),
   CONSTRAINT `user_tokens_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=20 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Add admin audit log table
-CREATE TABLE IF NOT EXISTS `admin_audit_log` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
-  `admin_user_id` int(11) NOT NULL,
-  `action` varchar(100) NOT NULL,
-  `target_type` varchar(50) DEFAULT NULL,
-  `target_id` int(11) DEFAULT NULL,
-  `details` json DEFAULT NULL,
-  `ip_address` varchar(45) DEFAULT NULL,
-  `user_agent` text DEFAULT NULL,
-  `created_at` timestamp NULL DEFAULT current_timestamp(),
-  PRIMARY KEY (`id`),
-  KEY `admin_user_id` (`admin_user_id`),
-  KEY `idx_action` (`action`),
-  KEY `idx_created_at` (`created_at`),
-  CONSTRAINT `admin_audit_log_ibfk_1` FOREIGN KEY (`admin_user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+-- Dumping data for table bookbite.user_tokens: ~15 rows (approximately)
+INSERT INTO `user_tokens` (`id`, `token`, `user_id`, `created_at`, `expires_at`, `is_active`) VALUES
+	(1, '1_8df97542e8c010e310985bfebff6615d_684ed8cb', 1, '2025-06-15 14:29:31', '2025-06-16 14:29:31', 1),
+	(2, '1_2987f47df37458e622fc0362fe14de87_684ed90e', 1, '2025-06-15 14:30:38', '2025-06-16 14:30:38', 0),
+	(3, '1_55d2921e8c83465c8d45557ff4f2a370_684ed9eb', 1, '2025-06-15 14:34:19', '2025-06-16 14:34:19', 0),
+	(4, '4_3ff9cc6011ff1f47293c76b05ab817f7_684ee02f', 4, '2025-06-15 15:01:03', '2025-06-16 15:01:03', 0),
+	(5, '4_42644c08fe584aad033d7dc44b1b4c19_684ee044', 4, '2025-06-15 15:01:24', '2025-06-16 15:01:24', 1),
+	(6, '4_05b406473809db94cf7fabd955ffe2ad_684ef082', 4, '2025-06-15 16:10:42', '2025-06-16 16:10:42', 0),
+	(7, '1_b2d421c831d5d915160513863fe9c654_684ef139', 1, '2025-06-15 16:13:45', '2025-06-16 16:13:45', 0),
+	(8, '4_0d7137df1802c92d47fa09e0b6eb15d3_684ef235', 4, '2025-06-15 16:17:57', '2025-06-16 16:17:57', 0),
+	(9, '1_b80e63980a639c55934cb815b3a88ec4_684ef281', 1, '2025-06-15 16:19:13', '2025-06-16 16:19:13', 0),
+	(10, '4_da8847677b00a200d1ca078c1c1d1785_684f1064', 4, '2025-06-15 18:26:44', '2025-06-16 18:26:44', 0),
+	(11, '1_f44c58af19294b75b1138de580c8cfdb_684f1239', 1, '2025-06-15 18:34:33', '2025-06-16 18:34:33', 0),
+	(12, '1_d8d139501eca207489e43df17efbcbc1_684f1258', 1, '2025-06-15 18:35:04', '2025-06-16 18:35:04', 0),
+	(13, '1_0f602d77bbe604681c9919981f958fde_684f15cf', 1, '2025-06-15 18:49:51', '2025-06-16 18:49:51', 0),
+	(14, '1_d29150efc71435ee63072383211c49aa_684f1695', 1, '2025-06-15 18:53:09', '2025-06-16 18:53:09', 0),
+	(15, '1_7ca99876baeed8ae531e8115d095d7f7_684f2000', 1, '2025-06-15 19:33:20', '2025-06-16 19:33:20', 0),
+	(17, '1_a125238b27864e50a506b0207f75ce1e_684f2d6e', 1, '2025-06-15 20:30:38', '2025-06-16 20:30:38', 0),
+	(19, '1_78d33b19fa0cb5f88ea3e0a974b18be2_684f2e84', 1, '2025-06-15 20:35:16', '2025-06-16 20:35:16', 1);
 
 /*!40103 SET TIME_ZONE=IFNULL(@OLD_TIME_ZONE, 'system') */;
 /*!40101 SET SQL_MODE=IFNULL(@OLD_SQL_MODE, '') */;

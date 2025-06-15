@@ -1,29 +1,32 @@
-# BookBite - Restaurant Reservation System
+# BookBite - Restaurant Reservation System 🍽️
 
 BookBite is a comprehensive restaurant reservation system featuring email confirmation workflows, user authentication, and modern web technologies. The system consists of a robust C++ backend using the Crow framework and a responsive Node.js/Express frontend with EJS templating.
 
 ## 🌟 Features
 
 ### Core Functionality
-- **User Authentication**: Secure registration, login/logout with session management
-- **Restaurant Management**: Browse restaurants with detailed information, photos, and reviews
-- **Table Reservations**: Real-time table availability and booking system
-- **Email Confirmation**: Automatic email confirmation workflow for reservations
-- **Admin Dashboard**: Comprehensive admin interface for managing restaurants, users, and reservations
-- **Responsive Design**: Modern, mobile-friendly interface
+- **User Registration & Authentication** - Secure user accounts with JWT token-based authentication
+- **Restaurant Discovery** - Browse restaurants with detailed information, ratings, and images
+- **Table Reservation System** - Real-time table availability and booking with email confirmation
+- **Review System** - Rate and review restaurants with star ratings
+- **Admin Dashboard** - Complete restaurant and user management interface
+- **Email Confirmations** - Automated email notifications for reservations and account verification
 
-### Email Confirmation System
-- Reservations start with "pending" status requiring email confirmation
-- Automatic confirmation emails with secure token-based verification
-- Resend confirmation email functionality for pending reservations
-- Confirmation page with next steps and reservation management links
+### User Features
+- User registration with email verification
+- Browse restaurants by cuisine type, rating, and location
+- View restaurant details with table availability
+- Make reservations with special requests
+- Manage personal reservations (view, cancel)
+- Write and edit restaurant reviews
+- Responsive design for mobile and desktop
 
-### Advanced Features
-- Real-time reservation status tracking (pending → confirmed → completed)
-- Payment status management
-- Special requests handling
-- Search and filter functionality
-- Reservation history and management
+### Admin Features
+- Restaurant management (create, update, delete)
+- User management with role-based permissions
+- Reservation management and monitoring
+- System analytics and audit logs
+- Table management for restaurants
 
 ## 🏗️ Project Structure
 
@@ -31,26 +34,30 @@ BookBite is a comprehensive restaurant reservation system featuring email confir
 bookbite/
 ├── backend/                    # C++ API Server
 │   ├── include/               # Header files
-│   │   ├── businessLogic/     # Service layer
+│   │   ├── businessLogic/     # Service layer (auth, restaurant, reservation, review)
 │   │   ├── dataAccess/        # Database access layer
-│   │   ├── models/            # Data models
+│   │   ├── models/            # Data models (User, Restaurant, Reservation, etc.)
 │   │   ├── presentation/      # API controllers
-│   │   └── utils/             # Utilities (email, env loader)
+│   │   └── utils/             # Utilities (email, database connection, env loader)
 │   ├── src/                   # Source files
 │   │   ├── main.cpp           # Application entry point
 │   │   └── [mirrors include structure]
 │   ├── build/                 # Build directory
-│   │   └── .env              # Environment configuration (REQUIRED)
 │   └── CMakeLists.txt        # Build configuration
 ├── frontend/                  # Node.js/Express Frontend
 │   ├── views/                 # EJS templates
 │   │   ├── pages/            # Page templates
 │   │   ├── partials/         # Reusable components
 │   │   └── layouts/          # Layout templates
-│   ├── public/               # Static assets
+│   ├── public/               # Static assets (CSS, JS, images)
 │   ├── app.js                # Express application
 │   └── package.json          # Dependencies
-├── add_confirmation_tokens.sql # Database migration
+├── diagrams/                  # System documentation
+│   ├── entity-relationship-diagram.png
+│   ├── sequence-diagram.png
+│   ├── activity-diagram.png
+│   ├── use-case-diagram.png
+│   └── file-structure-diagram.png
 ├── bookbite.sql              # Database schema
 └── README.md                 # This file
 ```
@@ -64,6 +71,7 @@ bookbite/
 - **Email**: CURL-based SMTP client with Gmail integration
 - **JSON**: nlohmann/json for API responses
 - **Security**: OpenSSL for cryptographic operations
+- **Build System**: CMake
 
 ### Frontend (Node.js)
 - **Framework**: Express.js with EJS templating
@@ -71,69 +79,88 @@ bookbite/
 - **Styling**: Bootstrap 5 with custom CSS
 - **Icons**: Font Awesome
 - **HTTP Client**: Axios for API communication
+- **Image Service**: Unsplash API integration
+
+### Database
+- **MySQL/MariaDB** with the following main tables:
+  - `users` - User accounts and authentication
+  - `restaurants` - Restaurant information and metadata
+  - `tables` - Restaurant seating arrangements
+  - `reservations` - Booking information and status
+  - `reviews` - User reviews and ratings
+  - `user_roles` - Role-based access control
+  - `auth_tokens` - JWT token management
 
 ## 🚀 Getting Started
 
 ### Prerequisites
-- C++ compiler with C++17 support
-- CMake 3.10+
-- MySQL/MariaDB database
-- Node.js 16+
-- npm
+- **C++ Compiler** (GCC 7+ or Clang 6+)
+- **CMake** (3.12+)
+- **Node.js** (14+) and npm
+- **MySQL/MariaDB** server
+- **Dependencies for C++ backend**:
+  - Crow framework
+  - nanodbc
+  - OpenSSL
+  - CURL
+  - nlohmann/json
+
+> **Note**: This project has been tested and verified to work on **macOS Tahoe Developer Beta 1**
 
 ### Database Setup
-
-1. Create a MySQL database and import the schema:
-   ```bash
-   mysql -u root -p < bookbite.sql
+1. Install MySQL/MariaDB
+2. Create the database:
+   ```sql
+   CREATE DATABASE bookbite;
    ```
-
-2. Apply the email confirmation migration:
+3. Import the schema:
    ```bash
-   mysql -u root -p bookbite < add_confirmation_tokens.sql
+   mysql -u root -p bookbite < bookbite.sql
    ```
 
 ### Backend Setup
-
 1. Navigate to the backend directory:
    ```bash
    cd backend
    ```
 
-2. **IMPORTANT**: Create the `.env` file in the `build/` directory with your email configuration:
+2. Install dependencies (macOS with Homebrew):
    ```bash
-   mkdir -p build
-   cat > build/.env << EOF
-   # Email Configuration (Required for email confirmation)
-   SMTP_HOST=smtp.gmail.com
-   SMTP_PORT=587
-   SMTP_USER=your-email@gmail.com
-   SMTP_PASSWORD=your-app-password
-   FROM_EMAIL=your-email@gmail.com
-   EOF
+   brew install cmake nanodbc unixodbc openssl curl nlohmann-json
    ```
 
-   **Note**: For Gmail, you need to:
-   - Enable 2-factor authentication
-   - Generate an app-specific password
-   - Use the app password (not your regular password)
-
-3. Build the project:
+3. Create build directory and configure:
    ```bash
-   mkdir -p build && cd build
+   mkdir build
+   cd build
    cmake ..
+   ```
+
+4. Build the project:
+   ```bash
    make
    ```
 
-4. Run the server:
+5. Create a `.env` file in the build directory:
+   ```env
+   DB_HOST=localhost
+   DB_PORT=3306
+   DB_USER=root
+   DB_PASSWORD=your_password
+   DB_NAME=bookbite
+   SMTP_SERVER=smtp.gmail.com
+   SMTP_PORT=587
+   SMTP_USER=your_email@gmail.com
+   SMTP_PASSWORD=your_app_password
+   ```
+
+6. Run the backend server:
    ```bash
    ./bookbite_server
    ```
-
    The backend API will be available at `http://localhost:8080/api`
 
 ### Frontend Setup
-
 1. Navigate to the frontend directory:
    ```bash
    cd frontend
@@ -144,36 +171,69 @@ bookbite/
    npm install
    ```
 
-3. Start the development server:
-   ```bash
-   npm run dev -c
+3. Create a `.env` file:
+   ```env
+   PORT=3000
+   API_URL=http://localhost:8080/api
+   DB_HOST=localhost
+   DB_PORT=3306
+   DB_USER=root
+   DB_PASSWORD=your_password
+   DB_NAME=bookbite
+   SESSION_SECRET=your_session_secret
    ```
 
+4. Start the frontend server:
+   ```bash
+   npm run dev
+   ```
    The frontend will be available at `http://localhost:3000`
+
+## 📊 System Architecture
+
+### Entity Relationship Diagram
+![ER Diagram](diagrams/entity-relationship-diagram.png)
+
+The system uses a normalized database schema with proper foreign key relationships:
+- Users can have multiple reservations and reviews
+- Restaurants have multiple tables and receive reviews
+- Tables belong to restaurants and can have multiple reservations
+- Reservations link users, restaurants, and tables
+
+### Use Case Diagram
+![Use Case Diagram](diagrams/use-case-diagram.png)
+
+The system supports different user roles:
+- **Guest Users**: Browse restaurants, view details
+- **Registered Users**: Make reservations, write reviews, manage bookings
+- **Administrators**: Full system management capabilities
+
+### Activity Diagram
+![Activity Diagram](diagrams/activity-diagram.png)
+
+Shows the complete reservation workflow from browsing to confirmation.
+
+### Sequence Diagram
+![Sequence Diagram](diagrams/sequence-diagram.png)
+
+Illustrates the interaction between frontend, backend, and database components.
 
 ## 📧 Email Configuration
 
-The email confirmation system requires proper SMTP configuration:
+The system uses Gmail SMTP for sending emails. To configure:
 
-### Gmail Setup (Recommended)
-1. Enable 2-factor authentication on your Google account
-2. Generate an app-specific password:
+1. Enable 2-factor authentication on your Gmail account
+2. Generate an App Password:
    - Go to Google Account settings
    - Security → 2-Step Verification → App passwords
-   - Generate a password for "Mail"
-3. Use this app password in your `.env` file
+   - Generate password for "Mail"
+3. Use the app password in your `.env` file
 
-### Environment Variables
-The `.env` file **must** be placed in `backend/build/.env` (same directory as the executable):
-
-```properties
-# Email Configuration
-SMTP_HOST=smtp.gmail.com
-SMTP_PORT=587
-SMTP_USER=your-email@gmail.com
-SMTP_PASSWORD=your-16-char-app-password
-FROM_EMAIL=your-email@gmail.com
-```
+Email features include:
+- Account verification emails
+- Reservation confirmation emails
+- Reservation reminder emails
+- Password reset emails (if implemented)
 
 ## 📚 API Documentation
 
@@ -181,65 +241,106 @@ FROM_EMAIL=your-email@gmail.com
 - `POST /api/auth/register` - Register new user
 - `POST /api/auth/login` - User login
 - `POST /api/auth/logout` - User logout
+- `GET /api/auth/verify-email/{token}` - Verify email address
 
 ### Restaurant Endpoints
 - `GET /api/restaurants` - List all restaurants
-- `GET /api/restaurants/:id` - Get restaurant details
-- `POST /api/restaurants` - Create restaurant (admin)
-- `PUT /api/restaurants/:id` - Update restaurant (admin)
-- `DELETE /api/restaurants/:id` - Delete restaurant (admin)
+- `GET /api/restaurants/{id}` - Get restaurant details
+- `GET /api/restaurants/{id}/tables` - Get restaurant tables
+- `GET /api/restaurants/{id}/reviews` - Get restaurant reviews
 
 ### Reservation Endpoints
+- `POST /api/reservations` - Create new reservation
 - `GET /api/user/reservations` - Get user's reservations
-- `POST /api/reservations` - Create new reservation (creates pending status)
-- `GET /api/reservations/confirm/:token` - Confirm reservation via email
-- `POST /api/reservations/:id/resend-email` - Resend confirmation email
-- `PUT /api/reservations/:id/cancel` - Cancel reservation
+- `POST /api/reservations/{id}/cancel` - Cancel reservation
+- `GET /api/reservations/confirm/{token}` - Confirm reservation
 
-### Table Endpoints
-- `GET /api/restaurants/:id/tables` - Get restaurant tables
-- `GET /api/restaurants/:id/availabletables` - Get available tables
+### Admin Endpoints
+- `GET /api/admin/users` - Manage users
+- `GET /api/admin/restaurants` - Manage restaurants
+- `GET /api/admin/reservations` - Manage reservations
+- `POST /api/admin/restaurants` - Create restaurant
 
 ## 💫 Email Confirmation Workflow
 
-1. **Reservation Creation**: User makes a reservation → Status: "pending"
-2. **Email Sent**: Confirmation email with secure token sent automatically
-3. **Email Confirmation**: User clicks link → Status: "confirmed"
-4. **Completion**: Restaurant can mark as "completed" after dining
+1. **User Registration**:
+   - User registers with email
+   - System sends verification email
+   - User clicks verification link
+   - Account becomes active
 
-### Pending Reservations Management
-- Users can view pending reservations in "My Reservations" → "Pending" tab
-- Resend confirmation email if not received
-- Pending reservations are excluded from upcoming/confirmed lists
+2. **Reservation Process**:
+   - User makes reservation
+   - System sends confirmation email with token
+   - User clicks confirmation link
+   - Reservation status changes to "confirmed"
 
 ## 🔧 Development
 
 ### Building the Backend
-```bash
-cd backend/build
-cmake ..
-make
-```
+The C++ backend uses CMake and requires several dependencies. The build process automatically:
+- Fetches the Crow framework if not installed
+- Links against MySQL/ODBC drivers
+- Configures SSL and CURL libraries
+- Copies the executable to the project root
 
-### Environment Variables
-Ensure the `.env` file is in the correct location (`backend/build/.env`) for the email service to work properly.
+### Frontend Development
+The Express.js frontend provides:
+- Server-side rendering with EJS
+- Session management with MySQL store
+- API proxy to the C++ backend
+- CORS handling for development
+
+### File Structure
+![File Structure](diagrams/file-structure-diagram.png)
+
+The project follows a clean architecture pattern:
+- **Models**: Data structures and entities
+- **Data Access**: Database operations and queries
+- **Business Logic**: Core application logic and rules
+- **Presentation**: API controllers and routing
+- **Utils**: Helper functions and utilities
 
 ## 📋 Common Issues
 
-### Email Not Sending
-- Verify `.env` file is in `backend/build/.env`
-- Check Gmail app password is correct
-- Ensure 2FA is enabled on Gmail account
+### Backend Issues
+- **Database Connection**: Ensure MySQL is running and credentials are correct
+- **ODBC Drivers**: Install MariaDB ODBC driver for macOS
+- **SSL Certificates**: May need to configure SSL certificate paths
 
-### Database Connection Issues
-- Verify MySQL is running
-- Check database credentials in the code
-- Ensure database schema is properly imported
+### Frontend Issues
+- **Session Store**: Requires MySQL connection for session storage
+- **API Communication**: Ensure backend is running on port 8080
+- **Image Loading**: Unsplash integration requires internet connection
 
-### Build Issues
-- Ensure all dependencies are installed
-- Check CMake version compatibility
-- Verify C++17 compiler support
+### Email Issues
+- **SMTP Authentication**: Use App Passwords for Gmail
+- **Firewall**: Ensure SMTP port 587 is not blocked
+- **Email Delivery**: Check spam folders for confirmation emails
 
-# Made with ❤️
-- Boris Milev
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Test thoroughly
+5. Submit a pull request
+
+## 📄 License
+
+This project is licensed under the MIT License - see the LICENSE file for details.
+
+## 🙏 Acknowledgments
+
+- Crow C++ framework for the robust backend
+- Bootstrap for the responsive UI components
+- Unsplash for restaurant imagery
+- Font Awesome for icons
+
+---
+
+**BookBite** - Making restaurant reservations simple and elegant! 🎉
+
+---
+
+Made with ❤️
