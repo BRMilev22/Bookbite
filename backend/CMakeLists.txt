@@ -5,6 +5,9 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
+# Add debug information during build
+set(CMAKE_VERBOSE_MAKEFILE ON)
+
 # Find Crow
 find_package(Crow QUIET)
 if(NOT Crow_FOUND)
@@ -85,6 +88,9 @@ target_link_libraries(bookbite_server PRIVATE
     OpenSSL::SSL
     OpenSSL::Crypto
 )
+
+# Add compile flags to enable explicit instantiation of template specializations for bool type
+target_compile_options(bookbite_server PRIVATE -DNANODBC_ENABLE_BOOST=OFF -DNANODBC_DISABLE_MSSQL=ON)
 
 # Link ODBC libraries if found
 if(ODBC_LIBRARY)

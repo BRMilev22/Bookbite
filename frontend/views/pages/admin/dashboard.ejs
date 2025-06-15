@@ -1,0 +1,233 @@
+<!-- Admin Edit Restaurant Content -->
+<link rel="stylesheet" href="/css/admin.css">
+
+<!-- Modern Admin Dashboard -->
+<div class="admin-layout">
+    <!-- Modern Admin Sidebar -->
+    <nav class="modern-admin-sidebar">
+        <div class="sidebar-header">
+            <div class="logo-section">
+                <i class="fas fa-utensils text-primary"></i>
+                <div>
+                    <h4 class="mb-0">BookBite Admin</h4>
+                    <small class="text-muted">Administrative Panel</small>
+                </div>
+            </div>
+        </div>
+        
+        <ul class="sidebar-nav">
+            <li>
+                <a href="/admin" class="nav-item active">
+                    <i class="fas fa-chart-pie"></i>
+                    <span>Dashboard</span>
+                </a>
+            </li>
+            <li>
+                <a href="/admin/users" class="nav-item">
+                    <i class="fas fa-users"></i>
+                    <span>Manage Users</span>
+                </a>
+            </li>
+            <li>
+                <a href="/admin/restaurants" class="nav-item">
+                    <i class="fas fa-utensils"></i>
+                    <span>Manage Restaurants</span>
+                </a>
+            </li>
+            <li class="separator"></li>
+            <li>
+                <a href="/" class="nav-item">
+                    <i class="fas fa-globe"></i>
+                    <span>View Website</span>
+                </a>
+            </li>
+            <li>
+                <a href="/logout" class="nav-item logout">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span>Logout</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+
+    <!-- Modern Main Content -->
+    <main class="modern-admin-content">
+        <div class="content-header">
+            <div>
+                <h1 class="content-title">Welcome to Admin Dashboard</h1>
+                <p class="content-subtitle">Monitor and manage your BookBite platform</p>
+            </div>
+            <div class="header-actions">
+                <button class="modern-btn primary">
+                    <i class="fas fa-plus"></i>
+                    Quick Actions
+                </button>
+            </div>
+        </div>
+
+        <!-- Statistics Cards -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-icon users">
+                    <i class="fas fa-users"></i>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-number"><%= totalUsers %></div>
+                    <div class="stat-label">Total Users</div>
+                </div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-icon restaurants">
+                    <i class="fas fa-utensils"></i>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-number"><%= totalRestaurants %></div>
+                    <div class="stat-label">Restaurants</div>
+                </div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-icon reservations">
+                    <i class="fas fa-calendar-check"></i>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-number"><%= totalReservations %></div>
+                    <div class="stat-label">Total Reservations</div>
+                </div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-icon today">
+                    <i class="fas fa-clock"></i>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-number"><%= todayReservations %></div>
+                    <div class="stat-label">Today's Reservations</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Activity Section -->
+        <div class="row g-4">
+            <!-- Recent Reservations -->
+            <div class="col-lg-8">
+                <div class="modern-card">
+                    <div class="card-header">
+                        <h3 class="card-title">Recent Reservations</h3>
+                        <p class="card-subtitle">Latest booking activity on your platform</p>
+                    </div>
+                    
+                    <div class="card-content">
+                        <div class="table-container">
+                            <table class="modern-table">
+                                <thead>
+                                    <tr>
+                                        <th>Customer</th>
+                                        <th>Restaurant</th>
+                                        <th>Date & Time</th>
+                                        <th>Status</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <% if (recentReservations && recentReservations.length > 0) { %>
+                                        <% recentReservations.forEach(reservation => { %>
+                                            <tr>
+                                                <td>
+                                                    <div class="user-info">
+                                                        <div class="user-avatar">
+                                                            <%= (reservation.customerName || 'U').charAt(0).toUpperCase() %>
+                                                        </div>
+                                                        <div>
+                                                            <div class="user-name"><%= reservation.customerName || 'Unknown' %></div>
+                                                            <div class="user-email"><%= reservation.email || '' %></div>
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                                <td>
+                                                    <div class="restaurant-info">
+                                                        <div class="restaurant-name"><%= reservation.restaurantName || 'Unknown Restaurant' %></div>
+                                                        <div class="table-info">Table <%= reservation.tableId %></div>
+                                                    </div>
+                                                </td>
+                                                <td>
+                                                    <div class="date-info">
+                                                        <div class="reservation-date"><%= new Date(reservation.date).toLocaleDateString() %></div>
+                                                        <div class="reservation-time"><%= reservation.startTime %> - <%= reservation.endTime %></div>
+                                                    </div>
+                                                </td>
+                                                <td>
+                                                    <span class="status-badge <%= reservation.status === 'confirmed' ? 'confirmed' : reservation.status === 'cancelled' ? 'cancelled' : 'pending' %>">
+                                                        <i class="fas fa-circle"></i>
+                                                        <%= reservation.status %>
+                                                    </span>
+                                                </td>
+                                                <td>
+                                                    <div class="action-buttons">
+                                                        <button class="action-btn info">
+                                                            <i class="fas fa-eye"></i>
+                                                        </button>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        <% }); %>
+                                    <% } else { %>
+                                        <tr>
+                                            <td colspan="5" class="empty-state">
+                                                <div class="empty-content">
+                                                    <i class="fas fa-calendar-times"></i>
+                                                    <h4>No recent reservations</h4>
+                                                    <p>No booking activity found in the system yet.</p>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    <% } %>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- New Users Sidebar -->
+            <div class="col-lg-4">
+                <div class="modern-card">
+                    <div class="card-header">
+                        <h3 class="card-title">New Users</h3>
+                        <p class="card-subtitle">Recently registered members</p>
+                    </div>
+                    
+                    <div class="card-content">
+                        <% if (recentUsers && recentUsers.length > 0) { %>
+                            <% recentUsers.forEach(user => { %>
+                                <div class="user-item">
+                                    <div class="user-avatar success">
+                                        <%= (user.firstName || 'U').charAt(0).toUpperCase() %>
+                                    </div>
+                                    <div class="user-details">
+                                        <div class="user-name"><%= user.firstName %> <%= user.lastName %></div>
+                                        <div class="user-email"><%= user.email %></div>
+                                        <div class="user-meta">
+                                            <i class="fas fa-clock"></i>
+                                            Joined <%= new Date(user.createdAt).toLocaleDateString() %>
+                                        </div>
+                                    </div>
+                                    <span class="role-badge <%= (user.roleName || 'Customer').toLowerCase() %>">
+                                        <%= user.roleName || 'Customer' %>
+                                    </span>
+                                </div>
+                            <% }); %>
+                        <% } else { %>
+                            <div class="empty-content">
+                                <i class="fas fa-user-slash"></i>
+                                <h4>No new users</h4>
+                                <p>No recent registrations found.</p>
+                            </div>
+                        <% } %>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>

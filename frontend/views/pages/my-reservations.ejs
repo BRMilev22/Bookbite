@@ -1,0 +1,507 @@
+<div class="container">
+    <div class="reservation-page-header mb-5">
+        <div class="row align-items-center">
+            <div class="col-lg-8">
+                <h1 class="display-5 mb-3">My Reservations</h1>
+                <p class="lead text-muted">Manage and track all your dining experiences in one place</p>
+            </div>
+            <div class="col-lg-4 text-lg-end">
+                <a href="/restaurants" class="btn btn-primary">
+                    <i class="fas fa-plus-circle me-2"></i> Book New Reservation
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Reservation stats cards -->
+        <div class="col-lg-12 mb-4">
+            <div class="row g-3">
+                <div class="col-sm-4">
+                    <div class="card border-0 shadow-sm stat-card">
+                        <div class="card-body p-4">
+                            <div class="d-flex align-items-center">
+                                <div class="stat-icon rounded-circle bg-primary bg-opacity-10 text-primary">
+                                    <i class="fas fa-calendar-alt"></i>
+                                </div>
+                                <div class="ms-3">
+                                    <h6 class="card-subtitle text-muted mb-1">Upcoming Reservations</h6>
+                                    <h3 class="card-title mb-0">
+                                        <% 
+                                            const upcomingCount = reservations.filter(r => {
+                                                const today = new Date();
+                                                today.setHours(0, 0, 0, 0); // Set to start of day
+                                                const resDate = new Date(r.date + 'T00:00:00'); // Ensure date is parsed correctly
+                                                resDate.setHours(0, 0, 0, 0); // Set to start of day
+                                                return r.status === 'confirmed' && resDate >= today;
+                                            }).length;
+                                        %>
+                                        <%= upcomingCount %>
+                                    </h3>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-sm-4">
+                    <div class="card border-0 shadow-sm stat-card">
+                        <div class="card-body p-4">
+                            <div class="d-flex align-items-center">
+                                <div class="stat-icon rounded-circle bg-success bg-opacity-10 text-success">
+                                    <i class="fas fa-history"></i>
+                                </div>
+                                <div class="ms-3">
+                                    <h6 class="card-subtitle text-muted mb-1">Past Visits</h6>
+                                    <h3 class="card-title mb-0">
+                                        <% 
+                                            const pastCount = reservations.filter(r => {
+                                                const today = new Date();
+                                                today.setHours(0, 0, 0, 0); // Set to start of day
+                                                const resDate = new Date(r.date + 'T00:00:00'); // Ensure date is parsed correctly
+                                                resDate.setHours(0, 0, 0, 0); // Set to start of day
+                                                return (r.status === 'confirmed' || r.status === 'completed') && resDate < today;
+                                            }).length;
+                                        %>
+                                        <%= pastCount %>
+                                    </h3>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-sm-4">
+                    <div class="card border-0 shadow-sm stat-card">
+                        <div class="card-body p-4">
+                            <div class="d-flex align-items-center">
+                                <div class="stat-icon rounded-circle bg-danger bg-opacity-10 text-danger">
+                                    <i class="fas fa-ban"></i>
+                                </div>
+                                <div class="ms-3">
+                                    <h6 class="card-subtitle text-muted mb-1">Cancelled</h6>
+                                    <h3 class="card-title mb-0">
+                                        <% 
+                                            const cancelledCount = reservations.filter(r => r.status === 'cancelled').length;
+                                        %>
+                                        <%= cancelledCount %>
+                                    </h3>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-12">
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-body p-0">
+                    <div class="reservation-tabs-header p-4 border-bottom">
+                        <ul class="nav nav-pills nav-pills-custom mb-0" id="reservationTabs" role="tablist">
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link active" id="upcoming-tab" data-bs-toggle="pill" data-bs-target="#upcoming" type="button" role="tab">
+                                    <i class="far fa-calendar-check me-2"></i> Upcoming
+                                </button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="past-tab" data-bs-toggle="pill" data-bs-target="#past" type="button" role="tab">
+                                    <i class="fas fa-history me-2"></i> Past
+                                </button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="cancelled-tab" data-bs-toggle="pill" data-bs-target="#cancelled" type="button" role="tab">
+                                    <i class="fas fa-ban me-2"></i> Cancelled
+                                </button>
+                            </li>
+                        </ul>
+                    </div>
+                    
+                    <div class="tab-content p-4" id="reservationTabContent">
+                        <!-- Upcoming Reservations -->
+                        <div class="tab-pane fade show active" id="upcoming" role="tabpanel">
+                            <% 
+                                const upcomingReservations = reservations.filter(r => {
+                                    const today = new Date();
+                                    today.setHours(0, 0, 0, 0); // Set to start of day
+                                    const resDate = new Date(r.date + 'T00:00:00'); // Ensure date is parsed correctly
+                                    resDate.setHours(0, 0, 0, 0); // Set to start of day
+                                    return r.status === 'confirmed' && resDate >= today;
+                                });
+                                
+                                if (upcomingReservations.length > 0) {
+                            %>
+                                <div class="reservation-search mb-4">
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-transparent border-end-0">
+                                            <i class="fas fa-search text-muted"></i>
+                                        </span>
+                                        <input type="text" class="form-control border-start-0 ps-0" id="searchUpcoming" 
+                                            placeholder="Search by restaurant name or date...">
+                                    </div>
+                                </div>
+                                
+                                <div class="reservation-cards">
+                                    <div class="d-flex flex-wrap gap-3">
+                                        <% upcomingReservations.forEach(reservation => { 
+                                            // Format date for display
+                                            const resDate = new Date(reservation.date);
+                                            const formattedDate = resDate.toLocaleDateString('en-US', {
+                                                weekday: 'short',
+                                                month: 'short', 
+                                                day: 'numeric'
+                                            });
+                                                             // Calculate days remaining
+                            const today = new Date();
+                            today.setHours(0, 0, 0, 0);
+                            const reservationDate = new Date(reservation.date);
+                            reservationDate.setHours(0, 0, 0, 0);
+                            const timeDiff = reservationDate.getTime() - today.getTime();
+                            const daysRemaining = Math.floor(timeDiff / (1000 * 3600 * 24));
+                                            
+                                            // Format time
+                                            let formattedTime = 'Time not set';
+                                            if (reservation.startTime) {
+                                                const timeArr = reservation.startTime.split(':');
+                                                const hour = parseInt(timeArr[0]);
+                                                const minute = timeArr[1];
+                                                const period = hour >= 12 ? 'PM' : 'AM';
+                                                const displayHour = hour > 12 ? hour - 12 : (hour === 0 ? 12 : hour);
+                                                formattedTime = `${displayHour}:${minute} ${period}`;
+                                            }
+                                        %>
+                                            <div class="reservation-item" style="flex: 0 0 auto; width: 300px; min-width: 280px;">
+                                                <div class="card border-0 shadow-sm reservation-card h-100">
+                                                    <div class="reservation-card-image">
+                                                        <img src="https://images.unsplash.com/photo-1552566626-52f8b828add9?q=80&w=3870&auto=format&fit=crop" 
+                                                            class="card-img-top" alt="<%= reservation.restaurant.name %>">
+                                                        <div class="reservation-card-tag">
+                                                            <span><i class="far fa-calendar me-1"></i> <%= formattedDate %></span>
+                                                        </div>
+                                                        <% if (daysRemaining <= 3) { %>
+                                                            <div class="reservation-countdown">
+                                                                <% if (daysRemaining === 0) { %>
+                                                                    <span class="badge bg-danger">Today!</span>
+                                                                <% } else if (daysRemaining === 1) { %>
+                                                                    <span class="badge bg-warning text-dark">Tomorrow</span>
+                                                                <% } else { %>
+                                                                    <span class="badge bg-info text-dark">In <%= daysRemaining %> days</span>
+                                                                <% } %>
+                                                            </div>
+                                                        <% } %>
+                                                    </div>
+                                                    <div class="card-body">
+                                                        <h5 class="card-title mb-3"><%= reservation.restaurant.name %></h5>
+                                                        <div class="reservation-details">
+                                                            <div class="detail-item">
+                                                                <i class="far fa-clock text-primary"></i>
+                                                                <span><%= formattedTime %></span>
+                                                            </div>
+                                                            <div class="detail-item">
+                                                                <i class="fas fa-users text-primary"></i>
+                                                                <span><%= reservation.guestCount %> <%= reservation.guestCount > 1 ? 'guests' : 'guest' %></span>
+                                                            </div>
+                                                            <div class="detail-item">
+                                                                <i class="fas fa-map-marker-alt text-primary"></i>
+                                                                <span class="text-truncate"><%= reservation.restaurant.address %></span>
+                                                            </div>
+                                                            <div class="detail-item">
+                                                                <i class="fas fa-table text-primary"></i>
+                                                                <span>Table #<%= reservation.tableId %></span>
+                                                            </div>
+                                                            <% if (reservation.totalAmount && reservation.totalAmount > 0) { %>
+                                                            <div class="detail-item">
+                                                                <i class="fas fa-dollar-sign text-primary"></i>
+                                                                <span>$<%= reservation.totalAmount %></span>
+                                                            </div>
+                                                            <% } %>
+                                                        </div>
+                                                        <hr>
+                                                        <div class="d-flex justify-content-between align-items-center mb-2">
+                                                            <span class="reservation-status">
+                                                                <i class="fas fa-circle text-success me-1 small"></i>
+                                                                Confirmed
+                                                            </span>
+                                                            <% if (reservation.paymentStatus) { %>
+                                                                <span class="payment-status">
+                                                                    <% if (reservation.paymentStatus === 'paid') { %>
+                                                                        <span class="badge bg-success">
+                                                                            <i class="fas fa-check me-1"></i>Paid
+                                                                        </span>
+                                                                    <% } else if (reservation.paymentStatus === 'pending') { %>
+                                                                        <span class="badge bg-warning text-dark">
+                                                                            <i class="fas fa-clock me-1"></i>Payment Due
+                                                                        </span>
+                                                                    <% } else { %>
+                                                                        <span class="badge bg-secondary">
+                                                                            <%= reservation.paymentStatus %>
+                                                                        </span>
+                                                                    <% } %>
+                                                                </span>
+                                                            <% } %>
+                                                        </div>
+                                                        <div class="dropdown">
+                                                                <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                                                    Actions
+                                                                </button>
+                                                                <ul class="dropdown-menu dropdown-menu-end">
+                                                                    <li>
+                                                                        <a class="dropdown-item" href="/restaurants/<%= reservation.restaurantId %>">
+                                                                            <i class="fas fa-store me-2"></i> View Restaurant
+                                                                        </a>
+                                                                    </li>
+                                                                    <li><hr class="dropdown-divider"></li>
+                                                                    <li>
+                                                                        <form action="/reservations/<%= reservation.id %>/cancel" method="POST">
+                                                                            <button type="submit" class="dropdown-item text-danger" 
+                                                                                onclick="return confirm('Are you sure you want to cancel this reservation?')">
+                                                                                <i class="fas fa-times-circle me-2"></i> Cancel Reservation
+                                                                            </button>
+                                                                        </form>
+                                                                    </li>
+                                                                </ul>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        <% }); %>
+                                    </div>
+                                </div>
+                                
+                                <% if (upcomingReservations.length > 6) { %>
+                                    <div class="text-center mt-4">
+                                        <button class="btn btn-outline-primary" id="loadMoreUpcoming">
+                                            <i class="fas fa-chevron-down me-2"></i> Load More
+                                        </button>
+                                    </div>
+                                <% } %>
+                            <% } else { %>
+                                <div class="empty-state text-center py-5">
+                                    <div class="empty-state-icon mb-4">
+                                        <i class="far fa-calendar text-muted"></i>
+                                    </div>
+                                    <h4>No Upcoming Reservations</h4>
+                                    <p class="text-muted mb-4">You don't have any upcoming restaurant reservations.</p>
+                                    <a href="/restaurants" class="btn btn-primary">
+                                        <i class="fas fa-utensils me-2"></i> Browse Restaurants
+                                    </a>
+                                </div>
+                            <% } %>
+                        </div>
+                        
+                        <!-- Past Reservations -->
+                        <div class="tab-pane fade" id="past" role="tabpanel">
+                            <% 
+                                const pastReservations = reservations.filter(r => {
+                                    const today = new Date();
+                                    today.setHours(0, 0, 0, 0); // Set to start of day
+                                    const resDate = new Date(r.date + 'T00:00:00'); // Ensure date is parsed correctly
+                                    resDate.setHours(0, 0, 0, 0); // Set to start of day
+                                    return (r.status === 'confirmed' || r.status === 'completed') && resDate < today;
+                                });
+                                
+                                if (pastReservations.length > 0) {
+                            %>
+                                <div class="reservation-search mb-4">
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-transparent border-end-0">
+                                            <i class="fas fa-search text-muted"></i>
+                                        </span>
+                                        <input type="text" class="form-control border-start-0 ps-0" id="searchPast" 
+                                            placeholder="Search past reservations...">
+                                    </div>
+                                </div>
+                                
+                                <div class="reservation-cards">
+                                    <div class="row g-4">
+                                        <% pastReservations.forEach(reservation => { 
+                                            // Format date and time
+                                            const resDate = new Date(reservation.date);
+                                            const formattedDate = resDate.toLocaleDateString('en-US', {
+                                                weekday: 'short',
+                                                month: 'short', 
+                                                day: 'numeric',
+                                                year: 'numeric'
+                                            });
+                                            
+                                            // Format time
+                                            let formattedTime = 'Time not set';
+                                            if (reservation.startTime) {
+                                                const timeArr = reservation.startTime.split(':');
+                                                const hour = parseInt(timeArr[0]);
+                                                const minute = timeArr[1];
+                                                const period = hour >= 12 ? 'PM' : 'AM';
+                                                const displayHour = hour > 12 ? hour - 12 : (hour === 0 ? 12 : hour);
+                                                formattedTime = `${displayHour}:${minute} ${period}`;
+                                            }
+                                        %>
+                                            <div class="col-md-6 col-xl-4 reservation-item">
+                                                <div class="card border-0 shadow-sm reservation-card h-100">
+                                                    <div class="reservation-card-image grayscale">
+                                                        <img src="https://images.unsplash.com/photo-1555939594-58d7cb561ad1?q=80&w=3687&auto=format&fit=crop" 
+                                                            class="card-img-top" alt="<%= reservation.restaurant.name %>">
+                                                        <div class="reservation-card-tag">
+                                                            <span><i class="far fa-calendar me-1"></i> <%= formattedDate %></span>
+                                                        </div>
+                                                    </div>
+                                                    <div class="card-body">
+                                                        <div class="d-flex justify-content-between align-items-start mb-3">
+                                                            <h5 class="card-title mb-0"><%= reservation.restaurant.name %></h5>
+                                                            <span class="badge bg-secondary">Completed</span>
+                                                        </div>
+                                                        <div class="reservation-details">
+                                                            <div class="detail-item">
+                                                                <i class="far fa-clock text-secondary"></i>
+                                                                <span><%= formattedTime %></span>
+                                                            </div>
+                                                            <div class="detail-item">
+                                                                <i class="fas fa-users text-secondary"></i>
+                                                                <span><%= reservation.guestCount %> <%= reservation.guestCount > 1 ? 'guests' : 'guest' %></span>
+                                                            </div>
+                                                            <div class="detail-item">
+                                                                <i class="fas fa-map-marker-alt text-secondary"></i>
+                                                                <span class="text-truncate"><%= reservation.restaurant.address %></span>
+                                                            </div>
+                                                        </div>
+                                                        <hr>
+                                                        <div class="d-flex justify-content-between align-items-center">
+                                                            <div class="rate-experience">
+                                                                <div class="rating-stars" data-restaurant="<%= reservation.restaurantId %>">
+                                                                    <i class="far fa-star"></i>
+                                                                    <i class="far fa-star"></i>
+                                                                    <i class="far fa-star"></i>
+                                                                    <i class="far fa-star"></i>
+                                                                    <i class="far fa-star"></i>
+                                                                </div>
+                                                            </div>
+                                                            <a href="/restaurants/<%= reservation.restaurantId %>" class="btn btn-sm btn-outline-secondary">
+                                                                Book Again
+                                                            </a>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        <% }); %>
+                                    </div>
+                                </div>
+                                
+                                <% if (pastReservations.length > 6) { %>
+                                    <div class="text-center mt-4">
+                                        <button class="btn btn-outline-primary" id="loadMorePast">
+                                            <i class="fas fa-chevron-down me-2"></i> Load More
+                                        </button>
+                                    </div>
+                                <% } %>
+                            <% } else { %>
+                                <div class="empty-state text-center py-5">
+                                    <div class="empty-state-icon mb-4">
+                                        <i class="fas fa-history text-muted"></i>
+                                    </div>
+                                    <h4>No Past Reservations</h4>
+                                    <p class="text-muted mb-4">You haven't completed any restaurant reservations yet.</p>
+                                    <a href="/restaurants" class="btn btn-primary">
+                                        <i class="fas fa-utensils me-2"></i> Browse Restaurants
+                                    </a>
+                                </div>
+                            <% } %>
+                        </div>
+                        
+                        <!-- Cancelled Reservations -->
+                        <div class="tab-pane fade" id="cancelled" role="tabpanel">
+                            <% 
+                                const cancelledReservations = reservations.filter(r => r.status === 'cancelled');
+                                
+                                if (cancelledReservations.length > 0) {
+                            %>
+                                <div class="reservation-search mb-4">
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-transparent border-end-0">
+                                            <i class="fas fa-search text-muted"></i>
+                                        </span>
+                                        <input type="text" class="form-control border-start-0 ps-0" id="searchCancelled" 
+                                            placeholder="Search cancelled reservations...">
+                                    </div>
+                                </div>
+                                
+                                <div class="cancelled-reservations">
+                                    <% cancelledReservations.forEach(reservation => { 
+                                        // Format date and time
+                                        const resDate = new Date(reservation.date);
+                                        const formattedDate = resDate.toLocaleDateString('en-US', {
+                                            weekday: 'short',
+                                            month: 'short', 
+                                            day: 'numeric',
+                                            year: 'numeric'
+                                        });
+                                        
+                                        // Format time
+                                        let formattedTime = 'Time not set';
+                                        if (reservation.startTime) {
+                                            const timeArr = reservation.startTime.split(':');
+                                            const hour = parseInt(timeArr[0]);
+                                            const minute = timeArr[1];
+                                            const period = hour >= 12 ? 'PM' : 'AM';
+                                            const displayHour = hour > 12 ? hour - 12 : (hour === 0 ? 12 : hour);
+                                            formattedTime = `${displayHour}:${minute} ${period}`;
+                                        }
+                                    %>
+                                        <div class="card border-0 shadow-sm mb-3 reservation-item">
+                                            <div class="card-body p-0">
+                                                <div class="row g-0">
+                                                    <div class="col-md-2 cancelled-img">
+                                                        <img src="https://images.unsplash.com/photo-1579027989536-b7b1f875659b?q=80&w=3870&auto=format&fit=crop" 
+                                                            class="img-fluid rounded-start h-100 w-100 object-cover grayscale" alt="<%= reservation.restaurant.name %>">
+                                                    </div>
+                                                    <div class="col-md-8">
+                                                        <div class="card-body">
+                                                            <h5 class="card-title mb-2"><%= reservation.restaurant.name %></h5>
+                                                            <p class="card-text text-muted small mb-3"><%= reservation.restaurant.address %></p>
+                                                            
+                                                            <div class="d-flex flex-wrap gap-3">
+                                                                <div class="cancelled-detail">
+                                                                    <div class="detail-label">Date</div>
+                                                                    <div class="detail-value"><%= formattedDate %></div>
+                                                                </div>
+                                                                <div class="cancelled-detail">
+                                                                    <div class="detail-label">Time</div>
+                                                                    <div class="detail-value"><%= formattedTime %></div>
+                                                                </div>
+                                                                <div class="cancelled-detail">
+                                                                    <div class="detail-label">Party Size</div>
+                                                                    <div class="detail-value"><%= reservation.guestCount %> people</div>
+                                                                </div>
+                                                                <div class="cancelled-detail">
+                                                                    <div class="detail-label">Status</div>
+                                                                    <div class="detail-value"><span class="badge bg-danger">Cancelled</span></div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-2 d-flex align-items-center justify-content-center p-3">
+                                                        <a href="/restaurants/<%= reservation.restaurantId %>" class="btn btn-outline-primary">
+                                                            Book Again
+                                                        </a>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    <% }); %>
+                                </div>
+                            <% } else { %>
+                                <div class="empty-state text-center py-5">
+                                    <div class="empty-state-icon mb-4">
+                                        <i class="fas fa-ban text-muted"></i>
+                                    </div>
+                                    <h4>No Cancelled Reservations</h4>
+                                    <p class="text-muted mb-4">You don't have any cancelled reservations.</p>
+                                    <a href="/restaurants" class="btn btn-primary">
+                                        <i class="fas fa-utensils me-2"></i> Browse Restaurants
+                                    </a>
+                                </div>
+                            <% } %>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

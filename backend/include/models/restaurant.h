@@ -1,27 +1,62 @@
-#pragma once
+#ifndef RESTAURANT_H
+#define RESTAURANT_H
 
 #include <string>
-#include <vector>
 
-struct RestaurantFeature {
-    int id = 0;
+class Restaurant {
+public:
+    Restaurant();
+    Restaurant(int id, const std::string& name, const std::string& address, 
+              const std::string& phoneNumber, const std::string& description, int tableCount,
+              const std::string& cuisineType = "", float rating = 0.0, bool isFeatured = false,
+              const std::string& priceRange = "", const std::string& openingTime = "", const std::string& closingTime = "",
+              const std::string& imageUrl = "");
+    
+    int getId() const;
+    std::string getName() const;
+    std::string getAddress() const;
+    std::string getPhoneNumber() const;
+    std::string getDescription() const;
+    int getTableCount() const;
+    std::string getCuisineType() const;
+    float getRating() const;
+    bool getIsFeatured() const;
+    std::string getPriceRange() const;
+    std::string getOpeningTime() const;
+    std::string getClosingTime() const;
+    std::string getImageUrl() const;
+    double getReservationFee() const;
+    
+    void setId(int id);
+    void setName(const std::string& name);
+    void setAddress(const std::string& address);
+    void setPhoneNumber(const std::string& phoneNumber);
+    void setDescription(const std::string& description);
+    void setTableCount(int tableCount);
+    void setCuisineType(const std::string& cuisineType);
+    void setRating(float rating);
+    void setIsFeatured(bool isFeatured);
+    void setPriceRange(const std::string& priceRange);
+    void setOpeningTime(const std::string& openingTime);
+    void setClosingTime(const std::string& closingTime);
+    void setImageUrl(const std::string& imageUrl);
+    void setReservationFee(double reservationFee);
+
+private:
+    int id;
     std::string name;
+    std::string address;
+    std::string phoneNumber;
+    std::string description;
+    int tableCount;
+    std::string cuisineType;
+    float rating;
+    bool isFeatured;
+    std::string priceRange;
+    std::string openingTime;
+    std::string closingTime;
+    std::string imageUrl;
+    double reservationFee;
 };
 
-// Restaurant data structure
-struct Restaurant {
-    int id = 0;
-    std::string name;
-    std::string imageUrl;
-    std::string location;
-    std::string distance;
-    std::string category;
-    std::string priceRange;
-    double rating = 4.0;
-    std::string ratingLabel = "Good";
-    int reviews = 0;
-    bool isSpecial = false;
-    bool isRecommended = false;
-    bool isTrending = false;
-    std::vector<RestaurantFeature> features;
-}; 
+#endif // RESTAURANT_H

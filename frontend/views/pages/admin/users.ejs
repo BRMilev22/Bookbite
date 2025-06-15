@@ -1,0 +1,180 @@
+<!-- Modern Admin Users Management -->
+<div class="admin-layout">
+    <!-- Modern Admin Sidebar -->
+    <nav class="modern-admin-sidebar">
+        <div class="sidebar-header">
+            <div class="logo-section">
+                <i class="fas fa-utensils text-primary"></i>
+                <div>
+                    <h4 class="mb-0">BookBite Admin</h4>
+                    <small class="text-muted">Administrative Panel</small>
+                </div>
+            </div>
+        </div>
+        
+        <ul class="sidebar-nav">
+            <li>
+                <a href="/admin" class="nav-item">
+                    <i class="fas fa-chart-pie"></i>
+                    <span>Dashboard</span>
+                </a>
+            </li>
+            <li>
+                <a href="/admin/users" class="nav-item active">
+                    <i class="fas fa-users"></i>
+                    <span>Manage Users</span>
+                </a>
+            </li>
+            <li>
+                <a href="/admin/restaurants" class="nav-item">
+                    <i class="fas fa-utensils"></i>
+                    <span>Manage Restaurants</span>
+                </a>
+            </li>
+            <li class="separator"></li>
+            <li>
+                <a href="/" class="nav-item">
+                    <i class="fas fa-globe"></i>
+                    <span>View Website</span>
+                </a>
+            </li>
+            <li>
+                <a href="/logout" class="nav-item logout">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span>Logout</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+
+    <!-- Modern Main Content -->
+    <main class="modern-admin-content">
+        <div class="content-header">
+            <div>
+                <h1 class="content-title">Manage Users</h1>
+                <p class="content-subtitle">Monitor and manage user accounts on your platform</p>
+            </div>
+            <div class="header-actions">
+                <button class="modern-btn secondary">
+                    <i class="fas fa-download"></i>
+                    Export
+                </button>
+            </div>
+        </div>
+
+        <!-- Users Table Card -->
+        <div class="modern-card">
+            <div class="card-header">
+                <h3 class="card-title">User Management</h3>
+                <p class="card-subtitle">View and manage all registered users</p>
+            </div>
+            
+            <div class="card-content">
+                <div class="table-container">
+                    <table class="modern-table">
+                        <thead>
+                            <tr>
+                                <th>User</th>
+                                <th>Email</th>
+                                <th>Role</th>
+                                <th>Status</th>
+                                <th>Registered</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <% if (users && users.length > 0) { %>
+                                <% users.forEach(user => { %>
+                                    <tr>
+                                        <td>
+                                            <div class="user-info">
+                                                <div class="user-avatar">
+                                                    <%= (user.firstName || 'U').charAt(0).toUpperCase() %>
+                                                </div>
+                                                <div>
+                                                    <div class="user-name"><%= user.firstName %> <%= user.lastName %></div>
+                                                    <div class="user-id">ID: <%= user.id %></div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <span class="table-email"><%= user.email %></span>
+                                        </td>
+                                        <td>
+                                            <span class="role-badge <%= (user.roleName || 'Customer').toLowerCase() %>">
+                                                <%= user.roleName || 'Customer' %>
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <span class="status-badge <%= user.isActive ? 'active' : 'inactive' %>">
+                                                <i class="fas fa-circle"></i>
+                                                <%= user.isActive ? 'Active' : 'Inactive' %>
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <span class="table-date"><%= new Date(user.createdAt).toLocaleDateString() %></span>
+                                        </td>
+                                        <td>
+                                            <div class="action-buttons">
+                                                <!-- Toggle Status -->
+                                                <button type="button" 
+                                                        class="action-btn <%= user.isActive ? 'warning' : 'success' %>" 
+                                                        onclick="toggleUserStatus(<%= user.id %>, <%= user.isActive %>)"
+                                                        title="<%= user.isActive ? 'Deactivate' : 'Activate' %> User">
+                                                    <i class="fas fa-<%= user.isActive ? 'user-slash' : 'user-check' %>"></i>
+                                                </button>
+                                                
+                                                <!-- Role Management -->
+                                                <div class="dropdown">
+                                                    <button type="button" 
+                                                            class="action-btn info dropdown-toggle" 
+                                                            data-bs-toggle="dropdown" 
+                                                            title="Change Role">
+                                                        <i class="fas fa-user-cog"></i>
+                                                    </button>
+                                                    <ul class="dropdown-menu">
+                                                        <% if (roles && roles.length > 0) { %>
+                                                            <% roles.forEach(role => { %>
+                                                                <% if (role.name !== user.roleName) { %>
+                                                                    <li>
+                                                                        <a class="dropdown-item" 
+                                                                           href="#" 
+                                                                           onclick="changeUserRole(<%= user.id %>, <%= role.id %>)">
+                                                                            <%= role.name %>
+                                                                        </a>
+                                                                    </li>
+                                                                <% } %>
+                                                            <% }); %>
+                                                        <% } %>
+                                                    </ul>
+                                                </div>
+                                                
+                                                <!-- Delete User -->
+                                                <button type="button" 
+                                                        class="action-btn danger" 
+                                                        onclick="confirmDeleteUser(<%= user.id %>, '<%= user.firstName %> <%= user.lastName %>')"
+                                                        title="Delete User">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                <% }); %>
+                            <% } else { %>
+                                <tr>
+                                    <td colspan="6" class="empty-state">
+                                        <div class="empty-content">
+                                            <i class="fas fa-users"></i>
+                                            <h4>No users found</h4>
+                                            <p>There are no users registered in the system yet.</p>
+                                        </div>
+                                    </td>
+                                </tr>
+                            <% } %>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>

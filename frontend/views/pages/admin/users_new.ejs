@@ -1,0 +1,394 @@
+<%- contentFor('head') %>
+<link rel="stylesheet" href="/css/admin.css">
+
+<%- contentFor('body') %>
+
+<div class="container-fluid p-0">
+    <div class="row g-0">
+        <!-- Sidebar -->
+        <div class="col-auto">
+            <div class="admin-sidebar">
+                <div class="d-flex flex-column h-100">
+                    <div class="p-3 border-bottom border-light border-opacity-25">
+                        <h5 class="text-white mb-0">
+                            <i class="fas fa-shield-alt text-warning me-2"></i>Admin Panel
+                        </h5>
+                    </div>
+                    <nav class="nav flex-column p-2">
+                        <a class="nav-link" href="/admin">
+                            <i class="fas fa-tachometer-alt me-2"></i>Dashboard
+                        </a>
+                        <a class="nav-link" href="/admin/restaurants">
+                            <i class="fas fa-utensils me-2"></i>Restaurants
+                        </a>
+                        <a class="nav-link active" href="/admin/users">
+                            <i class="fas fa-users me-2"></i>Users
+                        </a>
+                        <a class="nav-link" href="/restaurants">
+                            <i class="fas fa-arrow-left me-2"></i>Back to Site
+                        </a>
+                    </nav>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Main Content -->
+        <div class="col">
+            <div class="main-content">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h1 class="h3 mb-0">Manage Users</h1>
+                    <div class="text-muted">
+                        <i class="fas fa-users me-1"></i>
+                        Total: <%= users ? users.length : 0 %> users
+                    </div>
+                </div>
+                
+                <!-- Users Table -->
+                <div class="card admin-card border-0">
+                    <div class="card-body p-0">
+                        <% if (users && users.length > 0) { %>
+                            <div class="table-responsive">
+                                <table class="table admin-table table-hover mb-0">
+                                    <thead>
+                                        <tr>
+                                            <th>User</th>
+                                            <th>Email</th>
+                                            <th>Role</th>
+                                            <th>Status</th>
+                                            <th>Created</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <% users.forEach(user => { %>
+                                            <tr>
+                                                <td>
+                                                    <div class="d-flex align-items-center">
+                                                        <div class="avatar bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 40px; height: 40px;">
+                                                            <span><%= user.username.charAt(0).toUpperCase() %></span>
+                                                        </div>
+                                                        <div>
+                                                            <div class="fw-semibold"><%= user.username %></div>
+                                                            <% if (user.firstName || user.lastName) { %>
+                                                                <div class="text-muted small"><%= (user.firstName || '') %> <%= (user.lastName || '') %></div>
+                                                            <% } else { %>
+                                                                <div class="text-muted small"><%= user.roleName === 'admin' ? 'Administrator' : 'Regular User' %></div>
+                                                            <% } %>
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                                <td><%= user.email %></td>
+                                                <td>
+                                                    <span class="role-badge <%= user.roleName === 'admin' ? 'admin' : 'user' %>">
+                                                        <%= user.roleName === 'admin' ? 'ADMIN' : 'USER' %>
+                                                    </span>
+                                                </td>
+                                                <td>
+                                                    <% if (user.isActive !== false) { %>
+                                                        <span class="badge bg-success">Active</span>
+                                                    <% } else { %>
+                                                        <span class="badge bg-danger">Inactive</span>
+                                                    <% } %>
+                                                </td>
+                                                <td>
+                                                    <% if (user.createdAt) { %>
+                                                        <%= new Date(user.createdAt).toLocaleDateString() %>
+                                                    <% } else { %>
+                                                        N/A
+                                                    <% } %>
+                                                </td>
+                                                <td>
+                                                    <div class="btn-group btn-group-sm">
+                                                        <button class="btn btn-admin btn-outline-primary" 
+                                                                title="Change Role" 
+                                                                onclick="changeUserRole(<%= user.id %>, '<%= user.roleName || 'user' %>', '<%= user.username %>')">
+                                                            <i class="fas fa-user-cog"></i>
+                                                        </button>
+                                                        <% if (user.isActive !== false) { %>
+                                                            <button class="btn btn-admin btn-outline-warning" 
+                                                                    title="Deactivate User"
+                                                                    onclick="toggleUserStatus(<%= user.id %>, false)">
+                                                                <i class="fas fa-user-slash"></i>
+                                                            </button>
+                                                        <% } else { %>
+                                                            <button class="btn btn-admin btn-outline-success" 
+                                                                    title="Activate User"
+                                                                    onclick="toggleUserStatus(<%= user.id %>, true)">
+                                                                <i class="fas fa-user-check"></i>
+                                                            </button>
+                                                        <% } %>
+                                                        <% if (user.username !== 'admin') { %>
+                                                            <button class="btn btn-admin btn-outline-danger" 
+                                                                    title="Delete User"
+                                                                    onclick="confirmDeleteUser(<%= user.id %>, '<%= user.username %>')">
+                                                                <i class="fas fa-trash"></i>
+                                                            </button>
+                                                        <% } %>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        <% }); %>
+                                    </tbody>
+                                </table>
+                            </div>
+                        <% } else { %>
+                            <div class="text-center py-5">
+                                <i class="fas fa-users fa-3x text-muted mb-3"></i>
+                                <h5 class="text-muted">No users found</h5>
+                                <p class="text-muted">Users will appear here as they register.</p>
+                            </div>
+                        <% } %>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Role Change Modal -->
+<div class="modal fade" id="roleModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Change User Role</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="roleForm">
+                <div class="modal-body">
+                    <p>Change role for user: <strong id="userName"></strong></p>
+                    
+                    <div class="mb-3">
+                        <label for="roleSelect" class="form-label">Select Role</label>
+                        <select class="form-select" id="roleSelect" name="roleId" required>
+                            <option value="1">User - Regular user with basic permissions</option>
+                            <option value="2">Admin - Administrator with full permissions</option>
+                        </select>
+                    </div>
+                    
+                    <div class="alert alert-warning small">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        <strong>Warning:</strong> Changing a user's role will immediately affect their permissions and access to the system.
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Update Role</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Status Change Modal -->
+<div class="modal fade" id="statusModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="statusModalTitle">Change User Status</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p id="statusModalText">Are you sure you want to change this user's status?</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="confirmStatusChange">Confirm</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete User Confirmation Modal -->
+<div class="modal fade" id="deleteUserModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Confirm Delete User</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete user <strong id="deleteUserName"></strong>?</p>
+                <p class="text-muted small">This action cannot be undone and will also delete all user's reservations and reviews.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form id="deleteUserForm" method="POST" style="display: inline;">
+                    <button type="submit" class="btn btn-danger">Delete User</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<%- contentFor('scripts') %>
+<script>
+console.log('=== LOADING ADMIN USERS FUNCTIONS ===');
+
+// Define functions in the global scope immediately
+window.changeUserRole = function(userId, currentRole, userName) {
+    console.log('Change role called for user:', userName, 'ID:', userId, 'Current role:', currentRole);
+    
+    const userNameElement = document.getElementById('userName');
+    const roleSelect = document.getElementById('roleSelect');
+    const roleForm = document.getElementById('roleForm');
+    
+    if (userNameElement && roleSelect && roleForm) {
+        userNameElement.textContent = userName;
+        roleForm.action = '/admin/users/' + userId + '/promote';
+        
+        // Set the opposite role as selected
+        for (let option of roleSelect.options) {
+            if (currentRole.toLowerCase() === 'admin' && option.text.toLowerCase().includes('user')) {
+                option.selected = true;
+                break;
+            } else if (currentRole.toLowerCase() === 'user' && option.text.toLowerCase().includes('admin')) {
+                option.selected = true;
+                break;
+            }
+        }
+        
+        const modal = new bootstrap.Modal(document.getElementById('roleModal'));
+        modal.show();
+    } else {
+        console.error('Modal elements not found');
+        alert('Modal elements not found. Please refresh the page.');
+    }
+};
+
+window.toggleUserStatus = function(userId, newStatus) {
+    console.log('Toggle status called for user:', userId, 'New status:', newStatus);
+    
+    const statusText = newStatus ? 'activate' : 'deactivate';
+    const statusModalTitle = document.getElementById('statusModalTitle');
+    const statusModalText = document.getElementById('statusModalText');
+    const confirmButton = document.getElementById('confirmStatusChange');
+    
+    if (statusModalTitle && statusModalText && confirmButton) {
+        statusModalTitle.textContent = (newStatus ? 'Activate' : 'Deactivate') + ' User';
+        statusModalText.textContent = 'Are you sure you want to ' + statusText + ' this user?';
+        
+        confirmButton.onclick = function() {
+            performStatusChange(userId, newStatus);
+        };
+        
+        const modal = new bootstrap.Modal(document.getElementById('statusModal'));
+        modal.show();
+    } else {
+        console.error('Status modal elements not found');
+        alert('Status modal elements not found. Please refresh the page.');
+    }
+};
+
+window.confirmDeleteUser = function(userId, userName) {
+    console.log('Confirm delete called for user:', userName, 'ID:', userId);
+    
+    const deleteUserNameElement = document.getElementById('deleteUserName');
+    const deleteUserForm = document.getElementById('deleteUserForm');
+    
+    if (deleteUserNameElement && deleteUserForm) {
+        deleteUserNameElement.textContent = userName;
+        deleteUserForm.action = '/admin/users/' + userId + '/delete';
+        
+        const modal = new bootstrap.Modal(document.getElementById('deleteUserModal'));
+        modal.show();
+    } else {
+        console.error('Delete modal elements not found');
+        alert('Delete modal elements not found. Please refresh the page.');
+    }
+};
+
+function performStatusChange(userId, newStatus) {
+    console.log('Performing status change for user:', userId, 'to:', newStatus);
+    
+    fetch('/admin/users/' + userId + '/status', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            isActive: newStatus
+        })
+    })
+    .then(function(response) {
+        if (response.ok) {
+            alert('User ' + (newStatus ? 'activated' : 'deactivated') + ' successfully!');
+            window.location.reload();
+        } else {
+            return response.json().then(function(errorData) {
+                console.error('Server error:', errorData);
+                alert('Failed to change user status. Please try again.');
+            });
+        }
+    })
+    .catch(function(error) {
+        console.error('Error changing user status:', error);
+        alert('An error occurred. Please try again.');
+    })
+    .finally(function() {
+        const modal = bootstrap.Modal.getInstance(document.getElementById('statusModal'));
+        if (modal) {
+            modal.hide();
+        }
+    });
+}
+
+console.log('Functions defined on window:', {
+    changeUserRole: typeof window.changeUserRole,
+    toggleUserStatus: typeof window.toggleUserStatus,
+    confirmDeleteUser: typeof window.confirmDeleteUser
+});
+
+// DOM-dependent initialization
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('DOM loaded, setting up form handlers');
+    
+    // Handle role change form submission
+    const roleForm = document.getElementById('roleForm');
+    if (roleForm) {
+        roleForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            const roleId = formData.get('roleId');
+            const action = this.action;
+            
+            console.log('Submitting role change:', action, 'with roleId:', roleId);
+            
+            fetch(action, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    roleId: parseInt(roleId)
+                })
+            })
+            .then(function(response) {
+                if (response.ok) {
+                    alert('User role updated successfully!');
+                    window.location.reload();
+                } else {
+                    return response.text().then(function(errorText) {
+                        console.error('Server error:', errorText);
+                        alert('Failed to change user role. Please try again.');
+                    });
+                }
+            })
+            .catch(function(error) {
+                console.error('Error changing user role:', error);
+                alert('An error occurred. Please try again.');
+            })
+            .finally(function() {
+                const modal = bootstrap.Modal.getInstance(document.getElementById('roleModal'));
+                if (modal) {
+                    modal.hide();
+                }
+            });
+        });
+    } else {
+        console.error('Role form not found');
+    }
+    
+    console.log('Admin users functionality ready!');
+});
+</script>

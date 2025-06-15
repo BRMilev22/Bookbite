@@ -1,0 +1,109 @@
+/* Reviews styling for BookBite */
+
+.reviews-section {
+    margin-top: 3rem;
+    margin-bottom: 3rem;
+}
+
+.review-card {
+    border-left: 4px solid #ffc107;
+    transition: transform 0.2s;
+}
+
+.review-card:hover {
+    transform: translateY(-3px);
+}
+
+.review-stars i {
+    margin-right: 2px;
+}
+
+.review-form-card {
+    background-color: #f8f9fa;
+    border: none;
+    border-radius: 8px;
+}
+
+.review-stars-input {
+    font-size: 1.5rem;
+    cursor: pointer;
+}
+
+.review-stars-input i {
+    margin-right: 5px;
+    transition: transform 0.2s;
+}
+
+.review-stars-input i:hover {
+    transform: scale(1.2);
+}
+
+.review-stars-input i.hovered {
+    color: #ffb700;
+}
+
+.restaurant-price-badge {
+    display: inline-block;
+    padding: 0.25rem 0.5rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+    border-radius: 0.25rem;
+}
+
+/* Loading state for reviews container */
+#reviews-container.loading {
+    min-height: 200px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+#reviews-container .spinner-border {
+    width: 3rem;
+    height: 3rem;
+}
+
+#review-error {
+    margin-top: 1rem;
+    text-align: center;
+}
+
+.price-badge-budget {
+    background-color: #28a745;
+    color: white;
+}
+
+.price-badge-moderate {
+    background-color: #ffc107;
+    color: black;
+}
+
+.price-badge-expensive {
+    background-color: #dc3545;
+    color: white;
+}
+
+.review-summary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1.5rem;
+}
+
+.review-count {
+    font-size: 0.9rem;
+    color: #6c757d;
+}
+
+.review-form-footer {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 1rem;
+}
+
+#review-error, #review-success {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 1050;
+}

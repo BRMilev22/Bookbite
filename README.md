@@ -1,105 +1,114 @@
 # BookBite - Restaurant Reservation System
 
-BookBite is a modern restaurant reservation system with a C++ backend (Crow + nanodbc) and a Next.js frontend. The application allows customers to view available tables, make reservations, and manage their bookings.
+BookBite is a modern web application that allows users to browse restaurants, view their details, and make reservations. The system consists of a C++ backend using the Crow framework and a React frontend with Material UI.
 
 ## Project Structure
 
-The project consists of two main parts:
+The project is organized into two main directories:
 
-1. **Backend**: C++ application with Crow RESTful API framework and nanodbc for MySQL/MariaDB connectivity
-2. **Frontend**: Next.js application with TypeScript, Tailwind CSS, and Hero UI components
+- `backend/`: Contains the C++ backend API server
+- `frontend/`: Contains the React frontend application
 
-## Prerequisites
+## Backend
 
-### Backend
+The backend is built using:
 
-- C++ compiler with C++17 support
-- CMake 3.12+
-- Crow C++ framework
-- nanodbc library
-- MySQL or MariaDB
-- MariaDB Connector/C and Connector/ODBC
+- C++ with the Crow web framework
+- nanodbc for database connectivity
+- nlohmann/json for JSON handling
+- OpenSSL for password hashing and security
 
-These can be installed on macOS via Homebrew:
+### Backend Features
 
-```bash
-brew install crow odbc mysql mariadb-connector-c mariadb-connector-odbc
-```
+- User authentication (register, login, logout)
+- Restaurant management
+- Table management
+- Reservation system
 
-### Frontend
+## Frontend
 
-- Node.js 18+
-- npm
+The frontend is built using:
+
+- React with TypeScript
+- Material UI for the user interface
+- React Router for navigation
+- Axios for API calls
+- JWT for authentication
+
+### Frontend Features
+
+- Modern responsive UI
+- User authentication (login/register)
+- Browse restaurants
+- View restaurant details
+- Make table reservations
+- View and manage reservations
 
 ## Getting Started
 
-### Database Setup
+### Running the Backend
 
-Get the sql file from the backend folder and run it on your database.
+1. Navigate to the backend directory:
+   ```
+   cd /Users/borismilev/Desktop/bookbite/backend
+   ```
 
-### Backend Setup
+2. Build and run the application:
+   ```
+   ./build_and_run.sh
+   ```
 
-```bash
-cd backend
-mkdir build
-cd build
-cmake ..
-make 
-cd ../..
-```
+3. The backend API will be available at `http://localhost:8080/api`
 
-### Frontend Setup
+### Running the Frontend
 
-```bash
-cd frontend
-npm install
-cd ..
-```
+1. Navigate to the frontend directory:
+   ```
+   cd /Users/borismilev/Desktop/bookbite/frontend
+   ```
 
-## Running the Application
+2. Install dependencies (if you haven't already):
+   ```
+   npm install
+   ```
 
-### Start the Backend Server
+3. Start the development server:
+   ```
+   npm run dev
+   ```
 
-```bash
-./bookbite_server
-```
-
-The API will be available at http://localhost:8080
-
-### Start the Frontend Development Server
-
-```bash
-cd frontend
-npm run dev
-```
-
-The frontend will be available at http://localhost:3000
-
-## Features
-
-- View available restaurant tables
-- Make reservations with customer information
-- Specify special requests and requirements
-- Admin interface for restaurant staff (coming soon)
-- Email notifications (coming soon)
-
-## Architecture
-
-The project follows a three-layer architecture:
-
-1. **Data Layer**: Database models and direct database access
-2. **Service Layer**: Business logic and operations
-3. **Controller Layer**: API endpoints and request/response handling
+4. The frontend application will be available at `http://localhost:5173`
 
 ## API Endpoints
 
-- `GET /api/tables` - Get all restaurant tables
-- `GET /api/customers` - Get all customers
-- `POST /api/customers` - Create a new customer
-- `GET /api/customers/:id` - Get a specific customer
-- `POST /api/reservations` - Create a new reservation
-- More endpoints coming soon
+### Authentication
+
+- `POST /api/auth/register` - Register a new user
+- `POST /api/auth/login` - Login a user
+- `POST /api/auth/logout` - Logout a user
+
+### Restaurants
+
+- `GET /api/restaurants` - Get all restaurants
+- `GET /api/restaurants/:id` - Get restaurant by ID
+- `POST /api/restaurants` - Create a new restaurant (requires auth)
+- `PUT /api/restaurants/:id` - Update a restaurant (requires auth)
+- `DELETE /api/restaurants/:id` - Delete a restaurant (requires auth)
+
+### Tables
+
+- `GET /api/restaurants/:id/tables` - Get all tables for a restaurant
+- `GET /api/restaurants/:id/availabletables` - Get available tables for a restaurant
+- `POST /api/restaurants/:id/tables` - Add a table to a restaurant (requires auth)
+
+### Reservations
+
+- `GET /api/reservations` - Get all reservations (requires auth)
+- `GET /api/user/reservations` - Get user's reservations (requires auth)
+- `GET /api/restaurants/:id/reservations` - Get reservations for a restaurant (requires auth)
+- `POST /api/reservations` - Create a new reservation (requires auth)
+- `PUT /api/reservations/:id/cancel` - Cancel a reservation (requires auth)
 
 ## License
 
-This project is open source under the MIT license. 
+This project is licensed under the MIT License.

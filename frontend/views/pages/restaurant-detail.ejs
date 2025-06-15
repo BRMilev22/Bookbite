@@ -1,0 +1,336 @@
+<div class="container">
+    <nav aria-label="breadcrumb" class="mt-3">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="/restaurants">Restaurants</a></li>
+            <li class="breadcrumb-item active" aria-current="page"><%= restaurant.name %></li>
+        </ol>
+    </nav>
+
+    <!-- Restaurant header - Enhanced with parallax effect -->
+    <div class="restaurant-hero mb-5">
+        <div class="parallax-container unsplash-background" 
+             data-name="<%= restaurant.name %>" 
+             data-size="1600x900" 
+             data-keywords="restaurant,interior"
+             data-image-url="<%= restaurant.imageUrl || '' %>">
+            <div class="overlay"></div>
+            <div class="container position-relative py-5">
+                <div class="row justify-content-center">
+                    <div class="col-lg-10">
+                        <div class="restaurant-hero-content text-center text-white">
+                            <h1 class="display-4 fw-bold mb-3 text-shadow"><%= restaurant.name %></h1>
+                            <div class="d-flex justify-content-center mb-4">
+                                <span class="badge bg-warning text-dark me-2 px-3 py-2">
+                                    <i class="fas fa-star me-1"></i> <%= restaurant.rating.toFixed(1) %>
+                                </span>
+                                <span class="badge bg-light text-dark me-2 px-3 py-2">
+                                    <i class="fas fa-utensils me-1"></i> <%= restaurant.cuisineType %>
+                                </span>
+                                <% 
+                                let priceClass = '';
+                                if (restaurant.priceRange === 'Budget') {
+                                    priceClass = 'bg-success text-white';
+                                } else if (restaurant.priceRange === 'Moderate') {
+                                    priceClass = 'bg-warning text-dark';
+                                } else if (restaurant.priceRange === 'Expensive') {
+                                    priceClass = 'bg-danger text-white';
+                                }
+                                %>
+                                <span class="badge <%= priceClass %> px-3 py-2">
+                                    <i class="fas fa-dollar-sign me-1"></i> <%= restaurant.priceRange %>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Restaurant information cards -->
+    <div class="container mb-5">
+        <div class="row g-4">
+            <!-- Restaurant details card -->
+            <div class="col-lg-4">
+                <div class="card border-0 shadow-sm h-100 restaurant-info-card">
+                    <div class="card-body">
+                        <h5 class="card-title d-flex align-items-center mb-4">
+                            <i class="fas fa-info-circle text-primary me-2"></i> Restaurant Details
+                        </h5>
+                        <ul class="list-group list-group-flush">
+                            <li class="list-group-item d-flex border-0 ps-0">
+                                <i class="fas fa-map-marker-alt me-3 text-primary"></i>
+                                <span><%= restaurant.address %></span>
+                            </li>
+                            <li class="list-group-item d-flex border-0 ps-0">
+                                <i class="fas fa-phone me-3 text-primary"></i>
+                                <span><%= restaurant.phoneNumber %></span>
+                            </li>
+                            <li class="list-group-item d-flex border-0 ps-0">
+                                <i class="fas fa-table me-3 text-primary"></i>
+                                <span><%= restaurant.tableCount %> tables available</span>
+                            </li>
+                            <li class="list-group-item d-flex border-0 ps-0">
+                                <i class="fas fa-clock me-3 text-primary"></i>
+                                <span>Open: <%= restaurant.openingTime %> - <%= restaurant.closingTime %></span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Social card -->
+            <div class="col-lg-4">
+                <div class="card border-0 shadow-sm h-100 restaurant-info-card">
+                    <div class="card-body">
+                        <h5 class="card-title d-flex align-items-center mb-4">
+                            <i class="fas fa-share-alt text-primary me-2"></i> Social & Reviews
+                        </h5>
+                        <div class="review-summary mb-4">
+                            <div class="d-flex justify-content-center align-items-center mb-3">
+                                <div class="display-4 fw-bold me-3"><%= restaurant.rating.toFixed(1) %></div>
+                                <div>
+                                    <div class="stars mb-1">
+                                        <% for (let i = 1; i <= 5; i++) { %>
+                                            <% if (i <= Math.floor(restaurant.rating)) { %>
+                                                <i class="fas fa-star text-warning"></i>
+                                            <% } else if (i <= Math.ceil(restaurant.rating) && restaurant.rating % 1 !== 0) { %>
+                                                <i class="fas fa-star-half-alt text-warning"></i>
+                                            <% } else { %>
+                                                <i class="far fa-star text-warning"></i>
+                                            <% } %>
+                                        <% } %>
+                                    </div>
+                                    <small class="text-muted">Based on reviews</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="social-links d-flex justify-content-around mb-3">
+                            <a href="#" class="btn btn-outline-primary btn-sm rounded-circle social-btn">
+                                <i class="fab fa-facebook-f"></i>
+                            </a>
+                            <a href="#" class="btn btn-outline-primary btn-sm rounded-circle social-btn">
+                                <i class="fab fa-instagram"></i>
+                            </a>
+                            <a href="#" class="btn btn-outline-primary btn-sm rounded-circle social-btn">
+                                <i class="fab fa-twitter"></i>
+                            </a>
+                            <a href="#" class="btn btn-outline-primary btn-sm rounded-circle social-btn">
+                                <i class="fab fa-yelp"></i>
+                            </a>
+                        </div>
+                        <div class="d-grid">
+                            <button class="btn btn-outline-primary">
+                                <i class="far fa-share-square me-2"></i> Share This Restaurant
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Restaurant description -->
+    <div class="container mb-5">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body">
+                <h2 class="card-title d-flex align-items-center mb-4">
+                    <i class="fas fa-utensils text-primary me-2"></i> About <%= restaurant.name %>
+                </h2>
+                <div class="row">
+                    <div class="col-lg-12">
+                        <p class="card-text lead"><%= restaurant.description %></p>
+                        <div class="mt-4">
+                            <h5>Cuisine Type</h5>
+                            <div class="d-flex flex-wrap gap-2 mt-2">
+                                <span class="badge bg-light text-dark p-2"><%= restaurant.cuisineType %></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Restaurant tables section -->
+    <div class="container mb-5" id="available-tables">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body">
+                <h2 class="card-title d-flex align-items-center mb-4">
+                    <i class="fas fa-chair text-primary me-2"></i> Available Tables
+                </h2>
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Table #</th>
+                                <th>Capacity</th>
+                                <th>Status</th>
+                                <th>Today's Reservations</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <% if (tables && tables.length > 0) { %>
+                                <% tables.forEach((table, index) => { %>
+                                    <tr>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <div class="table-icon me-2">
+                                                    <i class="fas fa-chair text-secondary"></i>
+                                                </div>
+                                                <span>Table <%= table.id %></span>
+                                            </div>
+                                        </td>
+                                        <td><%= table.seatCount %> seats</td>
+                                        <td>
+                                            <% if (table.isAvailable) { %>
+                                                <span class="badge bg-success">Available for Booking</span>
+                                            <% } else { %>
+                                                <span class="badge bg-danger">Occupied</span>
+                                            <% } %>
+                                        </td>
+                                        <td>
+                                            <% 
+                                            // Filter today's reservations
+                                            const today = new Date();
+                                            const todayString = today.toISOString().split('T')[0];
+                                            const todayReservations = table.reservations ? table.reservations.filter(r => r.date === todayString && r.status === 'confirmed') : [];
+                                            %>
+                                            <% if (todayReservations.length > 0) { %>
+                                                <div class="reservation-times">
+                                                    <% todayReservations.forEach((reservation, idx) => { %>
+                                                        <%
+                                                        // Format time for display
+                                                        const startTime = reservation.startTime;
+                                                        const endTime = reservation.endTime;
+                                                        const [startHour, startMin] = startTime.split(':');
+                                                        const [endHour, endMin] = endTime.split(':');
+                                                        const startPeriod = parseInt(startHour) >= 12 ? 'PM' : 'AM';
+                                                        const endPeriod = parseInt(endHour) >= 12 ? 'PM' : 'AM';
+                                                        const displayStartHour = parseInt(startHour) > 12 ? parseInt(startHour) - 12 : (parseInt(startHour) === 0 ? 12 : parseInt(startHour));
+                                                        const displayEndHour = parseInt(endHour) > 12 ? parseInt(endHour) - 12 : (parseInt(endHour) === 0 ? 12 : parseInt(endHour));
+                                                        const formattedTime = `${displayStartHour}:${startMin} ${startPeriod} - ${displayEndHour}:${endMin} ${endPeriod}`;
+                                                        %>
+                                                        <small class="badge bg-warning text-dark me-1 mb-1 d-block">
+                                                            <i class="fas fa-clock me-1"></i><%= formattedTime %>
+                                                            <br><small>(<%= reservation.guestCount %> guests)</small>
+                                                        </small>
+                                                    <% }) %>
+                                                </div>
+                                            <% } else { %>
+                                                <small class="text-muted">No reservations today</small>
+                                            <% } %>
+                                        </td>
+                                        <td>
+                                            <% if (table.isAvailable && locals.isAuthenticated) { %>
+                                                <a href="/restaurants/<%= restaurant.id %>/reserve?tableId=<%= table.id %>" class="btn btn-sm btn-outline-primary">
+                                                    <i class="fas fa-calendar-plus me-1"></i> Reserve
+                                                </a>
+                                            <% } else if (!locals.isAuthenticated) { %>
+                                                <a href="/login" class="btn btn-sm btn-outline-secondary">
+                                                    <i class="fas fa-sign-in-alt me-1"></i> Login to Reserve
+                                                </a>
+                                            <% } else { %>
+                                                <button class="btn btn-sm btn-outline-secondary" disabled>
+                                                    <i class="fas fa-clock me-1"></i> Unavailable
+                                                </button>
+                                            <% } %>
+                                        </td>
+                                    </tr>
+                                <% }) %>
+                            <% } else { %>
+                                <tr>
+                                    <td colspan="5" class="text-center py-4">
+                                        <div class="empty-state">
+                                            <i class="fas fa-info-circle text-muted mb-3"></i>
+                                            <h5>No tables information available</h5>
+                                            <p class="text-muted">Please check back later for table availability</p>
+                                        </div>
+                                    </td>
+                                </tr>
+                            <% } %>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+</div>
+
+
+
+<!-- Reviews Section -->
+<div class="container reviews-section">
+    <h2 class="section-title mb-4">
+        <i class="fas fa-comment-alt text-primary me-2"></i> Customer Reviews
+    </h2>
+    
+    <div class="review-summary">
+        <div class="review-average">
+            <h3 class="h5 mb-0">Average Rating: <strong><%= restaurant.rating.toFixed(1) %>/5</strong></h3>
+            <div class="review-count" id="review-count"></div>
+        </div>
+    </div>        <!-- Reviews container -->
+        <div class="row mb-5">
+            <!-- Hidden input for restaurant ID - needed for JavaScript regardless of auth status -->
+            <input type="hidden" id="restaurant-id" value="<%= restaurant.id %>">
+            
+            <div class="col-lg-8" id="reviews-container">
+                <div class="text-center p-4">
+                    <p>No reviews yet. Be the first to review!</p>
+                </div>
+            </div>            <!-- Review submission form -->
+            <div class="col-lg-4">
+                <% if (locals.isAuthenticated) { %>
+                    <div class="card review-form-card">
+                        <div class="card-body">
+                            <h5 class="card-title mb-3">Leave a Review</h5>
+                            <form id="review-form">
+                                <input type="hidden" id="user-id" value="<%= locals.user?.id %>">
+                                <input type="hidden" id="review-rating" value="">
+                            
+                            <div class="mb-3">
+                                <label class="form-label">Rating</label>
+                                <div class="review-stars-input">
+                                    <i class="far fa-star text-warning" data-rating="1"></i>
+                                    <i class="far fa-star text-warning" data-rating="2"></i>
+                                    <i class="far fa-star text-warning" data-rating="3"></i>
+                                    <i class="far fa-star text-warning" data-rating="4"></i>
+                                    <i class="far fa-star text-warning" data-rating="5"></i>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="review-comment" class="form-label">Your Review</label>
+                                <textarea id="review-comment" class="form-control" rows="4" placeholder="Share your experience..."></textarea>
+                            </div>
+                            
+                            <div class="review-form-footer">
+                                <button type="submit" class="btn btn-primary">Submit Review</button>
+                            </div>
+                            
+                            <div class="alert alert-danger mt-3 d-none" id="review-error"></div>
+                            <div class="alert alert-success mt-3 d-none" id="review-success"></div>
+                        </form>
+                    </div>
+                </div>
+            <% } else { %>
+                <div  class="card review-form-card">
+                    <div class="card-body text-center">
+                        <h5 class="card-title mb-3">Want to leave a review?</h5>
+                        <p>Please log in to share your experience.</p>
+                        <a href="/login" class="btn btn-primary">Login</a>
+                        <a href="/register" class="btn btn-outline-primary ms-2">Register</a>
+                    </div>
+                </div>
+            <% } %>
+        </div>
+    </div>
+</div>
+
+
+
+

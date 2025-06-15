@@ -1,0 +1,212 @@
+<!-- Admin Edit Restaurant Content -->
+<link rel="stylesheet" href="/css/admin.css">
+
+<div class="admin-layout">
+    <!-- Admin Sidebar -->
+    <nav class="admin-sidebar col-md-3 col-lg-2 d-md-block sidebar collapse">
+        <div class="position-sticky pt-3">
+            <div class="text-center mb-4">
+                <h4 class="text-white fw-bold">BookBite Admin</h4>
+                <p class="text-muted small">Administrative Panel</p>
+            </div>
+            
+            <ul class="nav flex-column">
+                <li class="nav-item">
+                    <a class="nav-link" href="/admin">
+                        <i class="fas fa-tachometer-alt me-2"></i>
+                        Dashboard
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/admin/users">
+                        <i class="fas fa-users me-2"></i>
+                        Manage Users
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link active" href="/admin/restaurants">
+                        <i class="fas fa-utensils me-2"></i>
+                        Manage Restaurants
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/">
+                        <i class="fas fa-home me-2"></i>
+                        Back to Site
+                    </a>
+                </li>
+                <li class="nav-item mt-4">
+                    <a class="nav-link text-danger" href="/logout">
+                        <i class="fas fa-sign-out-alt me-2"></i>
+                        Logout
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="admin-main-content col-md-9 ms-sm-auto col-lg-10 px-md-4">
+        <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+            <h1 class="h2 fw-bold">Edit Restaurant</h1>
+            <div class="btn-toolbar mb-2 mb-md-0">
+                <div class="btn-group me-2">
+                    <a href="/admin/restaurants" class="btn btn-sm btn-outline-secondary">
+                        <i class="fas fa-arrow-left me-1"></i>
+                        Back to Restaurants
+                    </a>
+                    <a href="/restaurants/<%= restaurant.id %>" class="btn btn-sm btn-info" target="_blank">
+                        <i class="fas fa-eye me-1"></i>
+                        View Restaurant
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Edit Restaurant Form -->
+        <div class="card shadow mb-4">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">Edit "<%= restaurant.name %>"</h6>
+            </div>
+            <div class="card-body">
+                <form action="/admin/restaurants/<%= restaurant.id %>" method="POST" class="needs-validation" novalidate>
+                    <input type="hidden" name="_method" value="PUT">
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="name" class="form-label">Restaurant Name <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="name" name="name" value="<%= restaurant.name %>" required>
+                            <div class="invalid-feedback">
+                                Please provide a restaurant name.
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="cuisineType" class="form-label">Cuisine Type <span class="text-danger">*</span></label>
+                            <select class="form-select" id="cuisineType" name="cuisineType" required>
+                                <option value="">Select cuisine type</option>
+                                <option value="Italian" <%= restaurant.cuisineType === 'Italian' ? 'selected' : '' %>>Italian</option>
+                                <option value="Chinese" <%= restaurant.cuisineType === 'Chinese' ? 'selected' : '' %>>Chinese</option>
+                                <option value="Japanese" <%= restaurant.cuisineType === 'Japanese' ? 'selected' : '' %>>Japanese</option>
+                                <option value="French" <%= restaurant.cuisineType === 'French' ? 'selected' : '' %>>French</option>
+                                <option value="Indian" <%= restaurant.cuisineType === 'Indian' ? 'selected' : '' %>>Indian</option>
+                                <option value="Mediterranean" <%= restaurant.cuisineType === 'Mediterranean' ? 'selected' : '' %>>Mediterranean</option>
+                                <option value="Mexican" <%= restaurant.cuisineType === 'Mexican' ? 'selected' : '' %>>Mexican</option>
+                                <option value="American" <%= restaurant.cuisineType === 'American' ? 'selected' : '' %>>American</option>
+                                <option value="Thai" <%= restaurant.cuisineType === 'Thai' ? 'selected' : '' %>>Thai</option>
+                                <option value="Korean" <%= restaurant.cuisineType === 'Korean' ? 'selected' : '' %>>Korean</option>
+                                <option value="Vietnamese" <%= restaurant.cuisineType === 'Vietnamese' ? 'selected' : '' %>>Vietnamese</option>
+                                <option value="Greek" <%= restaurant.cuisineType === 'Greek' ? 'selected' : '' %>>Greek</option>
+                                <option value="Spanish" <%= restaurant.cuisineType === 'Spanish' ? 'selected' : '' %>>Spanish</option>
+                                <option value="Other" <%= restaurant.cuisineType === 'Other' ? 'selected' : '' %>>Other</option>
+                            </select>
+                            <div class="invalid-feedback">
+                                Please select a cuisine type.
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="address" class="form-label">Address <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="address" name="address" value="<%= restaurant.address %>" required>
+                        <div class="invalid-feedback">
+                            Please provide the restaurant address.
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="phoneNumber" class="form-label">Phone Number <span class="text-danger">*</span></label>
+                            <input type="tel" class="form-control" id="phoneNumber" name="phoneNumber" value="<%= restaurant.phoneNumber %>" required>
+                            <div class="invalid-feedback">
+                                Please provide a phone number.
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="priceRange" class="form-label">Price Range <span class="text-danger">*</span></label>
+                            <select class="form-select" id="priceRange" name="priceRange" required>
+                                <option value="">Select price range</option>
+                                <option value="$" <%= restaurant.priceRange === '$' ? 'selected' : '' %>>$ - Budget Friendly</option>
+                                <option value="$$" <%= restaurant.priceRange === '$$' ? 'selected' : '' %>>$$ - Moderate</option>
+                                <option value="$$$" <%= restaurant.priceRange === '$$$' ? 'selected' : '' %>>$$$ - Upscale</option>
+                                <option value="$$$$" <%= restaurant.priceRange === '$$$$' ? 'selected' : '' %>>$$$$ - Fine Dining</option>
+                            </select>
+                            <div class="invalid-feedback">
+                                Please select a price range.
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="description" class="form-label">Description</label>
+                        <textarea class="form-control" id="description" name="description" rows="4" placeholder="Describe the restaurant, its ambiance, specialties, etc."><%= restaurant.description || '' %></textarea>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="openingTime" class="form-label">Opening Time <span class="text-danger">*</span></label>
+                            <input type="time" class="form-control" id="openingTime" name="openingTime" value="<%= restaurant.openingTime %>" required>
+                            <div class="invalid-feedback">
+                                Please provide opening time.
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="closingTime" class="form-label">Closing Time <span class="text-danger">*</span></label>
+                            <input type="time" class="form-control" id="closingTime" name="closingTime" value="<%= restaurant.closingTime %>" required>
+                            <div class="invalid-feedback">
+                                Please provide closing time.
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="reservationFee" class="form-label">Reservation Fee ($)</label>
+                            <input type="number" class="form-control" id="reservationFee" name="reservationFee" 
+                                   value="<%= restaurant.reservationFee || 25.00 %>" min="0" step="0.01">
+                            <div class="form-text">Default reservation fee (can be 0 for free reservations)</div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="imageUrl" class="form-label">Image URL</label>
+                            <input type="url" class="form-control" id="imageUrl" name="imageUrl" 
+                                   value="<%= restaurant.imageUrl || '' %>" placeholder="https://example.com/restaurant-image.jpg">
+                            <div class="form-text">URL to restaurant's main image</div>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="isFeatured" name="isFeatured" 
+                                   <%= restaurant.isFeatured ? 'checked' : '' %>>
+                            <label class="form-check-label" for="isFeatured">
+                                Featured Restaurant
+                            </label>
+                            <div class="form-text">Featured restaurants appear prominently on the homepage</div>
+                        </div>
+                    </div>
+
+                    <!-- Current Image Preview -->
+                    <% if (restaurant.imageUrl) { %>
+                        <div class="mb-3">
+                            <label class="form-label">Current Image</label>
+                            <div>
+                                <img src="<%= restaurant.imageUrl %>" alt="<%= restaurant.name %>" 
+                                     style="max-width: 300px; max-height: 200px; object-fit: cover; border-radius: 8px;">
+                            </div>
+                        </div>
+                    <% } %>
+
+                    <div class="d-flex justify-content-between">
+                        <a href="/admin/restaurants" class="btn btn-secondary">
+                            <i class="fas fa-times me-1"></i>
+                            Cancel
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save me-1"></i>
+                            Save Changes
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </main>
+</div>

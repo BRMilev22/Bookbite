@@ -1,0 +1,214 @@
+<!-- Hero Section with Background Image -->
+<div class="hero-section" style="background: linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)), url('https://images.unsplash.com/photo-1622115837997-90c89ae689f9?q=80&w=3408&auto=format&fit=crop') center/cover no-repeat; height: 80vh; display: flex; align-items: center;">
+    <div class="container text-center text-white">
+        <h1 class="display-3 fw-bold mb-4 animate__animated animate__fadeInDown">Find and Book the Perfect Restaurant</h1>
+        <p class="lead fs-4 mb-5 animate__animated animate__fadeInUp">Discover top restaurants, make reservations, and enjoy the best dining experiences with BookBite.</p>
+        <div class="d-flex justify-content-center gap-3 animate__animated animate__fadeInUp" style="animation-delay: 0.3s;">
+            <a href="/restaurants" class="btn btn-primary btn-lg px-5 py-3 rounded-pill">Browse Restaurants</a>
+            <% if (!locals.isAuthenticated) { %>
+                <a href="/register" class="btn btn-outline-light btn-lg px-5 py-3 rounded-pill">Sign Up</a>
+            <% } %>
+        </div>
+    </div>
+</div>
+
+<!-- Main Features Section -->
+<section class="py-5 bg-white">
+    <div class="container py-4">
+        <h2 class="text-center fw-bold mb-5 display-5 position-relative">
+            <span class="position-relative z-index-1">Why Choose BookBite?</span>
+            <div class="position-absolute start-50 bottom-0 translate-middle-x bg-primary" style="height: 4px; width: 80px;"></div>
+        </h2>
+        
+        <div class="row g-5 mt-3">
+            <div class="col-md-4">
+                <div class="card border-0 shadow-sm h-100 hover-lift">
+                    <div class="card-body p-5 text-center">
+                        <div class="icon-box mb-4 mx-auto bg-primary bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center" style="width: 100px; height: 100px;">
+                            <i class="fas fa-search fa-3x text-primary"></i>
+                        </div>
+                        <h3 class="h4 mb-3">Discover</h3>
+                        <p class="text-muted mb-0">Find the perfect restaurant for any occasion based on cuisine, location, and more.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card border-0 shadow-sm h-100 hover-lift">
+                    <div class="card-body p-5 text-center">
+                        <div class="icon-box mb-4 mx-auto bg-primary bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center" style="width: 100px; height: 100px;">
+                            <i class="fas fa-calendar-check fa-3x text-primary"></i>
+                        </div>
+                        <h3 class="h4 mb-3">Reserve</h3>
+                        <p class="text-muted mb-0">Book tables at your favorite restaurants instantly with our easy reservation system.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card border-0 shadow-sm h-100 hover-lift">
+                    <div class="card-body p-5 text-center">
+                        <div class="icon-box mb-4 mx-auto bg-primary bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center" style="width: 100px; height: 100px;">
+                            <i class="fas fa-utensils fa-3x text-primary"></i>
+                        </div>
+                        <h3 class="h4 mb-3">Enjoy</h3>
+                        <p class="text-muted mb-0">Experience hassle-free dining with confirmed reservations and special perks.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Featured Restaurants Section with Unsplash Images -->
+<section class="py-5 bg-light">
+    <div class="container py-4">
+        <h2 class="text-center fw-bold mb-5 display-5 position-relative">
+            <span class="position-relative z-index-1">Featured Restaurants</span>
+            <div class="position-absolute start-50 bottom-0 translate-middle-x bg-primary" style="height: 4px; width: 80px;"></div>
+        </h2>
+        
+        <div class="row g-4">
+            <% if (locals.featuredRestaurants && featuredRestaurants.length > 0) { %>
+                <% featuredRestaurants.forEach(restaurant => { %>
+                    <div class="col-lg-4 col-md-6">
+                        <div class="card border-0 shadow overflow-hidden h-100 restaurant-card">
+                            <img src="" class="card-img-top restaurant-image unsplash-image" 
+                                data-name="<%= restaurant.name %>" 
+                                data-size="600x400" 
+                                data-keywords="restaurant,food" 
+                                data-image-url="<%= restaurant.imageUrl || '' %>"
+                                alt="<%= restaurant.name %>">
+                            <div class="card-body p-4">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <% if (restaurant.cuisineType) { %>
+                                        <span class="badge bg-<%= restaurant.cuisineType === 'Italian' ? 'danger' : (restaurant.cuisineType === 'Asian' ? 'success' : 'primary') %>"><%= restaurant.cuisineType %> Cuisine</span>
+                                    <% } %>
+                                    <% if (restaurant.rating > 0) { %>
+                                        <span class="text-warning">
+                                            <%
+                                                // Round the rating to 1 decimal place to handle backend precision issues
+                                                const displayRating = Math.round(restaurant.rating * 10) / 10;
+                                            %>                            <% for(let i = 1; i <= 5; i++) { %>
+                                <% if (i <= Math.floor(displayRating)) { %>
+                                    <i class="fas fa-star"></i>
+                                <% } else if (i === Math.floor(displayRating) + 1 && displayRating % 1 >= 0.5) { %>
+                                    <i class="fas fa-star-half-alt"></i>
+                                <% } else { %>
+                                    <i class="far fa-star"></i>
+                                <% } %>
+                            <% } %>
+                                        </span>
+                                    <% } %>
+                                </div>
+                                <h3 class="h5 card-title"><%= restaurant.name %></h3>
+                                <p class="card-text text-muted"><%= restaurant.description %></p>
+                                <div class="d-flex justify-content-between align-items-center mt-3">
+                                    <a href="/restaurants/<%= restaurant.id %>" class="btn btn-outline-primary">View Details</a>
+                                    <span class="text-muted"><i class="fas fa-map-marker-alt me-1"></i> <%= restaurant.address.split(',')[0] %></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                <% }); %>
+            <% } else { %>
+                <div class="col-12 text-center">
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i> No featured restaurants found at the moment.
+                    </div>
+                    <a href="/restaurants" class="btn btn-primary">Browse All Restaurants</a>
+                </div>
+            <% } %>
+        </div>
+        
+        <div class="text-center mt-5">
+            <a href="/restaurants" class="btn btn-primary btn-lg px-5 py-3">View All Restaurants</a>
+        </div>
+    </div>
+</section>
+
+<!-- Mobile App Section -->
+<section class="py-5 bg-white">
+    <div class="container py-4">
+        <div class="row align-items-center">
+            <div class="col-lg-6 mb-4 mb-lg-0">
+                <h2 class="fw-bold mb-4">Book on the Go</h2>
+                <p class="lead mb-4">Download our mobile app and make reservations anytime, anywhere.</p>
+                <ul class="list-unstyled mb-4">
+                    <li class="mb-3">
+                        <i class="fas fa-check-circle text-primary me-2"></i>
+                        Easy-to-use mobile interface
+                    </li>
+                    <li class="mb-3">
+                        <i class="fas fa-check-circle text-primary me-2"></i>
+                        Real-time table availability
+                    </li>
+                    <li class="mb-3">
+                        <i class="fas fa-check-circle text-primary me-2"></i>
+                        Push notifications for your reservations
+                    </li>
+                    <li class="mb-3">
+                        <i class="fas fa-check-circle text-primary me-2"></i>
+                        Quick access to your favorite restaurants
+                    </li>
+                </ul>
+                <div class="d-flex flex-wrap gap-3">
+                    <a href="#" class="btn btn-dark px-4">
+                        <i class="fab fa-apple me-2"></i> App Store
+                    </a>
+                    <a href="#" class="btn btn-dark px-4">
+                        <i class="fab fa-google-play me-2"></i> Google Play
+                    </a>
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <div class="position-relative">
+                    <img src="https://images.unsplash.com/photo-1604328471151-b52226907017?q=80&w=3871&auto=format&fit=crop" alt="Mobile App" class="img-fluid rounded-4 shadow">
+                    <div class="position-absolute top-0 start-0 translate-middle bg-primary rounded-circle p-3" style="width: 100px; height: 100px;">
+                        <div class="d-flex align-items-center justify-content-center h-100 text-white">
+                            <div class="text-center">
+                                <div class="h3 mb-0">NEW</div>
+                                <div class="small">APP</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Add animation and hover effects with CSS -->
+<style>
+    @import url('https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css');
+    
+    .hover-lift {
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    
+    .hover-lift:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1) !important;
+    }
+    
+    .restaurant-image {
+        height: 200px;
+        object-fit: cover;
+        transition: transform 0.5s ease;
+    }
+    
+    .restaurant-card:hover .restaurant-image {
+        transform: scale(1.05);
+    }
+    
+    .z-index-1 {
+        z-index: 1;
+    }
+    
+    /* Add custom animation for page loading */
+    .animate__animated {
+        animation-duration: 1s;
+    }
+
+    .rounded-4 {
+        border-radius: 0.5rem;
+    }
+</style>

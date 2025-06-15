@@ -1,0 +1,605 @@
+<div class="container my-4">
+    <!-- Header Section with Restaurant Photo -->
+    <div class="text-center mb-5">
+        <div class="restaurant-header-image mb-4">
+            <img src="https://images.unsplash.com/photo-1555939594-58d7cb561ad1?q=80&w=3687&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" 
+                 alt="<%= restaurant.name %>" 
+                 class="img-fluid rounded-4 shadow" 
+                 style="height: 200px; width: 100%; max-width: 600px; object-fit: cover;">
+        </div>
+        <h2 class="display-6 fw-bold text-primary">Reserve Your Table</h2>
+        <p class="lead text-muted">at <%= restaurant.name %></p>
+    </div>
+
+    <div class="row">
+        <!-- Today's Reservations Sidebar -->
+        <div class="col-lg-4 mb-4">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-header bg-primary text-white">
+                    <h6 class="mb-0">
+                        <i class="fas fa-calendar-day me-2"></i>Today's Reservations
+                    </h6>
+                </div>
+                <div class="card-body p-3" style="max-height: 400px; overflow-y: auto;">
+                    <%
+                    // Get today's date in YYYY-MM-DD format
+                    const today = new Date().toISOString().split('T')[0];
+                    const todaysReservations = (restaurantReservationData || []).filter(r => 
+                        r.date === today && r.status === 'confirmed'
+                    ).sort((a, b) => a.startTime.localeCompare(b.startTime));
+                    %>
+                    
+                    <% if (todaysReservations.length > 0) { %>
+                        <% todaysReservations.forEach(function(reservation) { %>
+                            <div class="reservation-item mb-2 p-2 border rounded" data-table-id="<%= reservation.tableId %>" data-start-time="<%= reservation.startTime %>" data-end-time="<%= reservation.endTime %>">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div>
+                                        <strong class="text-primary">Table <%= reservation.tableId %></strong>
+                                        <div class="small text-muted">
+                                            <i class="fas fa-clock me-1"></i>
+                                            <%= reservation.startTime %> - <%= reservation.endTime %>
+                                        </div>
+                                        <% if (reservation.guestCount) { %>
+                                            <div class="small text-muted">
+                                                <i class="fas fa-users me-1"></i>
+                                                <%= reservation.guestCount %> guests
+                                            </div>
+                                        <% } %>
+                                    </div>
+                                    <span class="badge bg-success">Booked</span>
+                                </div>
+                            </div>
+                        <% }); %>
+                    <% } else { %>
+                        <div class="text-center text-muted py-4">
+                            <i class="fas fa-calendar-times fa-2x mb-2"></i>
+                            <p class="mb-0">No reservations today</p>
+                        </div>
+                    <% } %>
+                </div>
+            </div>
+        </div>
+
+        <!-- Reservation Form -->
+        <div class="col-lg-8">
+            <div class="card shadow-sm border-0">
+                <div class="card-body p-5">
+                    <form action="/reservations" method="POST" id="reservationForm">
+                        <input type="hidden" name="restaurantId" value="<%= restaurant.id %>">
+                        
+                        <!-- Step 1: Date & Time -->
+                        <div class="mb-5">
+                            <h5 class="mb-3 text-primary">
+                                <i class="fas fa-calendar-alt me-2"></i>When would you like to dine?
+                            </h5>
+                            
+                            <div class="row g-3">
+                                <div class="col-12">
+                                    <label for="date" class="form-label fw-bold">Date</label>
+                                    <input type="date" class="form-control form-control-lg" id="date" name="date" required 
+                                           min="<%= new Date().toISOString().split('T')[0] %>">
+                                </div>
+                            </div>
+                            
+                            <!-- Time Selection with Dropdowns -->
+                            <div class="row g-3 mt-3">
+                                <div class="col-md-6">
+                                    <label for="startTimeSelect" class="form-label fw-bold">Start Time</label>
+                                    <select class="form-select form-select-lg" id="startTimeSelect" required>
+                                        <option value="">Select a date first</option>
+                                    </select>
+                                    <input type="hidden" id="startTime" name="startTime" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="endTimeSelect" class="form-label fw-bold">End Time</label>
+                                    <select class="form-select form-select-lg" id="endTimeSelect" disabled required>
+                                        <option value="">Select start time first</option>
+                                    </select>
+                                    <input type="hidden" id="endTime" name="endTime" required>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Step 2: Your Selected Table -->
+                        <div class="mb-5">
+                            <h5 class="mb-3 text-primary">
+                                <i class="fas fa-chair me-2"></i>Your Table
+                            </h5>
+                            
+                            <% if (selectedTableId && availableTables) { %>
+                                <% const selectedTable = availableTables.find(table => table.id == selectedTableId); %>
+                                <% if (selectedTable) { %>
+                                    <div class="card border-primary">
+                                        <div class="card-body">
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <div>
+                                                    <h6 class="card-title mb-1">
+                                                        <i class="fas fa-table me-2 text-primary"></i>Table <%= selectedTable.id %>
+                                                    </h6>
+                                                    <p class="card-text text-muted mb-0">
+                                                        <i class="fas fa-users me-1"></i>Seats up to <%= selectedTable.seatCount %> guests
+                                                    </p>
+                                                </div>
+                                                <span class="badge bg-primary fs-6"><%= selectedTable.seatCount %> seats</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <!-- Hidden input for the selected table -->
+                                    <input type="hidden" name="tableId" value="<%= selectedTable.id %>">
+                                <% } else { %>
+                                    <div class="alert alert-warning">
+                                        <i class="fas fa-exclamation-triangle me-2"></i>
+                                        Selected table not found. Please select a table below.
+                                    </div>
+                                <% } %>
+                            <% } else { %>
+                                <!-- Table Selection Interface -->
+                                <div class="row g-3" id="tableSelectionGrid">
+                                    <% if (availableTables && availableTables.length > 0) { %>
+                                        <% availableTables.forEach(function(table) { %>
+                                            <div class="col-md-6 col-lg-4">
+                                                <div class="table-option-card">
+                                                    <input type="radio" name="tableId" value="<%= table.id %>" id="table-<%= table.id %>" required>
+                                                    <label for="table-<%= table.id %>" class="table-card">
+                                                        <div class="table-card-header">
+                                                            <h6 class="mb-0">
+                                                                <i class="fas fa-table me-2"></i>Table <%= table.id %>
+                                                            </h6>
+                                                            <span class="badge bg-primary"><%= table.seatCount %> seats</span>
+                                                        </div>
+                                                        <p class="text-muted mb-0 mt-2">
+                                                            <i class="fas fa-users me-1"></i>Seats up to <%= table.seatCount %> guests
+                                                        </p>
+                                                    </label>
+                                                </div>
+                                            </div>
+                                        <% }); %>
+                                    <% } else { %>
+                                        <div class="col-12">
+                                            <div class="alert alert-warning">
+                                                <i class="fas fa-exclamation-triangle me-2"></i>
+                                                No tables available. Please try again later.
+                                            </div>
+                                        </div>
+                                    <% } %>
+                                </div>
+                            <% } %>
+                        </div>
+
+                        <!-- Step 3: Guest Details -->
+                        <div class="mb-5">
+                            <h5 class="mb-3 text-primary">
+                                <i class="fas fa-users me-2"></i>Guest Information
+                            </h5>
+                            
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label for="guestCount" class="form-label fw-bold">Number of Guests</label>
+                                    <select class="form-select form-select-lg" id="guestCount" name="guestCount" required>
+                                        <option value="">Select guests</option>
+                                        <% for(let i = 1; i <= 10; i++) { %>
+                                            <option value="<%= i %>"><%= i %> Guest<%= i > 1 ? 's' : '' %></option>
+                                        <% } %>
+                                    </select>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="phoneNumber" class="form-label fw-bold">Phone Number</label>
+                                    <input type="tel" class="form-control form-control-lg" id="phoneNumber" name="phoneNumber" 
+                                           placeholder="Your phone number" required>
+                                </div>
+                                <div class="col-12">
+                                    <label for="email" class="form-label fw-bold">Email Address</label>
+                                    <input type="email" class="form-control form-control-lg" id="email" name="email" 
+                                           placeholder="your@email.com" required
+                                           <% if (user && user.email) { %>value="<%= user.email %>"<% } %>>
+                                </div>
+                                <div class="col-12">
+                                    <label for="specialRequests" class="form-label fw-bold">Special Requests (Optional)</label>
+                                    <textarea class="form-control" id="specialRequests" name="specialRequests" rows="3" 
+                                              placeholder="Any special dietary requirements, celebrations, or other requests..."></textarea>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Payment Section -->
+                        <div class="payment-section border-top pt-4 mt-4">
+                            <h5 class="fw-bold mb-3">
+                                <i class="fas fa-credit-card me-2"></i>Payment Information
+                            </h5>
+                            
+                            <!-- Reservation Fee Display -->
+                            <div class="reservation-fee-display mb-4 p-3 bg-light rounded">
+                                <div class="row align-items-center">
+                                    <div class="col">
+                                        <h6 class="mb-1">Reservation Fee</h6>
+                                        <small class="text-muted">Required to secure your booking</small>
+                                    </div>
+                                    <div class="col-auto">
+                                        <span class="h4 fw-bold text-primary mb-0">$4.00</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Payment Method Selection -->
+                            <div class="payment-method-selection mb-4">
+                                <label class="form-label fw-bold">Payment Method</label>
+                                <div class="row">
+                                    <div class="col-md-6 mb-2">
+                                        <div class="form-check payment-option">
+                                            <input class="form-check-input" type="radio" name="paymentMethod" id="paymentCard" value="card" checked>
+                                            <label class="form-check-label w-100" for="paymentCard">
+                                                <div class="payment-option-content p-3 border rounded">
+                                                    <i class="fas fa-credit-card me-2"></i>Credit/Debit Card
+                                                    <small class="d-block text-muted">Pay now securely online</small>
+                                                </div>
+                                            </label>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6 mb-2">
+                                        <div class="form-check payment-option">
+                                            <input class="form-check-input" type="radio" name="paymentMethod" id="paymentCash" value="cash">
+                                            <label class="form-check-label w-100" for="paymentCash">
+                                                <div class="payment-option-content p-3 border rounded">
+                                                    <i class="fas fa-money-bill me-2"></i>Pay at Restaurant
+                                                    <small class="d-block text-muted">Pay when you arrive</small>
+                                                </div>
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Card Payment Details -->
+                            <div id="cardPaymentDetails" class="card-payment-details">
+                                <div class="row g-3">
+                                    <div class="col-12">
+                                        <label for="cardNumber" class="form-label fw-bold">Card Number</label>
+                                        <input type="text" class="form-control form-control-lg" id="cardNumber" name="cardNumber" 
+                                               placeholder="1234 5678 9012 3456" maxlength="19">
+                                    </div>
+                                    <div class="col-md-8">
+                                        <label for="cardholderName" class="form-label fw-bold">Cardholder Name</label>
+                                        <input type="text" class="form-control form-control-lg" id="cardholderName" name="cardholderName" 
+                                               placeholder="John Doe">
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label for="cardExpiry" class="form-label fw-bold">Expiry Date</label>
+                                        <input type="text" class="form-control form-control-lg" id="cardExpiry" name="cardExpiry" 
+                                               placeholder="MM/YY" maxlength="5">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label for="cardCvv" class="form-label fw-bold">CVV</label>
+                                        <input type="text" class="form-control form-control-lg" id="cardCvv" name="cardCvv" 
+                                               placeholder="123" maxlength="4">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label for="billingZip" class="form-label fw-bold">Billing Postal Code</label>
+                                        <input type="text" class="form-control form-control-lg" id="billingZip" name="billingZip" 
+                                               placeholder="1000" maxlength="4">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Cash Payment Notice -->
+                            <div id="cashPaymentNotice" class="cash-payment-notice d-none">
+                                <div class="alert alert-info">
+                                    <i class="fas fa-info-circle me-2"></i>
+                                    <strong>Pay at Restaurant:</strong> Your reservation will be confirmed, and you can pay the fee when you arrive at the restaurant.
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Hidden field for calculated fee -->
+                        <input type="hidden" name="calculatedFee" id="calculatedFee" value="4.00">
+                        
+                        <!-- Submit Button -->
+                        <div class="text-center mt-4">
+                            <button type="submit" class="btn btn-primary btn-lg px-5 py-3" id="submitBtn">
+                                <span id="submitBtnText">
+                                    <i class="fas fa-credit-card me-2"></i>Pay & Reserve
+                                </span>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Debug output -->
+<div style="display: none;" id="debug-data">
+    <div id="debug-tables-count"><%= availableTables ? availableTables.length : 'undefined' %></div>
+    <div id="debug-restaurant-name"><%= restaurant ? restaurant.name : 'undefined' %></div>
+    <div id="debug-raw-data"><%- JSON.stringify(availableTables) %></div>
+</div>
+
+<!-- Data container for external JavaScript to access -->
+<div id="server-data" style="display: none;" 
+     data-restaurant='<%- JSON.stringify(restaurant || {}) %>'
+     data-reservation-data='<%- JSON.stringify(restaurantReservationData || []) %>'
+     data-tables-data='<%- JSON.stringify(availableTables || []) %>'>
+</div>
+
+<style>
+.btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.form-control:focus,
+.form-select:focus {
+    border-color: #0d6efd;
+    box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+}
+
+.is-invalid {
+    border-color: #dc3545;
+}
+
+.invalid-feedback {
+    display: block;
+    color: #dc3545;
+    font-size: 0.875rem;
+    margin-top: 0.25rem;
+}
+
+/* Time Picker Styles */
+.time-picker-container {
+    border: 2px solid #e9ecef;
+    border-radius: 0.5rem;
+    padding: 1rem;
+    background: #f8f9fa;
+}
+
+.time-slots-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 0.75rem;
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.time-slot {
+    padding: 0.75rem;
+    border: 2px solid #dee2e6;
+    border-radius: 0.375rem;
+    background: white;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-align: center;
+    position: relative;
+}
+
+.time-slot:hover {
+    border-color: #0d6efd;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(13, 110, 253, 0.15);
+}
+
+.time-slot.selected {
+    border-color: #0d6efd;
+    background: linear-gradient(135deg, #0d6efd, #0056b3);
+    color: white;
+    box-shadow: 0 4px 12px rgba(13, 110, 253, 0.3);
+}
+
+.time-slot.unavailable {
+    background: #f8f9fa;
+    border-color: #dee2e6;
+    color: #6c757d;
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+.time-slot.unavailable:hover {
+    transform: none;
+    box-shadow: none;
+    border-color: #dee2e6;
+}
+
+.time-range {
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+.duration-label {
+    font-size: 0.75rem;
+    margin-top: 0.25rem;
+    opacity: 0.8;
+}
+
+.time-slot.duration-long {
+    border-style: dashed;
+}
+
+.time-slot.duration-long .duration-label {
+    background: rgba(13, 110, 253, 0.1);
+    padding: 2px 6px;
+    border-radius: 10px;
+    margin-top: 0.5rem;
+}
+
+.time-slot.selected .duration-label {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.unavailable-reason {
+    font-size: 0.65rem;
+    margin-top: 0.25rem;
+    font-style: italic;
+}
+
+/* Table Status Indicators */
+.table-option-card {
+    position: relative;
+    transition: all 0.3s ease;
+}
+
+.table-option-card.partially-reserved {
+    border: 2px solid #ffc107;
+    border-radius: 0.5rem;
+}
+
+.table-option-card input[type="radio"] {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.table-card {
+    display: block;
+    padding: 1rem;
+    border: 2px solid #e9ecef;
+    border-radius: 0.5rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    background: white;
+    text-decoration: none;
+    color: inherit;
+}
+
+.table-card:hover {
+    border-color: #0d6efd;
+    box-shadow: 0 4px 8px rgba(13, 110, 253, 0.1);
+}
+
+.table-option-card input[type="radio"]:checked + .table-card {
+    border-color: #0d6efd;
+    background-color: rgba(13, 110, 253, 0.05);
+    box-shadow: 0 4px 12px rgba(13, 110, 253, 0.2);
+}
+
+.table-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+}
+
+.table-status {
+    border-top: 1px solid #e9ecef;
+    padding-top: 0.5rem;
+    margin-top: 0.5rem;
+}
+
+/* Today's Reservations Styling */
+.reservation-item {
+    transition: all 0.3s ease;
+}
+
+.reservation-item.highlight-today {
+    background: linear-gradient(135deg, #fff3cd, #ffeaa7);
+    border-color: #ffc107 !important;
+    box-shadow: 0 2px 8px rgba(255, 193, 7, 0.3);
+}
+
+.reservation-item:hover {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Restaurant header image */
+.restaurant-header-image {
+    position: relative;
+    overflow: hidden;
+    border-radius: 1rem;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .time-slots-grid {
+        grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+        gap: 0.5rem;
+    }
+    
+    .time-slot {
+        padding: 0.5rem;
+        font-size: 0.85rem;
+    }
+    
+    .card-body {
+        padding: 1.5rem !important;
+    }
+}
+
+/* Loading animation */
+@keyframes pulse {
+    0% { opacity: 1; }
+    50% { opacity: 0.5; }
+    100% { opacity: 1; }
+}
+
+.time-slot.loading {
+    animation: pulse 1.5s infinite;
+}
+
+/* Payment Section Styles */
+.payment-section {
+    background: #f8f9fa;
+    border-radius: 0.5rem;
+    padding: 1.5rem;
+    margin-top: 2rem;
+}
+
+.reservation-fee-display {
+    background: linear-gradient(135deg, #e3f2fd 0%, #f3e5f5 100%);
+    border: 1px solid #e0e0e0;
+}
+
+.payment-option {
+    margin-bottom: 0;
+}
+
+.payment-option-content {
+    transition: all 0.3s ease;
+    cursor: pointer;
+    text-align: center;
+}
+
+.payment-option-content:hover {
+    background-color: #f8f9fa;
+    border-color: #007bff !important;
+}
+
+.payment-option input[type="radio"]:checked + label .payment-option-content {
+    background-color: #e7f3ff;
+    border-color: #007bff !important;
+    color: #007bff;
+}
+
+.card-payment-details {
+    background: white;
+    border-radius: 0.5rem;
+    padding: 1.5rem;
+    border: 1px solid #e0e0e0;
+    margin-top: 1rem;
+}
+
+.cash-payment-notice {
+    margin-top: 1rem;
+}
+
+/* Card input formatting */
+#cardNumber {
+    font-family: 'Courier New', monospace;
+    letter-spacing: 1px;
+}
+
+#cardExpiry, #cardCvv {
+    font-family: 'Courier New', monospace;
+}
+
+/* Payment method transitions */
+.card-payment-details {
+    transition: all 0.3s ease;
+}
+
+.card-payment-details.d-none {
+    opacity: 0;
+    transform: translateY(-10px);
+}
+
+.cash-payment-notice {
+    transition: all 0.3s ease;
+}
+</style>
