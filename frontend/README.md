@@ -83,3 +83,6 @@ The frontend integrates with the BookBite C++ backend API which provides the fol
   - `img/` - Images
 - `package.json` - Project configuration
 
+## License
+
+ISC

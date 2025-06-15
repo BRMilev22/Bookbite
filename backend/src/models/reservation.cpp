@@ -68,6 +68,10 @@ std::string Reservation::getPaymentMethod() const {
     return paymentMethod;
 }
 
+std::string Reservation::getConfirmationToken() const {
+    return confirmationToken;
+}
+
 void Reservation::setId(int id) {
     this->id = id;
 }
@@ -126,4 +130,8 @@ void Reservation::setPaymentStatus(const std::string& paymentStatus) {
 
 void Reservation::setPaymentMethod(const std::string& paymentMethod) {
     this->paymentMethod = paymentMethod;
+}
+
+void Reservation::setConfirmationToken(const std::string& confirmationToken) {
+    this->confirmationToken = confirmationToken;
 }

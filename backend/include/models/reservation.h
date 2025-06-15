@@ -25,6 +25,7 @@ public:
     double getTotalAmount() const;
     std::string getPaymentStatus() const;
     std::string getPaymentMethod() const;
+    std::string getConfirmationToken() const;
     
     void setId(int id);
     void setUserId(int userId);
@@ -41,6 +42,7 @@ public:
     void setTotalAmount(double totalAmount);
     void setPaymentStatus(const std::string& paymentStatus);
     void setPaymentMethod(const std::string& paymentMethod);
+    void setConfirmationToken(const std::string& confirmationToken);
 
 private:
     int id;
@@ -58,6 +60,7 @@ private:
     double totalAmount;
     std::string paymentStatus; // "pending", "paid", "refunded"
     std::string paymentMethod; // "card", "cash"
+    std::string confirmationToken;
 };
 
 

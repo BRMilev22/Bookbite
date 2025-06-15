@@ -297,6 +297,38 @@ app.get('/login', (req, res) => {
   });
 });
 
+// Reservation confirmation page
+app.get('/confirm-reservation', async (req, res) => {
+  const { token } = req.query;
+  
+  if (!token) {
+    req.session.error = 'Invalid confirmation link';
+    return res.redirect('/');
+  }
+  
+  try {
+    // Call the backend API to confirm the reservation
+    const response = await apiClient.get(`/reservations/confirm/${token}`);
+    
+    if (response.data.success) {
+      req.session.success = 'Reservation confirmed successfully! You will receive a confirmation email shortly.';
+      res.render('pages/reservation-confirmed', {
+        title: 'Reservation Confirmed - BookBite',
+        isAuthenticated: !!req.session.token,
+        message: 'Your reservation has been confirmed successfully!'
+      });
+    } else {
+      req.session.error = response.data.message || 'Failed to confirm reservation';
+      res.redirect('/');
+    }
+  } catch (error) {
+    console.error('Error confirming reservation:', error.message);
+    const errorMessage = error.response?.data?.message || 'Invalid or expired confirmation link';
+    req.session.error = errorMessage;
+    res.redirect('/');
+  }
+});
+
 // Register handler
 app.post('/register', async (req, res) => {
   try {
@@ -585,8 +617,8 @@ app.post('/reservations', isAuthenticated, async (req, res) => {
     
     console.log(`✅ Reservation created successfully`);
     const successMessage = paymentMethod === 'card' 
-      ? `Reservation confirmed! Payment of $${totalAmount.toFixed(2)} processed successfully.`
-      : `Reservation confirmed! Please pay $${totalAmount.toFixed(2)} when you arrive at the restaurant.`;
+      ? `Reservation created! Payment of $${totalAmount.toFixed(2)} processed successfully. Please check your email to confirm your reservation.`
+      : `Reservation created! Please check your email to confirm your reservation. You'll pay $${totalAmount.toFixed(2)} when you arrive at the restaurant.`;
     
     req.session.success = successMessage;
     res.redirect('/my-reservations');

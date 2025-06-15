@@ -167,7 +167,7 @@ bool ReservationData::addReservation(const Reservation& reservation) {
     try {
         nanodbc::connection conn = dbConnection.getConnection();
         nanodbc::statement stmt(conn);
-        nanodbc::prepare(stmt, "INSERT INTO reservations (user_id, table_id, restaurant_id, date, start_time, end_time, guest_count, status, special_requests, phone_number, email, total_amount, payment_status, payment_method) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+        nanodbc::prepare(stmt, "INSERT INTO reservations (user_id, table_id, restaurant_id, date, start_time, end_time, guest_count, status, special_requests, phone_number, email, total_amount, payment_status, payment_method, confirmation_token) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
         
         int userId = reservation.getUserId();
         int tableId = reservation.getTableId();
@@ -183,6 +183,7 @@ bool ReservationData::addReservation(const Reservation& reservation) {
         double totalAmount = reservation.getTotalAmount();
         std::string paymentStatus = reservation.getPaymentStatus();
         std::string paymentMethod = reservation.getPaymentMethod();
+        std::string confirmationToken = reservation.getConfirmationToken();
         
         stmt.bind(0, &userId);
         stmt.bind(1, &tableId);
@@ -198,6 +199,7 @@ bool ReservationData::addReservation(const Reservation& reservation) {
         stmt.bind(11, &totalAmount);
         stmt.bind(12, paymentStatus.c_str());
         stmt.bind(13, paymentMethod.c_str());
+        stmt.bind(14, confirmationToken.c_str());
         
         nanodbc::execute(stmt);
         return true;
@@ -367,4 +369,70 @@ std::vector<int> ReservationData::getAvailableTableIds(int restaurantId, const s
         std::cerr << "Database error in getAvailableTableIds: " << e.what() << std::endl;
     }
     return availableTableIds;
+}
+
+std::optional<Reservation> ReservationData::getReservationByConfirmationToken(const std::string& token) {
+    try {
+        nanodbc::connection conn = dbConnection.getConnection();
+        nanodbc::statement stmt(conn);
+        nanodbc::prepare(stmt, "SELECT id, user_id, table_id, restaurant_id, date, start_time, end_time, guest_count, status, special_requests, phone_number, email, total_amount, payment_status, payment_method, confirmation_token FROM reservations WHERE confirmation_token = ?");
+        stmt.bind(0, token.c_str());
+        nanodbc::result result = nanodbc::execute(stmt);
+        
+        if (result.next()) {
+            Reservation reservation;
+            reservation.setId(result.get<int>("id"));
+            reservation.setUserId(result.get<int>("user_id"));
+            reservation.setTableId(result.get<int>("table_id"));
+            reservation.setRestaurantId(result.get<int>("restaurant_id"));
+            reservation.setDate(result.get<nanodbc::string>("date", ""));
+            reservation.setStartTime(result.get<nanodbc::string>("start_time", ""));
+            reservation.setEndTime(result.get<nanodbc::string>("end_time", ""));
+            reservation.setGuestCount(result.get<int>("guest_count"));
+            reservation.setStatus(result.get<nanodbc::string>("status", ""));
+            reservation.setSpecialRequests(result.get<nanodbc::string>("special_requests", ""));
+            reservation.setPhoneNumber(result.get<nanodbc::string>("phone_number", ""));
+            reservation.setEmail(result.get<nanodbc::string>("email", ""));
+            reservation.setTotalAmount(result.get<double>("total_amount", 0.0));
+            reservation.setPaymentStatus(result.get<nanodbc::string>("payment_status", ""));
+            reservation.setPaymentMethod(result.get<nanodbc::string>("payment_method", ""));
+            return reservation;
+        }
+    } catch (const nanodbc::database_error& e) {
+        std::cerr << "Database error in getReservationByConfirmationToken: " << e.what() << std::endl;
+    }
+    return std::nullopt;
+}
+
+bool ReservationData::updateReservationConfirmationToken(int id, const std::string& token) {
+    try {
+        nanodbc::connection conn = dbConnection.getConnection();
+        nanodbc::statement stmt(conn);
+        nanodbc::prepare(stmt, "UPDATE reservations SET confirmation_token = ? WHERE id = ?");
+        
+        stmt.bind(0, token.c_str());
+        stmt.bind(1, &id);
+        
+        nanodbc::execute(stmt);
+        return true;
+    } catch (const nanodbc::database_error& e) {
+        std::cerr << "Database error in updateReservationConfirmationToken: " << e.what() << std::endl;
+        return false;
+    }
+}
+
+bool ReservationData::confirmReservation(const std::string& token) {
+    try {
+        nanodbc::connection conn = dbConnection.getConnection();
+        nanodbc::statement stmt(conn);
+        nanodbc::prepare(stmt, "UPDATE reservations SET status = 'confirmed', confirmed_at = CURRENT_TIMESTAMP, confirmation_token = NULL WHERE confirmation_token = ? AND status = 'pending'");
+        
+        stmt.bind(0, token.c_str());
+        
+        nanodbc::result result = nanodbc::execute(stmt);
+        return result.affected_rows() > 0;
+    } catch (const nanodbc::database_error& e) {
+        std::cerr << "Database error in confirmReservation: " << e.what() << std::endl;
+        return false;
+    }
 }

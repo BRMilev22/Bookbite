@@ -1,0 +1,79 @@
+<style>
+  .confirmation-container {
+    max-width: 600px;
+    margin: 4rem auto;
+    padding: 2rem;
+    text-align: center;
+  }
+  
+  .confirmation-icon {
+    font-size: 4rem;
+    color: #28a745;
+    margin-bottom: 1rem;
+  }
+  
+  .confirmation-title {
+    color: #28a745;
+    margin-bottom: 1rem;
+  }
+  
+  .confirmation-message {
+    color: #6c757d;
+    margin-bottom: 2rem;
+    line-height: 1.6;
+  }
+  
+  .action-buttons {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+  
+  .confirmation-card {
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    padding: 3rem 2rem;
+  }
+</style>
+
+<div class="container">
+  <div class="confirmation-container">
+    <div class="confirmation-card">
+      <div class="confirmation-icon">
+        <i class="fas fa-check-circle"></i>
+      </div>
+      
+      <h1 class="confirmation-title">Reservation Confirmed!</h1>
+      
+      <p class="confirmation-message">
+        <%= message || 'Your reservation has been confirmed successfully! You will receive a confirmation email with all the details shortly.' %>
+      </p>
+      
+      <div class="confirmation-message">
+        <p><strong>What's next?</strong></p>
+        <ul style="text-align: left; display: inline-block;">
+          <li>Check your email for the confirmation details</li>
+          <li>Mark your calendar for the reservation date</li>
+          <li>Arrive on time at the restaurant</li>
+          <li>Enjoy your dining experience!</li>
+        </ul>
+      </div>
+      
+      <div class="action-buttons">
+        <% if (isAuthenticated) { %>
+          <a href="/my-reservations" class="btn btn-primary">
+            <i class="fas fa-calendar-alt"></i> View My Reservations
+          </a>
+        <% } %>
+        <a href="/restaurants" class="btn btn-outline-primary">
+          <i class="fas fa-search"></i> Browse More Restaurants
+        </a>
+        <a href="/" class="btn btn-outline-secondary">
+          <i class="fas fa-home"></i> Go Home
+        </a>
+      </div>
+    </div>
+  </div>
+</div>

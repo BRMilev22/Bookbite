@@ -616,7 +616,7 @@ void ApiController::setupReservationRoutes(crow::App<>& app) {
             reservation.setStartTime(data["startTime"]);
             reservation.setEndTime(data["endTime"]);
             reservation.setGuestCount(data["guestCount"]);
-            reservation.setStatus("confirmed");
+            // Status will be set to "pending" by the reservation service
             
             // Set payment fields
             if (data.contains("totalAmount") && !data["totalAmount"].is_null()) {
@@ -658,7 +658,8 @@ void ApiController::setupReservationRoutes(crow::App<>& app) {
                 
                 json response;
                 response["success"] = true;
-                response["message"] = "Reservation created successfully";
+                response["message"] = "Reservation created successfully. Please check your email for confirmation instructions.";
+                response["status"] = "pending";
                 return crow::response(201, response.dump());
             } else {
                 json response;
@@ -738,6 +739,87 @@ void ApiController::setupReservationRoutes(crow::App<>& app) {
             response["success"] = false;
             response["message"] = "Reservation not found";
             return crow::response(404, response.dump());
+        }
+    });
+
+    // Confirm reservation via email token
+    app.route_dynamic("/api/reservations/confirm/<string>")
+    .methods("GET"_method)
+    ([this](const crow::request& req, std::string token) {
+        try {
+            bool success = reservationService.confirmReservation(token);
+            if (success) {
+                json response;
+                response["success"] = true;
+                response["message"] = "Reservation confirmed successfully";
+                return createResponse(200, response.dump());
+            } else {
+                json response;
+                response["success"] = false;
+                response["message"] = "Invalid or expired confirmation token";
+                return createResponse(400, response.dump());
+            }
+        } catch (const std::exception& e) {
+            json response;
+            response["success"] = false;
+            response["message"] = "Failed to confirm reservation";
+            return createResponse(500, response.dump());
+        }
+    });
+
+    // Resend confirmation email for a reservation
+    app.route_dynamic("/api/reservations/<int>/resend-confirmation")
+    .methods("POST"_method)
+    ([this](const crow::request& req, int reservationId) {
+        if (!isAuthenticated(req)) {
+            json response;
+            response["success"] = false;
+            response["message"] = "Unauthorized";
+            return createResponse(401, response.dump());
+        }
+
+        int userId = getUserIdFromRequest(req);
+        if (userId < 0) {
+            json response;
+            response["success"] = false;
+            response["message"] = "Invalid authentication token";
+            return createResponse(401, response.dump());
+        }
+
+        // Verify that the reservation belongs to the authenticated user
+        auto reservation = reservationService.getReservationById(reservationId);
+        if (!reservation) {
+            json response;
+            response["success"] = false;
+            response["message"] = "Reservation not found";
+            return createResponse(404, response.dump());
+        }
+
+        if (reservation->getUserId() != userId) {
+            json response;
+            response["success"] = false;
+            response["message"] = "Access denied - reservation does not belong to user";
+            return createResponse(403, response.dump());
+        }
+
+        try {
+            bool success = reservationService.resendConfirmationEmail(reservationId);
+            if (success) {
+                json response;
+                response["success"] = true;
+                response["message"] = "Confirmation email resent successfully";
+                return createResponse(200, response.dump());
+            } else {
+                json response;
+                response["success"] = false;
+                response["message"] = "Failed to resend confirmation email. Make sure the reservation is still pending.";
+                return createResponse(400, response.dump());
+            }
+        } catch (const std::exception& e) {
+            json response;
+            response["success"] = false;
+            response["message"] = "Failed to resend confirmation email";
+            return createResponse(500, response.dump());
         }
     });
 }

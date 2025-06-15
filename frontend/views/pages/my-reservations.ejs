@@ -1,4 +1,48 @@
 <div class="container">
+<style>
+.reservation-status-badge {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    z-index: 10;
+}
+
+.reservation-status-badge .badge {
+    font-size: 0.75rem;
+    padding: 0.5rem 0.75rem;
+}
+
+.pending-card {
+    border-left: 4px solid #ffc107;
+}
+
+.resend-email-btn {
+    transition: all 0.3s ease;
+}
+
+.resend-email-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.toast-container {
+    z-index: 9999;
+}
+
+.reservation-card-image {
+    position: relative;
+    overflow: hidden;
+}
+
+.reservation-card-image img {
+    transition: transform 0.3s ease;
+}
+
+.reservation-card:hover .reservation-card-image img {
+    transform: scale(1.05);
+}
+</style>
+
     <div class="reservation-page-header mb-5">
         <div class="row align-items-center">
             <div class="col-lg-8">
@@ -17,7 +61,7 @@
         <!-- Reservation stats cards -->
         <div class="col-lg-12 mb-4">
             <div class="row g-3">
-                <div class="col-sm-4">
+                <div class="col-sm-3">
                     <div class="card border-0 shadow-sm stat-card">
                         <div class="card-body p-4">
                             <div class="d-flex align-items-center">
@@ -43,7 +87,7 @@
                         </div>
                     </div>
                 </div>
-                <div class="col-sm-4">
+                <div class="col-sm-3">
                     <div class="card border-0 shadow-sm stat-card">
                         <div class="card-body p-4">
                             <div class="d-flex align-items-center">
@@ -69,7 +113,27 @@
                         </div>
                     </div>
                 </div>
-                <div class="col-sm-4">
+                <div class="col-sm-3">
+                    <div class="card border-0 shadow-sm stat-card">
+                        <div class="card-body p-4">
+                            <div class="d-flex align-items-center">
+                                <div class="stat-icon rounded-circle bg-warning bg-opacity-10 text-warning">
+                                    <i class="fas fa-clock"></i>
+                                </div>
+                                <div class="ms-3">
+                                    <h6 class="card-subtitle text-muted mb-1">Pending</h6>
+                                    <h3 class="card-title mb-0">
+                                        <% 
+                                            const pendingCount = reservations.filter(r => r.status === 'pending').length;
+                                        %>
+                                        <%= pendingCount %>
+                                    </h3>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-sm-3">
                     <div class="card border-0 shadow-sm stat-card">
                         <div class="card-body p-4">
                             <div class="d-flex align-items-center">
@@ -98,7 +162,12 @@
                     <div class="reservation-tabs-header p-4 border-bottom">
                         <ul class="nav nav-pills nav-pills-custom mb-0" id="reservationTabs" role="tablist">
                             <li class="nav-item" role="presentation">
-                                <button class="nav-link active" id="upcoming-tab" data-bs-toggle="pill" data-bs-target="#upcoming" type="button" role="tab">
+                                <button class="nav-link active" id="pending-tab" data-bs-toggle="pill" data-bs-target="#pending" type="button" role="tab">
+                                    <i class="fas fa-clock me-2"></i> Pending
+                                </button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="upcoming-tab" data-bs-toggle="pill" data-bs-target="#upcoming" type="button" role="tab">
                                     <i class="far fa-calendar-check me-2"></i> Upcoming
                                 </button>
                             </li>
@@ -116,8 +185,141 @@
                     </div>
                     
                     <div class="tab-content p-4" id="reservationTabContent">
+                        <!-- Pending Reservations -->
+                        <div class="tab-pane fade show active" id="pending" role="tabpanel">
+                            <% 
+                                const pendingReservations = reservations.filter(r => r.status === 'pending');
+                                
+                                if (pendingReservations.length > 0) {
+                            %>
+                                <div class="alert alert-info border-0 mb-4">
+                                    <i class="fas fa-info-circle me-2"></i>
+                                    <strong>Email Confirmation Required:</strong> These reservations are pending email confirmation. Check your email and click the confirmation link, or use the "Resend Email" button below.
+                                </div>
+                                
+                                <div class="reservation-search mb-4">
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-transparent border-end-0">
+                                            <i class="fas fa-search text-muted"></i>
+                                        </span>
+                                        <input type="text" class="form-control border-start-0 ps-0" id="searchPending" 
+                                            placeholder="Search pending reservations...">
+                                    </div>
+                                </div>
+                                
+                                <div class="reservation-cards">
+                                    <div class="d-flex flex-wrap gap-3">
+                                        <% pendingReservations.forEach(reservation => { 
+                                            // Format date for display
+                                            const resDate = new Date(reservation.date);
+                                            const formattedDate = resDate.toLocaleDateString('en-US', {
+                                                weekday: 'short',
+                                                month: 'short', 
+                                                day: 'numeric'
+                                            });
+                                            
+                                            // Format time
+                                            let formattedTime = 'Time not set';
+                                            if (reservation.startTime) {
+                                                const timeArr = reservation.startTime.split(':');
+                                                const hour = parseInt(timeArr[0]);
+                                                const minute = timeArr[1];
+                                                const period = hour >= 12 ? 'PM' : 'AM';
+                                                const displayHour = hour > 12 ? hour - 12 : (hour === 0 ? 12 : hour);
+                                                formattedTime = `${displayHour}:${minute} ${period}`;
+                                            }
+                                        %>
+                                            <div class="reservation-item" style="flex: 0 0 auto; width: 300px; min-width: 280px;">
+                                                <div class="card border-0 shadow-sm reservation-card pending-card h-100">
+                                                    <div class="reservation-card-image">
+                                                        <img src="https://images.unsplash.com/photo-1552566626-52f8b828add9?q=80&w=3870&auto=format&fit=crop" 
+                                                            class="card-img-top" alt="<%= reservation.restaurant.name %>">
+                                                        <div class="reservation-card-tag">
+                                                            <span><i class="far fa-calendar me-1"></i> <%= formattedDate %></span>
+                                                        </div>
+                                                        <div class="reservation-status-badge">
+                                                            <span class="badge bg-warning text-dark">
+                                                                <i class="fas fa-clock me-1"></i>Pending Confirmation
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                    <div class="card-body">
+                                                        <h5 class="card-title mb-3"><%= reservation.restaurant.name %></h5>
+                                                        <div class="reservation-details">
+                                                            <div class="detail-item">
+                                                                <i class="far fa-clock text-primary"></i>
+                                                                <span><%= formattedTime %></span>
+                                                            </div>
+                                                            <div class="detail-item">
+                                                                <i class="fas fa-users text-primary"></i>
+                                                                <span><%= reservation.guestCount %> <%= reservation.guestCount > 1 ? 'guests' : 'guest' %></span>
+                                                            </div>
+                                                            <div class="detail-item">
+                                                                <i class="fas fa-map-marker-alt text-primary"></i>
+                                                                <span class="text-truncate"><%= reservation.restaurant.address %></span>
+                                                            </div>
+                                                            <div class="detail-item">
+                                                                <i class="fas fa-table text-primary"></i>
+                                                                <span>Table #<%= reservation.tableId %></span>
+                                                            </div>
+                                                        </div>
+                                                        <hr>
+                                                        <div class="d-flex justify-content-between align-items-center mb-3">
+                                                            <span class="reservation-status">
+                                                                <i class="fas fa-circle text-warning me-1 small"></i>
+                                                                Pending Email Confirmation
+                                                            </span>
+                                                        </div>
+                                                        <div class="d-grid gap-2">
+                                                            <button class="btn btn-warning btn-sm resend-email-btn" 
+                                                                    data-reservation-id="<%= reservation.id %>"
+                                                                    data-restaurant-name="<%= reservation.restaurant.name %>">
+                                                                <i class="fas fa-envelope me-2"></i> Resend Confirmation Email
+                                                            </button>
+                                                            <div class="dropdown">
+                                                                <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                                                    More Actions
+                                                                </button>
+                                                                <ul class="dropdown-menu dropdown-menu-end">
+                                                                    <li>
+                                                                        <a class="dropdown-item" href="/restaurants/<%= reservation.restaurantId %>">
+                                                                            <i class="fas fa-store me-2"></i> View Restaurant
+                                                                        </a>
+                                                                    </li>
+                                                                    <li><hr class="dropdown-divider"></li>
+                                                                    <li>
+                                                                        <form action="/reservations/<%= reservation.id %>/cancel" method="POST">
+                                                                            <button type="submit" class="dropdown-item text-danger" 
+                                                                                onclick="return confirm('Are you sure you want to cancel this reservation?')">
+                                                                                <i class="fas fa-times-circle me-2"></i> Cancel Reservation
+                                                                            </button>
+                                                                        </form>
+                                                                    </li>
+                                                                </ul>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        <% }); %>
+                                    </div>
+                                </div>
+                            <% } else { %>
+                                <div class="empty-state text-center py-5">
+                                    <div class="empty-state-icon mb-4">
+                                        <i class="fas fa-check-circle text-muted"></i>
+                                    </div>
+                                    <h4>No Pending Reservations</h4>
+                                    <p class="text-muted mb-4">All your reservations have been confirmed!</p>
+                                    <a href="/restaurants" class="btn btn-primary">
+                                        <i class="fas fa-utensils me-2"></i> Browse Restaurants
+                                    </a>
+                                </div>
+                            <% } %>
+                        </div>
+                        
                         <!-- Upcoming Reservations -->
-                        <div class="tab-pane fade show active" id="upcoming" role="tabpanel">
+                        <div class="tab-pane fade" id="upcoming" role="tabpanel">
                             <% 
                                 const upcomingReservations = reservations.filter(r => {
                                     const today = new Date();
@@ -182,8 +384,6 @@
                                                                     <span class="badge bg-danger">Today!</span>
                                                                 <% } else if (daysRemaining === 1) { %>
                                                                     <span class="badge bg-warning text-dark">Tomorrow</span>
-                                                                <% } else { %>
-                                                                    <span class="badge bg-info text-dark">In <%= daysRemaining %> days</span>
                                                                 <% } %>
                                                             </div>
                                                         <% } %>
@@ -505,3 +705,119 @@
         </div>
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Handle resend email button clicks
+    document.querySelectorAll('.resend-email-btn').forEach(button => {
+        button.addEventListener('click', async function() {
+            const reservationId = this.getAttribute('data-reservation-id');
+            const restaurantName = this.getAttribute('data-restaurant-name');
+            const originalText = this.innerHTML;
+            
+            // Disable button and show loading state
+            this.disabled = true;
+            this.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i> Sending...';
+            
+            try {
+                const response = await fetch(`/api/reservations/${reservationId}/resend-confirmation`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + localStorage.getItem('token')
+                    }
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    // Show success message
+                    this.innerHTML = '<i class="fas fa-check me-2"></i> Email Sent!';
+                    this.classList.remove('btn-warning');
+                    this.classList.add('btn-success');
+                    
+                    // Show toast notification
+                    showToast('Success!', `Confirmation email resent for ${restaurantName}`, 'success');
+                    
+                    // Reset button after 3 seconds
+                    setTimeout(() => {
+                        this.innerHTML = originalText;
+                        this.classList.remove('btn-success');
+                        this.classList.add('btn-warning');
+                        this.disabled = false;
+                    }, 3000);
+                } else {
+                    throw new Error(data.message || 'Failed to resend email');
+                }
+            } catch (error) {
+                console.error('Error resending email:', error);
+                
+                // Show error message
+                this.innerHTML = '<i class="fas fa-exclamation-triangle me-2"></i> Failed';
+                this.classList.remove('btn-warning');
+                this.classList.add('btn-danger');
+                
+                // Show toast notification
+                showToast('Error', error.message || 'Failed to resend confirmation email', 'error');
+                
+                // Reset button after 3 seconds
+                setTimeout(() => {
+                    this.innerHTML = originalText;
+                    this.classList.remove('btn-danger');
+                    this.classList.add('btn-warning');
+                    this.disabled = false;
+                }, 3000);
+            }
+        });
+    });
+    
+    // Toast notification function
+    function showToast(title, message, type = 'info') {
+        // Create toast if it doesn't exist
+        let toastContainer = document.querySelector('.toast-container');
+        if (!toastContainer) {
+            toastContainer = document.createElement('div');
+            toastContainer.className = 'toast-container position-fixed top-0 end-0 p-3';
+            toastContainer.style.zIndex = '9999';
+            document.body.appendChild(toastContainer);
+        }
+        
+        const toastId = 'toast-' + Date.now();
+        const iconClass = type === 'success' ? 'fas fa-check-circle text-success' : 
+                         type === 'error' ? 'fas fa-exclamation-circle text-danger' : 
+                         'fas fa-info-circle text-primary';
+        
+        const toastHtml = `
+            <div id="${toastId}" class="toast align-items-center border-0" role="alert" aria-live="assertive" aria-atomic="true">
+                <div class="d-flex">
+                    <div class="toast-body">
+                        <div class="d-flex align-items-center">
+                            <i class="${iconClass} me-2"></i>
+                            <div>
+                                <strong>${title}</strong><br>
+                                <small>${message}</small>
+                            </div>
+                        </div>
+                    </div>
+                    <button type="button" class="btn-close me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+                </div>
+            </div>
+        `;
+        
+        toastContainer.insertAdjacentHTML('beforeend', toastHtml);
+        
+        const toastElement = document.getElementById(toastId);
+        const toast = new bootstrap.Toast(toastElement, {
+            autohide: true,
+            delay: 5000
+        });
+        
+        toast.show();
+        
+        // Remove toast element after it's hidden
+        toastElement.addEventListener('hidden.bs.toast', () => {
+            toastElement.remove();
+        });
+    }
+});
+</script>

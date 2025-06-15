@@ -2,8 +2,12 @@
 #include "crow.h"
 #include "presentation/apiController.h"
 #include "utils/dbConnection.h"
+#include "utils/envLoader.h"
 
 int main() {
+    // Load environment variables from .env file
+    EnvLoader::loadFromFile(".env");
+    
     // Initialize database connection to make sure it works
     DbConnection dbConn;
     if (!dbConn.isConnected()) {

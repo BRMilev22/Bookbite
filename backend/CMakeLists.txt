@@ -23,6 +23,9 @@ endif()
 # Find OpenSSL for SHA-256 hashing
 find_package(OpenSSL REQUIRED)
 
+# Find CURL for email sending
+find_package(CURL REQUIRED)
+
 # Find MySQL and nanodbc
 find_path(NANODBC_INCLUDE_DIR nanodbc/nanodbc.h HINTS /usr/local/include)
 find_library(NANODBC_LIBRARY nanodbc HINTS /usr/local/lib)
@@ -87,6 +90,7 @@ target_link_libraries(bookbite_server PRIVATE
     ${NANODBC_LIBRARY}
     OpenSSL::SSL
     OpenSSL::Crypto
+    CURL::libcurl
 )
 
 # Add compile flags to enable explicit instantiation of template specializations for bool type
