@@ -285,11 +285,18 @@ Email features include:
 
 ## 💫 Email Confirmation Workflow
 
+### Account Verification
+![Account Confirmation Email](pictures/account-confirmation-email.png)
+
 1. **User Registration**:
    - User registers with email
    - System sends verification email
    - User clicks verification link
    - Account becomes active
+
+### Reservation Confirmation
+![Confirm Reservation Email](pictures/confirm-reservation-email.png)
+![Reservation Confirmed Email](pictures/reservation-confirmed-email.png)
 
 2. **Reservation Process**:
    - User makes reservation
