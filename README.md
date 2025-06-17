@@ -69,14 +69,27 @@ BookBite is a comprehensive restaurant reservation system featuring email confir
 
 ### 📱 Mobile App Screenshots
 
-![Restaurants Mobile](pictures/restaurants-mobile.png)
-*SwiftUI restaurant browsing with native iOS design*
-
-![Make Reservation Mobile](pictures/make-reservation-mobile.png)
-*Smart reservation form with time slot validation*
-
-![My Reservations Mobile](pictures/my-reservations-mobile.png)
-*User reservation management and booking history*
+<div align="center">
+  <table>
+    <tr>
+      <td align="center" width="33%">
+        <img src="pictures/restaurants-mobile.png" width="250" alt="Restaurants Mobile"/>
+        <br/>
+        <em>SwiftUI restaurant browsing with native iOS design</em>
+      </td>
+      <td align="center" width="33%">
+        <img src="pictures/make-reservation-mobile.png" width="250" alt="Make Reservation Mobile"/>
+        <br/>
+        <em>Smart reservation form with time slot validation</em>
+      </td>
+      <td align="center" width="33%">
+        <img src="pictures/my-reservations-mobile.png" width="250" alt="My Reservations Mobile"/>
+        <br/>
+        <em>User reservation management and booking history</em>
+      </td>
+    </tr>
+  </table>
+</div>
 
 ## 🏗️ Project Structure
 
