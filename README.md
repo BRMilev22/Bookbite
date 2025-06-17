@@ -1,6 +1,6 @@
 # BookBite - Restaurant Reservation System 🍽️
 
-BookBite is a comprehensive restaurant reservation system featuring email confirmation workflows, user authentication, and modern web technologies. The system consists of a robust C++ backend using the Crow framework and a responsive Node.js/Express frontend with EJS templating.
+BookBite is a comprehensive restaurant reservation system featuring email confirmation workflows, user authentication, and modern cross-platform technologies. The system consists of a robust C++ backend using the Crow framework, a responsive Node.js/Express web frontend with EJS templating, and a native iOS SwiftUI mobile application that provides a seamless mobile-first experience.
 
 ## 🌟 Features
 
@@ -20,6 +20,11 @@ BookBite is a comprehensive restaurant reservation system featuring email confir
 - Manage personal reservations (view, cancel)
 - Write and edit restaurant reviews
 - Responsive design for mobile and desktop
+- **Native iOS app** with SwiftUI interface and native performance
+
+### Mobile App Features
+- **Native iOS Experience** - SwiftUI interface optimized for iPhone and iPad
+- **Real-Time Reservations** - Live table availability and instant booking confirmation
 
 ### Admin Features
 - Restaurant management (create, update, delete)
@@ -30,25 +35,57 @@ BookBite is a comprehensive restaurant reservation system featuring email confir
 
 ## 📸 Application Screenshots
 
-### Main Page
+### 🌐 Web Application
+
 ![Main Page](pictures/main-page.png)
+*Homepage with featured restaurants and navigation*
 
-### Restaurant Browsing
 ![Restaurants Page](pictures/restaurants-page.png)
+*Restaurant browsing with search and cuisine filters*
 
-### Restaurant Details & Reviews
 ![Restaurant Details](pictures/restaurant-details.png)
+*Detailed restaurant information and table availability*
+
 ![Restaurant Reviews](pictures/restaurant-reviews.png)
+*Customer reviews and ratings system*
 
-### Reservation System
 ![Available Tables](pictures/avaliable-tables.png)
-![Make Reservation](pictures/make-reservation.png)
-![My Reservations](pictures/my-reservations-page.png)
+*Real-time table availability display*
 
-### Admin Dashboard
+![Make Reservation](pictures/make-reservation.png)
+*Complete reservation form with payment options*
+
+![My Reservations](pictures/my-reservations-page.png)
+*User reservation management dashboard*
+
 ![Admin Dashboard](pictures/admin-dashboard.png)
+*Administrative overview and system management*
+
 ![Manage Restaurants](pictures/admin-manage-restaurants.png)
+*Restaurant management interface for admins*
+
 ![Manage Users](pictures/admin-manage-users.png)
+*User management and role assignment*
+
+### 📱 Mobile App Screenshots
+
+![iOS Authentication](ios/screenshots/auth-screen.png)
+*Native iOS login with TouchID/FaceID support*
+
+![Restaurant List](ios/screenshots/restaurant-list.png)
+*SwiftUI restaurant browsing with search and filters*
+
+![Restaurant Details](ios/screenshots/restaurant-detail.png)
+*Comprehensive restaurant information and table selection*
+
+![Reservation Form](ios/screenshots/reservation-form.png)
+*Smart time selection within restaurant hours*
+
+![My Reservations](ios/screenshots/my-reservations.png)
+*User reservation management and history*
+
+![User Profile](ios/screenshots/profile-screen.png)
+*Profile settings and preferences*
 
 ## 🏗️ Project Structure
 
@@ -66,7 +103,7 @@ bookbite/
 │   │   └── [mirrors include structure]
 │   ├── build/                 # Build directory
 │   └── CMakeLists.txt        # Build configuration
-├── frontend/                  # Node.js/Express Frontend
+├── frontend/                  # Node.js/Express Web Frontend
 │   ├── views/                 # EJS templates
 │   │   ├── pages/            # Page templates
 │   │   ├── partials/         # Reusable components
@@ -74,12 +111,35 @@ bookbite/
 │   ├── public/               # Static assets (CSS, JS, images)
 │   ├── app.js                # Express application
 │   └── package.json          # Dependencies
+├── ios/                       # Native iOS SwiftUI App
+│   ├── BookBiteApp.swift     # Main app entry point
+│   ├── Models.swift          # Data models matching backend API
+│   ├── APIService.swift      # Network layer and API communication
+│   ├── AuthenticationManager.swift # Authentication state management
+│   ├── Theme.swift           # Centralized UI theme and styling
+│   ├── Views/                # SwiftUI views
+│   │   ├── AuthenticationView.swift
+│   │   ├── ContentView.swift
+│   │   ├── RestaurantsView.swift
+│   │   ├── RestaurantDetailView.swift
+│   │   ├── MakeReservationView.swift
+│   │   ├── ReservationsView.swift
+│   │   ├── ProfileView.swift
+│   │   └── AddReviewView.swift
+│   └── README.md             # iOS app documentation
+├── mobile/                    # iOS Xcode Project
+│   └── BoobBite/             # Xcode project files
+│       ├── BoobBite.xcodeproj
+│       ├── BoobBite/         # Source files (Swift UI views)
+│       ├── BoobBiteTests/    # Unit tests
+│       └── BoobBiteUITests/  # UI automation tests
 ├── diagrams/                  # System documentation
 │   ├── entity-relationship-diagram.png
 │   ├── sequence-diagram.png
 │   ├── activity-diagram.png
 │   ├── use-case-diagram.png
 │   └── file-structure-diagram.png
+├── pictures/                  # Application screenshots
 ├── bookbite.sql              # Database schema
 └── README.md                 # This file
 ```
@@ -103,6 +163,14 @@ bookbite/
 - **HTTP Client**: Axios for API communication
 - **Image Service**: Unsplash API integration
 
+### Mobile (iOS)
+- **Framework**: SwiftUI (iOS 16.0+)
+- **Architecture**: MVVM with Combine
+- **Networking**: URLSession with async/await
+- **Authentication**: JWT token management
+- **UI**: Native iOS design with accessibility support
+- **Deployment**: Xcode 15+ with iOS 16+ SDK
+
 ### Database
 - **MySQL/MariaDB** with the following main tables:
   - `users` - User accounts and authentication
@@ -112,6 +180,105 @@ bookbite/
   - `reviews` - User reviews and ratings
   - `user_roles` - Role-based access control
   - `auth_tokens` - JWT token management
+
+## 📱 Mobile Application
+
+### iOS App Overview
+The BookBite iOS app provides a native mobile experience built with SwiftUI, offering all the functionality of the web application optimized for mobile devices. The app features a clean, intuitive interface that follows iOS design guidelines while maintaining brand consistency with the web application.
+
+### Key Mobile Features
+
+#### 🎨 **Native UI/UX Design**
+- **SwiftUI Framework**: Modern declarative UI with smooth animations
+- **iOS Design Guidelines**: Native navigation, gestures, and interactions
+- **Brand Consistency**: Matches web application color scheme and branding
+- **Responsive Layout**: Optimized for iPhone and iPad screen sizes
+- **Dark Mode Support**: Automatic adaptation to system appearance settings
+
+#### 🔐 **Authentication & Security**
+- **JWT Token Management**: Secure authentication with automatic token refresh
+- **Keychain Storage**: Secure storage of user credentials and tokens
+- **Session Persistence**: Automatic login on app restart
+
+#### 🍽️ **Restaurant Discovery**
+- **Interactive Restaurant List**: Card-based layout with search and filtering
+- **Restaurant Details**: Comprehensive restaurant information with image galleries
+- **Real-Time Reviews**: User reviews and ratings with ability to add new reviews
+- **Cuisine Filtering**: Browse by cuisine type, rating, and price range
+
+#### 📅 **Advanced Reservation System**
+- **Smart Time Selection**: Time slots restricted to restaurant operating hours
+- **Availability Checking**: Real-time table availability with visual indicators
+- **Reservation Validation**: Prevents double-booking and validates time selections
+- **Payment Integration**: Reservation fees with payment method selection
+- **Email Confirmations**: Automatic email notifications for reservations
+
+#### 📱 **Mobile-Optimized Features**
+- **Loading States**: Smooth loading indicators and skeleton screens
+- **Error Handling**: User-friendly error messages and retry mechanisms
+- **Network Timeout Handling**: Automatic timeouts prevent app hanging
+
+### Technical Architecture
+
+#### 🏗️ **MVVM Architecture**
+```
+Views (SwiftUI) → ViewModels → Services → API Layer → Backend
+```
+
+#### 📦 **Core Components**
+- **APIService.swift**: Network layer handling all backend communication
+- **AuthenticationManager.swift**: Centralized authentication state management
+- **Models.swift**: Data models matching backend API schema
+- **Theme.swift**: Centralized styling and design system
+
+#### 🌐 **API Integration**
+- **RESTful API Communication**: Full integration with C++ backend
+- **Async/Await Patterns**: Modern Swift concurrency for network operations
+- **JSON Serialization**: Automatic encoding/decoding of API responses
+- **Error Propagation**: Comprehensive error handling throughout the stack
+
+### Development Workflow
+
+#### 🛠️ **Development Setup**
+1. **Xcode Requirements**: Xcode 15.0+ with iOS 16+ SDK
+
+### Mobile App Screens
+
+#### 📱 **Main Navigation**
+- **Tab Bar Interface**: Easy navigation between main sections
+- **Authentication Flow**: Login/register with brand-consistent design
+- **Restaurant List**: Search, filter, and browse restaurants
+- **Restaurant Details**: Comprehensive restaurant information
+
+#### 🎯 **Reservation Flow**
+1. **Table Selection**: Choose from available tables with capacity info
+2. **Date/Time Picker**: Smart time selection within restaurant hours
+3. **Guest Information**: Contact details and special requests
+4. **Payment Options**: Card payment or pay-at-restaurant
+5. **Confirmation**: Email confirmation and reservation summary
+
+#### 👤 **User Management**
+- **Profile Screen**: User information and preferences
+- **Reservation History**: View and manage all reservations
+- **Review Management**: View and edit submitted reviews
+
+### Performance Optimizations
+
+#### ⚡ **Network Optimization**
+- **Request Caching**: Intelligent caching of restaurant data
+- **Image Loading**: Lazy loading with placeholder images
+- **Batch Requests**: Efficient data fetching strategies
+- **Background Sync**: Data synchronization when app becomes active
+
+#### 🎯 **UI Performance**
+- **LazyVStack/LazyHStack**: Efficient list rendering for large datasets
+- **SwiftUI Optimizations**: Proper state management and view updates
+- **Memory Management**: Automatic reference counting and leak prevention
+
+#### 📱 **Device Compatibility**
+- **iOS Versions**: iOS 16.0+ support
+- **Device Types**: iPhone 12+ and iPad (9th generation+)
+- **Screen Sizes**: Responsive design for all screen sizes
 
 ## 🚀 Getting Started
 
@@ -210,6 +377,79 @@ bookbite/
    npm run dev
    ```
    The frontend will be available at `http://localhost:3000`
+
+### iOS App Setup
+1. **Prerequisites**:
+   - **macOS**: macOS Monterey (12.0) or later
+   - **Xcode**: Xcode 15.0+ with iOS 16+ SDK
+   - **Apple Developer Account**: For device testing
+   - **Running Backend**: Ensure C++ backend server is running (steps above)
+
+2. **Project Setup**:
+   ```bash
+   # Navigate to the mobile project
+   cd mobile/BoobBite
+   
+   # Open in Xcode
+   open BoobBite.xcodeproj
+   ```
+
+3. **Configuration**:
+   - **Bundle Identifier**: Set to `com.yourcompany.bookbite`
+   - **Team**: Select your Apple Developer team
+   - **Deployment Target**: Set to iOS 16.0 minimum
+   - **Signing**: Enable automatic signing for development
+
+4. **Network Configuration**:
+   Update the API base URL in `APIService.swift`:
+   ```swift
+   // For iOS Simulator (localhost)
+   private let baseURL = "http://localhost:8080/api"
+   
+   // For Physical Device Testing (replace with your Mac's IP)
+   private let baseURL = "http://192.168.1.100:8080/api"
+   ```
+
+5. **Build and Run**:
+   - **Simulator**: Select any iPhone simulator and press Cmd+R
+   - **Physical Device**: Connect iPhone, select device, and press Cmd+R
+   - **Testing**: Ensure backend is running and accessible from the device
+
+### Mobile App Architecture Details
+
+#### 📱 **App Structure**
+```
+BoobBite/
+├── BookBiteApp.swift          # Main app entry point
+├── ContentView.swift          # Tab bar navigation
+├── Theme.swift               # UI theme and styling
+├── Models.swift              # Data models
+├── APIService.swift          # Network layer
+├── AuthenticationManager.swift # Auth state
+└── Views/
+    ├── AuthenticationView.swift    # Login/Register
+    ├── RestaurantsView.swift      # Restaurant list
+    ├── RestaurantDetailView.swift # Restaurant details & booking
+    ├── ReservationsView.swift     # User reservations
+    ├── ProfileView.swift          # User profile
+    └── AddReviewView.swift        # Review submission
+```
+
+#### 🔄 **Data Flow**
+1. **User Interaction** → SwiftUI View
+2. **View** → ViewModel (state management)
+3. **ViewModel** → APIService (network call)
+4. **APIService** → Backend API
+5. **Response** → Model parsing
+6. **UI Update** → SwiftUI automatic refresh
+
+#### 🎨 **UI Components**
+- **Custom Cards**: Restaurant and reservation cards with shadows
+- **Loading States**: Skeleton screens and progress indicators
+- **Error Handling**: User-friendly error messages and retry buttons
+- **Form Validation**: Real-time validation for reservation forms
+
+> **Note**: For physical device testing, replace `localhost` with your Mac's IP address in the APIService configuration. Ensure both devices are on the same WiFi network and firewall allows connections on port 8080.
 
 ## 📊 System Architecture
 
@@ -346,6 +586,13 @@ The project follows a clean architecture pattern:
 - **SMTP Authentication**: Use App Passwords for Gmail
 - **Firewall**: Ensure SMTP port 587 is not blocked
 - **Email Delivery**: Check spam folders for confirmation emails
+
+### Mobile App Issues
+- **Network Connectivity**: Ensure backend server is accessible from mobile device
+- **API Base URL**: Update APIService.swift with correct IP address for device testing
+- **Xcode Build Errors**: Ensure iOS 16+ deployment target and Swift 5.7+ compatibility
+- **Simulator vs Device**: Different network configurations required for localhost vs IP testing
+- **Modal Presentation**: Use proper SwiftUI sheet presentation patterns to avoid white screens
 
 ## 📄 License
 
