@@ -7,6 +7,7 @@ class ImageCacheManager: ObservableObject {
     
     private var cache = NSCache<NSString, UIImage>()
     private var downloadTasks: [String: Task<UIImage?, Never>] = [:]
+    private let taskQueue = DispatchQueue(label: "ImageCacheManager.taskQueue", attributes: .concurrent)
     
     private init() {
         // Configure cache
@@ -25,11 +26,20 @@ class ImageCacheManager: ObservableObject {
     
     private func handleMemoryWarning() {
         // Clear half the cache on memory warning
-        cache.removeAllObjects()
+        taskQueue.async(flags: .barrier) { [weak self] in
+            self?.cache.removeAllObjects()
+            self?.downloadTasks.removeAll()
+        }
         print("🧹 Image cache cleared due to memory warning")
     }
     
     func getImage(from urlString: String) async -> UIImage? {
+        // Validate URL first
+        guard !urlString.isEmpty, URL(string: urlString) != nil else { 
+            print("❌ Invalid URL string: \(urlString)")
+            return nil 
+        }
+        
         let cacheKey = NSString(string: urlString)
         
         // Check if image is already cached
@@ -37,45 +47,76 @@ class ImageCacheManager: ObservableObject {
             return cachedImage
         }
         
-        // Check if download is already in progress
-        if let existingTask = downloadTasks[urlString] {
-            return await existingTask.value
+        // Check if download is already in progress (thread-safe)
+        let task = await withCheckedContinuation { continuation in
+            taskQueue.async(flags: .barrier) { [weak self] in
+                if let existingTask = self?.downloadTasks[urlString] {
+                    continuation.resume(returning: existingTask)
+                } else {
+                    // Start new download task
+                    let newTask = Task<UIImage?, Never> {
+                        let image = await self?.downloadImage(from: urlString)
+                        
+                        // Remove task from dictionary when completed
+                        self?.taskQueue.async(flags: .barrier) {
+                            self?.downloadTasks.removeValue(forKey: urlString)
+                        }
+                        
+                        return image
+                    }
+                    
+                    self?.downloadTasks[urlString] = newTask
+                    continuation.resume(returning: newTask)
+                }
+            }
         }
         
-        // Start new download task
-        let task = Task<UIImage?, Never> {
-            await downloadImage(from: urlString)
-        }
-        
-        downloadTasks[urlString] = task
-        let image = await task.value
-        downloadTasks.removeValue(forKey: urlString)
-        
-        // Cache the downloaded image
-        if let image = image {
-            cache.setObject(image, forKey: cacheKey)
-        }
-        
-        return image
+        return await task.value
     }
     
     private func downloadImage(from urlString: String) async -> UIImage? {
-        guard let url = URL(string: urlString) else { return nil }
+        guard let url = URL(string: urlString) else { 
+            print("❌ Invalid URL: \(urlString)")
+            return nil 
+        }
         
         do {
-            let (data, _) = try await URLSession.shared.data(from: url)
-            return UIImage(data: data)
+            let (data, response) = try await URLSession.shared.data(from: url)
+            
+            // Validate HTTP response
+            if let httpResponse = response as? HTTPURLResponse {
+                guard 200...299 ~= httpResponse.statusCode else {
+                    print("❌ HTTP Error \(httpResponse.statusCode) for URL: \(urlString)")
+                    return nil
+                }
+            }
+            
+            guard let image = UIImage(data: data) else {
+                print("❌ Failed to create UIImage from data for URL: \(urlString)")
+                return nil
+            }
+            
+            // Cache the downloaded image
+            let cacheKey = NSString(string: urlString)
+            cache.setObject(image, forKey: cacheKey)
+            
+            return image
         } catch {
-            print("Failed to download image: \(error)")
+            print("❌ Failed to download image from \(urlString): \(error.localizedDescription)")
             return nil
         }
     }
     
     func clearCache() {
-        cache.removeAllObjects()
+        taskQueue.async(flags: .barrier) { [weak self] in
+            self?.cache.removeAllObjects()
+            self?.downloadTasks.removeAll()
+        }
     }
     
     func preloadImage(from urlString: String) {
+        guard !urlString.isEmpty, URL(string: urlString) != nil else { return }
+        
         Task {
             _ = await getImage(from: urlString)
         }
@@ -85,8 +126,26 @@ class ImageCacheManager: ObservableObject {
         return (count: cache.countLimit, totalCost: cache.totalCostLimit)
     }
     
+    func getCurrentCacheUsage() -> (imageCount: Int, taskCount: Int) {
+        var taskCount = 0
+        taskQueue.sync {
+            taskCount = downloadTasks.count
+        }
+        return (imageCount: cache.countLimit, taskCount: taskCount)
+    }
+    
+    func printDebugInfo() {
+        let usage = getCurrentCacheUsage()
+        print("🔍 Cache Debug Info:")
+        print("   - Cached images: \(usage.imageCount)")
+        print("   - Active download tasks: \(usage.taskCount)")
+    }
+    
     deinit {
         NotificationCenter.default.removeObserver(self)
+        // Cancel all pending tasks
+        downloadTasks.values.forEach { $0.cancel() }
+        downloadTasks.removeAll()
     }
 }
 
@@ -118,6 +177,14 @@ struct CachedAsyncImage<Content: View, Placeholder: View>: View {
                     .onAppear {
                         loadImage()
                     }
+                    .onChange(of: url) { newUrl in
+                        // Reset state when URL changes
+                        image = nil
+                        isLoading = false
+                        if newUrl != nil && !newUrl!.isEmpty {
+                            loadImage()
+                        }
+                    }
             }
         }
     }
@@ -129,9 +196,15 @@ struct CachedAsyncImage<Content: View, Placeholder: View>: View {
         Task {
             let downloadedImage = await ImageCacheManager.shared.getImage(from: url)
             
+            // Check if the view is still active and URL hasn't changed
+            guard !Task.isCancelled else { return }
+            
             await MainActor.run {
-                self.image = downloadedImage
-                self.isLoading = false
+                // Only update if we're still loading the same URL
+                if self.url == url {
+                    self.image = downloadedImage
+                    self.isLoading = false
+                }
             }
         }
     }
