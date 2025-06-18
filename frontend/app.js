@@ -1090,6 +1090,9 @@ app.post('/admin/reservations/:id', isAdmin, async (req, res) => {
 });
 
 // Start server
-app.listen(PORT, () => {
-  console.log(`Server is running on http://localhost:${PORT}`);
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`Server is running on:`);
+  console.log(`  - Local:   http://localhost:${PORT}`);
+  console.log(`  - Network: http://192.168.0.116:${PORT}`);
+  console.log(`  - Use the Network URL to access from your phone`);
 });
