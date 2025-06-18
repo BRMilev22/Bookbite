@@ -333,25 +333,11 @@ struct ReservationCard: View {
         VStack(spacing: 0) {
             // Restaurant Image and Date Badge
             ZStack {
-                AsyncImage(url: URL(string: restaurant?.imageUrl ?? "")) { image in
-                    image
-                        .resizable()
-                        .aspectRatio(contentMode: .fill)
-                } placeholder: {
-                    Rectangle()
-                        .fill(LinearGradient(
-                            gradient: Gradient(colors: [Color.gray.opacity(0.3), Color.gray.opacity(0.1)]),
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        ))
-                        .overlay(
-                            Image(systemName: "fork.knife")
-                                .foregroundColor(.white)
-                                .font(.system(size: 24, weight: .medium))
-                        )
-                }
-                .frame(height: 140)
-                .clipped()
+                RestaurantImageView(
+                    imageUrl: restaurant?.imageUrl,
+                    height: 140,
+                    cornerRadius: 0
+                )
                 
                 // Date badge overlay
                 VStack {

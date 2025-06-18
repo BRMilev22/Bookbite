@@ -111,21 +111,11 @@ struct RestaurantCard: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             // Restaurant Image
-            AsyncImage(url: URL(string: restaurant.imageUrl ?? "")) { image in
-                image
-                    .resizable()
-                    .aspectRatio(contentMode: .fill)
-            } placeholder: {
-                Rectangle()
-                    .fill(Color.gray.opacity(0.2))
-                    .overlay(
-                        Image(systemName: "fork.knife")
-                            .font(.system(size: 30))
-                            .foregroundColor(.gray)
-                    )
-            }
-            .frame(height: 160)
-            .clipped()
+            RestaurantImageView(
+                imageUrl: restaurant.imageUrl,
+                height: 160,
+                cornerRadius: 0
+            )
             
             // Restaurant Info
             VStack(alignment: .leading, spacing: 8) {

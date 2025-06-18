@@ -103,17 +103,33 @@ class APIService: ObservableObject {
     
     // MARK: - Restaurants
     func getRestaurants() async throws -> [Restaurant] {
-        return try await request(
+        let restaurants = try await request(
             endpoint: "/restaurants",
             responseType: [Restaurant].self
         )
+        
+        // Preload restaurant images for better performance
+        for restaurant in restaurants {
+            if let imageUrl = restaurant.imageUrl {
+                ImageCacheManager.shared.preloadImage(from: imageUrl)
+            }
+        }
+        
+        return restaurants
     }
     
     func getRestaurant(id: Int) async throws -> Restaurant {
-        return try await request(
+        let restaurant = try await request(
             endpoint: "/restaurants/\(id)",
             responseType: Restaurant.self
         )
+        
+        // Preload restaurant image
+        if let imageUrl = restaurant.imageUrl {
+            ImageCacheManager.shared.preloadImage(from: imageUrl)
+        }
+        
+        return restaurant
     }
     
     func getRestaurantTables(restaurantId: Int) async throws -> [Table] {

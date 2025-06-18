@@ -25,21 +25,11 @@ struct RestaurantDetailView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 0) {
                 // Header Image
-                AsyncImage(url: URL(string: restaurant.imageUrl ?? "")) { image in
-                    image
-                        .resizable()
-                        .aspectRatio(contentMode: .fill)
-                } placeholder: {
-                    Rectangle()
-                        .fill(Color.gray.opacity(0.3))
-                        .overlay(
-                            Image(systemName: "fork.knife")
-                                .font(.system(size: 40))
-                                .foregroundColor(.gray)
-                        )
-                }
-                .frame(height: 250)
-                .clipped()
+                RestaurantImageView(
+                    imageUrl: restaurant.imageUrl,
+                    height: 250,
+                    cornerRadius: 0
+                )
                 
                 VStack(alignment: .leading, spacing: 16) {
                     // Restaurant Info

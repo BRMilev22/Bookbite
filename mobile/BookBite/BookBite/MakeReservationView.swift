@@ -162,17 +162,10 @@ struct MakeReservationView: View {
     private var restaurantSection: some View {
         Section(header: Text("Restaurant")) {
             HStack {
-                AsyncImage(url: URL(string: restaurant.imageUrl ?? "")) { image in
-                    image
-                        .resizable()
-                        .aspectRatio(contentMode: .fill)
-                } placeholder: {
-                    Rectangle()
-                        .fill(Color.gray.opacity(0.3))
-                }
-                .frame(width: 50, height: 50)
-                .cornerRadius(8)
-                .clipped()
+                CircularRestaurantImageView(
+                    imageUrl: restaurant.imageUrl,
+                    size: 50
+                )
                 
                 VStack(alignment: .leading) {
                     Text(restaurant.name)
