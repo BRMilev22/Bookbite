@@ -88,6 +88,23 @@ BookBite is a comprehensive restaurant reservation system featuring email confir
         <em>User reservation management and booking history</em>
       </td>
     </tr>
+    <tr>
+      <td align="center" width="33%">
+        <img src="pictures/payment-dark-mobile.png" width="250" alt="Payment Dark Mobile"/>
+        <br/>
+        <em>Dark mode payment interface</em>
+      </td>
+      <td align="center" width="33%">
+        <img src="pictures/make-reservation-dark-mobile.png" width="250" alt="Make Reservation Dark Mobile"/>
+        <br/>
+        <em>Dark mode reservation form with optimized contrast</em>
+      </td>
+      <td align="center" width="33%">
+        <img src="pictures/my-reservation-dark-mobile.png" width="250" alt="My Reservation Dark Mobile"/>
+        <br/>
+        <em>Dark mode reservation management interface</em>
+      </td>
+    </tr>
   </table>
 </div>
 

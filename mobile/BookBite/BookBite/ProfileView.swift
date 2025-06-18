@@ -14,7 +14,7 @@ struct ProfileView: View {
                     HStack {
                         Image(systemName: "person.circle.fill")
                             .font(.system(size: 50))
-                            .foregroundColor(Theme.Colors.warning)
+                            .foregroundColor(Theme.Colors.primary)
                         
                         VStack(alignment: .leading, spacing: 4) {
                             if let user = authManager.currentUser {
@@ -57,7 +57,7 @@ struct ProfileView: View {
                 Section("About") {
                     HStack {
                         Image(systemName: "fork.knife.circle")
-                            .foregroundColor(Theme.Colors.warning)
+                            .foregroundColor(Theme.Colors.primary)
                         Text("BookBite")
                             .foregroundColor(Theme.Colors.primaryText)
                         Spacer()
