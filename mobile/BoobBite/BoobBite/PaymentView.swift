@@ -5,6 +5,8 @@ struct PaymentView: View {
     let onPaymentComplete: () -> Void
     let onCancel: () -> Void
     
+    @Environment(\.colorScheme) var colorScheme
+    
     @State private var cardNumber: String = ""
     @State private var expiryDate: String = ""
     @State private var cvv: String = ""
@@ -83,6 +85,36 @@ struct PaymentView: View {
         }
     }
 
+    // MARK: - Adaptive Colors
+    
+    private var primaryAccentColor: Color {
+        Color.orange
+    }
+    
+    private var successColor: Color {
+        colorScheme == .dark ? Color.green : Color.green
+    }
+    
+    private var warningColor: Color {
+        Color.orange
+    }
+    
+    private var cardBackgroundColor: Color {
+        colorScheme == .dark ? Color(.systemGray6) : Color(.systemGray6)
+    }
+    
+    private var secondaryBackgroundColor: Color {
+        colorScheme == .dark ? Color(.systemGray5) : Color(.systemGray6)
+    }
+    
+    private var buttonBackgroundColor: Color {
+        if isPaymentFormValid && !isProcessing {
+            return primaryAccentColor
+        } else {
+            return colorScheme == .dark ? Color(.systemGray4) : Color(.systemGray3)
+        }
+    }
+
     // MARK: - Computed Properties
     
     private var isPaymentFormValid: Bool {
@@ -137,46 +169,47 @@ struct PaymentView: View {
             Text("Payment Summary")
                 .font(.title2)
                 .fontWeight(.bold)
-                .foregroundColor(Theme.Colors.primaryText)
+                .foregroundColor(.primary)
             
             VStack(spacing: 12) {
                 HStack {
                     Text("Table Capacity:")
                         .font(.subheadline)
-                        .foregroundColor(Theme.Colors.primaryText)
+                        .foregroundColor(.primary)
                     Spacer()
                     Text("\(tableCapacity) seats")
                         .font(.subheadline)
                         .fontWeight(.medium)
-                        .foregroundColor(Theme.Colors.primaryText)
+                        .foregroundColor(.primary)
                 }
                 
                 HStack {
                     Text("Table Type:")
                         .font(.subheadline)
-                        .foregroundColor(Theme.Colors.primaryText)
+                        .foregroundColor(.primary)
                     Spacer()
                     Text(feeDescription)
                         .font(.subheadline)
                         .fontWeight(.medium)
-                        .foregroundColor(Theme.Colors.secondaryText)
+                        .foregroundColor(.secondary)
                 }
                 
                 Divider()
+                    .background(.secondary)
                 
                 HStack {
                     Text("Reservation Fee:")
                         .font(.headline)
-                        .foregroundColor(Theme.Colors.primaryText)
+                        .foregroundColor(.primary)
                     Spacer()
                     Text("$\(calculatedAmount, specifier: "%.2f")")
                         .font(.title2)
                         .fontWeight(.bold)
-                        .foregroundColor(Theme.Colors.warning)
+                        .foregroundColor(primaryAccentColor)
                 }
             }
             .padding()
-            .background(Theme.Colors.inputBackground)
+            .background(secondaryBackgroundColor)
             .cornerRadius(12)
         }
         .padding(.horizontal)
@@ -187,7 +220,7 @@ struct PaymentView: View {
             Text("Card Information")
                 .font(.title2)
                 .fontWeight(.bold)
-                .foregroundColor(Theme.Colors.primaryText)
+                .foregroundColor(.primary)
                 .padding(.horizontal)
             
             VStack(spacing: 16) {
@@ -204,7 +237,7 @@ struct PaymentView: View {
             Text("Cardholder Name")
                 .font(.subheadline)
                 .fontWeight(.medium)
-                .foregroundColor(Theme.Colors.primaryText)
+                .foregroundColor(.primary)
             TextField("Enter name on card", text: $cardholderName)
                 .textFieldStyle(RoundedBorderTextFieldStyle())
                 .textContentType(.name)
@@ -217,7 +250,7 @@ struct PaymentView: View {
             Text("Card Number")
                 .font(.subheadline)
                 .fontWeight(.medium)
-                .foregroundColor(Theme.Colors.primaryText)
+                .foregroundColor(.primary)
             TextField("1234 5678 9012 3456", text: $cardNumber)
                 .textFieldStyle(RoundedBorderTextFieldStyle())
                 .keyboardType(.numberPad)
@@ -233,7 +266,7 @@ struct PaymentView: View {
                 Text("Expiry Date")
                     .font(.subheadline)
                     .fontWeight(.medium)
-                    .foregroundColor(Theme.Colors.primaryText)
+                    .foregroundColor(.primary)
                 TextField("MM/YY", text: $expiryDate)
                     .textFieldStyle(RoundedBorderTextFieldStyle())
                     .keyboardType(.numberPad)
@@ -246,7 +279,7 @@ struct PaymentView: View {
                 Text("CVV")
                     .font(.subheadline)
                     .fontWeight(.medium)
-                    .foregroundColor(Theme.Colors.primaryText)
+                    .foregroundColor(.primary)
                 TextField("123", text: $cvv)
                     .textFieldStyle(RoundedBorderTextFieldStyle())
                     .keyboardType(.numberPad)
@@ -263,21 +296,21 @@ struct PaymentView: View {
         VStack(spacing: 8) {
             HStack {
                 Image(systemName: "lock.shield.fill")
-                    .foregroundColor(Theme.Colors.success)
+                    .foregroundColor(successColor)
                 Text("Secure Payment")
                     .font(.subheadline)
                     .fontWeight(.medium)
-                    .foregroundColor(Theme.Colors.primaryText)
+                    .foregroundColor(.primary)
                 Spacer()
             }
             
             Text("Demo payment processing. No real transactions will occur.")
                 .font(.caption)
-                .foregroundColor(Theme.Colors.warning)
+                .foregroundColor(warningColor)
                 .multilineTextAlignment(.leading)
         }
         .padding()
-        .background(Theme.Colors.inputBackground)
+        .background(secondaryBackgroundColor)
         .cornerRadius(12)
         .padding(.horizontal)
     }
@@ -299,7 +332,7 @@ struct PaymentView: View {
             .foregroundColor(.white)
             .frame(maxWidth: .infinity)
             .frame(height: 50)
-            .background(isPaymentFormValid && !isProcessing ? Theme.Colors.warning : Theme.Colors.secondaryText)
+            .background(buttonBackgroundColor)
             .cornerRadius(12)
         }
         .disabled(!isPaymentFormValid || isProcessing)

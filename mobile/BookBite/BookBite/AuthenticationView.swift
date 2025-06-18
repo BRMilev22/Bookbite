@@ -30,11 +30,11 @@ struct AuthenticationView: View {
                         
                         Text("BookBite")
                             .font(.system(size: 32, weight: .bold))
-                            .foregroundColor(.primary)
+                            .foregroundColor(Theme.Colors.primaryText)
                         
                         Text("Reserve your perfect dining experience")
                             .font(.system(size: 16))
-                            .foregroundColor(.secondary)
+                            .foregroundColor(Theme.Colors.secondaryText)
                             .multilineTextAlignment(.center)
                     }
                     .padding(.top, max(60, geometry.safeAreaInsets.top + 40))
@@ -57,7 +57,7 @@ struct AuthenticationView: View {
                                     VStack(alignment: .leading, spacing: 8) {
                                         Text("Username")
                                             .font(.system(size: 14, weight: .medium))
-                                            .foregroundColor(.primary)
+                                            .foregroundColor(Theme.Colors.primaryText)
                                         
                                         TextField("Enter your username", text: $username)
                                             .textFieldStyle(PlainTextFieldStyle())
@@ -70,7 +70,7 @@ struct AuthenticationView: View {
                                     VStack(alignment: .leading, spacing: 8) {
                                         Text("Password")
                                             .font(.system(size: 14, weight: .medium))
-                                            .foregroundColor(.primary)
+                                            .foregroundColor(Theme.Colors.primaryText)
                                         
                                         SecureField("Enter your password", text: $password)
                                             .textFieldStyle(PlainTextFieldStyle())
@@ -105,7 +105,7 @@ struct AuthenticationView: View {
                                     HStack {
                                         Text("Need an account?")
                                             .font(.system(size: 14))
-                                            .foregroundColor(.secondary)
+                                            .foregroundColor(Theme.Colors.secondaryText)
                                         
                                         Button(action: {
                                             withAnimation(.easeInOut(duration: 0.3)) {
@@ -137,7 +137,7 @@ struct AuthenticationView: View {
                                         VStack(alignment: .leading, spacing: 8) {
                                             Text("First Name")
                                                 .font(.system(size: 14, weight: .medium))
-                                                .foregroundColor(.primary)
+                                                .foregroundColor(Theme.Colors.primaryText)
                                             
                                             TextField("Enter first name", text: $firstName)
                                                 .textFieldStyle(PlainTextFieldStyle())
@@ -149,7 +149,7 @@ struct AuthenticationView: View {
                                         VStack(alignment: .leading, spacing: 8) {
                                             Text("Last Name")
                                                 .font(.system(size: 14, weight: .medium))
-                                                .foregroundColor(.primary)
+                                                .foregroundColor(Theme.Colors.primaryText)
                                             
                                             TextField("Enter last name", text: $lastName)
                                                 .textFieldStyle(PlainTextFieldStyle())
@@ -162,7 +162,7 @@ struct AuthenticationView: View {
                                     VStack(alignment: .leading, spacing: 8) {
                                         Text("Email")
                                             .font(.system(size: 14, weight: .medium))
-                                            .foregroundColor(.primary)
+                                            .foregroundColor(Theme.Colors.primaryText)
                                         
                                         TextField("Enter your email", text: $email)
                                             .textFieldStyle(PlainTextFieldStyle())
@@ -176,7 +176,7 @@ struct AuthenticationView: View {
                                     VStack(alignment: .leading, spacing: 8) {
                                         Text("Username")
                                             .font(.system(size: 14, weight: .medium))
-                                            .foregroundColor(.primary)
+                                            .foregroundColor(Theme.Colors.primaryText)
                                         
                                         TextField("Choose a username", text: $username)
                                             .textFieldStyle(PlainTextFieldStyle())
@@ -189,7 +189,7 @@ struct AuthenticationView: View {
                                     VStack(alignment: .leading, spacing: 8) {
                                         Text("Password")
                                             .font(.system(size: 14, weight: .medium))
-                                            .foregroundColor(.primary)
+                                            .foregroundColor(Theme.Colors.primaryText)
                                         
                                         SecureField("Create a password", text: $password)
                                             .textFieldStyle(PlainTextFieldStyle())
@@ -201,7 +201,7 @@ struct AuthenticationView: View {
                                     VStack(alignment: .leading, spacing: 8) {
                                         Text("Phone Number (Optional)")
                                             .font(.system(size: 14, weight: .medium))
-                                            .foregroundColor(.primary)
+                                            .foregroundColor(Theme.Colors.primaryText)
                                         
                                         TextField("Enter phone number", text: $phoneNumber)
                                             .textFieldStyle(PlainTextFieldStyle())
@@ -243,7 +243,7 @@ struct AuthenticationView: View {
                                     HStack {
                                         Text("Already have an account?")
                                             .font(.system(size: 14))
-                                            .foregroundColor(.secondary)
+                                            .foregroundColor(Theme.Colors.secondaryText)
                                         
                                         Button(action: {
                                             withAnimation(.easeInOut(duration: 0.3)) {
@@ -273,7 +273,7 @@ struct AuthenticationView: View {
                     }
                     .background(Theme.Colors.cardBackground)
                     .cornerRadius(12)
-                    .shadow(color: Color.black.opacity(0.1), radius: 20, x: 0, y: 8)
+                    .shadow(color: Theme.Shadows.card, radius: 20, x: 0, y: 8)
                     .padding(.horizontal, 32)
                     .padding(.bottom, max(40, geometry.safeAreaInsets.bottom + 20))
                 }

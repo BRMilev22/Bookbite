@@ -43,7 +43,7 @@ struct MainTabView: View {
                     Text("Profile")
                 }
         }
-        .accentColor(Color(red: 0.31, green: 0.27, blue: 0.9))
+        .accentColor(Theme.Colors.primary)
     }
 }
 

@@ -32,7 +32,7 @@ class APIService: ObservableObject {
         if let body = body {
             request.httpBody = body
         }
-        
+            
         do {
             let (data, response) = try await session.data(for: request)
             

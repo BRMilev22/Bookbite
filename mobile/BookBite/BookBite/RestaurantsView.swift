@@ -23,7 +23,7 @@ struct RestaurantsView: View {
     var body: some View {
         NavigationView {
             ZStack {
-                Color(red: 0.97, green: 0.97, blue: 0.98)
+                Theme.Colors.background
                     .ignoresSafeArea()
                 
                 if isLoading {
@@ -83,15 +83,16 @@ struct ErrorStateView: View {
         VStack(spacing: 16) {
             Image(systemName: "exclamationmark.triangle")
                 .font(.system(size: 50))
-                .foregroundColor(Color(red: 1.0, green: 0.6, blue: 0.0))
+                .foregroundColor(Theme.Colors.warning)
             
             Text("Error")
                 .font(.system(size: 24, weight: .bold))
                 .fontWeight(.semibold)
+                .foregroundColor(Theme.Colors.primaryText)
             
             Text(message)
                 .multilineTextAlignment(.center)
-                .foregroundColor(.secondary)
+                .foregroundColor(Theme.Colors.secondaryText)
                 .font(.system(size: 16))
             
             Button("Retry") {
@@ -130,17 +131,17 @@ struct RestaurantCard: View {
             VStack(alignment: .leading, spacing: 8) {
                 Text(restaurant.name)
                     .font(.system(size: 18, weight: .semibold))
-                    .foregroundColor(.primary)
+                    .foregroundColor(Theme.Colors.primaryText)
                     .lineLimit(1)
                 
                 Text(restaurant.cuisineType)
                     .font(.system(size: 14, weight: .medium))
-                    .foregroundColor(Color(red: 0.31, green: 0.27, blue: 0.9))
+                    .foregroundColor(Theme.Colors.primary)
                     .fontWeight(.medium)
                 
                 Text(restaurant.address)
                     .font(.system(size: 12, weight: .medium))
-                    .foregroundColor(.secondary)
+                    .foregroundColor(Theme.Colors.secondaryText)
                     .lineLimit(2)
                 
                 HStack {
@@ -154,7 +155,7 @@ struct RestaurantCard: View {
                         
                         Text(String(format: "%.1f", restaurant.rating))
                             .font(.system(size: 12, weight: .medium))
-                            .foregroundColor(.secondary)
+                            .foregroundColor(Theme.Colors.secondaryText)
                     }
                     
                     Spacer()
@@ -162,18 +163,18 @@ struct RestaurantCard: View {
                     // Price Range
                     Text(restaurant.priceRange)
                         .font(.system(size: 12, weight: .semibold))
-                        .foregroundColor(Color(red: 0.0, green: 0.7, blue: 0.4))
+                        .foregroundColor(Theme.Colors.success)
                         .padding(.horizontal, 8)
                         .padding(.vertical, 4)
-                        .background(Color(red: 0.0, green: 0.7, blue: 0.4).opacity(0.1))
+                        .background(Theme.Colors.success.opacity(0.1))
                         .cornerRadius(8)
                 }
             }
             .padding(16)
         }
-        .background(Color.white)
+        .background(Theme.Colors.cardBackground)
         .cornerRadius(12)
-        .shadow(color: Color.black.opacity(0.08), radius: 4, x: 0, y: 2)
+        .shadow(color: Theme.Shadows.card, radius: 4, x: 0, y: 2)
     }
 }
 
@@ -184,7 +185,7 @@ struct PrimaryButtonStyle: ButtonStyle {
             .foregroundColor(.white)
             .padding(.horizontal, 20)
             .padding(.vertical, 12)
-            .background(Color(red: 0.31, green: 0.27, blue: 0.9))
+            .background(Theme.Colors.primary)
             .cornerRadius(12)
             .scaleEffect(configuration.isPressed ? 0.95 : 1.0)
             .animation(.easeInOut(duration: 0.1), value: configuration.isPressed)

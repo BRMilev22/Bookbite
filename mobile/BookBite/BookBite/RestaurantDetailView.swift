@@ -47,10 +47,11 @@ struct RestaurantDetailView: View {
                         Text(restaurant.name)
                             .font(.system(size: 28, weight: .bold))
                             .fontWeight(.bold)
+                            .foregroundColor(Theme.Colors.primaryText)
                         
                         Text(restaurant.cuisineType)
                             .font(.system(size: 20, weight: .medium))
-                            .foregroundColor(Color(red: 0.31, green: 0.27, blue: 0.9))
+                            .foregroundColor(Theme.Colors.primary)
                         
                         HStack {
                             ForEach(0..<5) { index in
@@ -59,21 +60,22 @@ struct RestaurantDetailView: View {
                             }
                             
                             Text(String(format: "%.1f", restaurant.rating))
-                                .foregroundColor(.secondary)
+                                .foregroundColor(Theme.Colors.secondaryText)
                             
                             Spacer()
                             
                             Text(restaurant.priceRange)
                                 .fontWeight(.medium)
-                                .foregroundColor(Color(red: 0.0, green: 0.7, blue: 0.4))
+                                .foregroundColor(Theme.Colors.success)
                                 .padding(.horizontal, 8)
                                 .padding(.vertical, 4)
-                                .background(Color(red: 0.0, green: 0.7, blue: 0.4).opacity(0.1))
+                                .background(Theme.Colors.success.opacity(0.1))
                                 .cornerRadius(8)
                         }
                         
                         Text(restaurant.description)
                             .font(.body)
+                            .foregroundColor(Theme.Colors.primaryText)
                             .fixedSize(horizontal: false, vertical: true)
                     }
                     
@@ -81,6 +83,7 @@ struct RestaurantDetailView: View {
                     VStack(alignment: .leading, spacing: 12) {
                         Text("Restaurant Information")
                             .font(.system(size: 18, weight: .semibold))
+                            .foregroundColor(Theme.Colors.primaryText)
                         
                         VStack(alignment: .leading, spacing: 8) {
                             Label(restaurant.address, systemImage: "location")
@@ -88,12 +91,12 @@ struct RestaurantDetailView: View {
                             Label("\(restaurant.openingTime) - \(restaurant.closingTime)", systemImage: "clock")
                         }
                         .font(.subheadline)
-                        .foregroundColor(.secondary)
+                        .foregroundColor(Theme.Colors.secondaryText)
                     }
                     .padding(16)
-                    .background(Color.white)
+                    .background(Theme.Colors.cardBackground)
                     .cornerRadius(12)
-                    .shadow(color: Color.black.opacity(0.05), radius: 2, x: 0, y: 1)
+                    .shadow(color: Theme.Shadows.light, radius: 2, x: 0, y: 1)
                     
                     // Reserve Button - General
                     Button(action: {
@@ -102,7 +105,7 @@ struct RestaurantDetailView: View {
                         Text("View Available Tables")
                             .frame(maxWidth: .infinity)
                             .padding(16)
-                            .background(Color(red: 0.31, green: 0.27, blue: 0.9))
+                            .background(Theme.Colors.primary)
                             .foregroundColor(.white)
                             .font(.system(size: 16, weight: .semibold))
                             .cornerRadius(12)
@@ -125,7 +128,7 @@ struct RestaurantDetailView: View {
                     }
                 }
                 .padding(16)
-                .background(Color(red: 0.97, green: 0.97, blue: 0.98))
+                .background(Theme.Colors.background)
             }
         }
         .navigationBarTitleDisplayMode(.inline)
@@ -171,9 +174,9 @@ struct TablesView: View {
                 }
                 .frame(maxWidth: .infinity)
                 .padding(24)
-                .background(Color.white)
+                .background(Theme.Colors.cardBackground)
                 .cornerRadius(12)
-                .shadow(color: Color.black.opacity(0.05), radius: 2, x: 0, y: 1)
+                .shadow(color: Theme.Shadows.light, radius: 2, x: 0, y: 1)
             } else {
                 VStack(spacing: 12) {
                     ForEach(tables) { table in
@@ -200,17 +203,18 @@ struct TableRowCard: View {
             // Table Icon
             Image(systemName: "table.furniture")
                 .font(.system(size: 24))
-                .foregroundColor(Color(red: 0.31, green: 0.27, blue: 0.9))
+                .foregroundColor(Theme.Colors.primary)
                 .frame(width: 40)
             
             // Table Info
             VStack(alignment: .leading, spacing: 4) {
                 Text("Table \(table.tableNumber)")
                     .font(.system(size: 16, weight: .semibold))
+                    .foregroundColor(Theme.Colors.primaryText)
                 
                 Text("\(table.capacity) seats")
                     .font(.system(size: 14))
-                    .foregroundColor(.secondary)
+                    .foregroundColor(Theme.Colors.secondaryText)
             }
             
             Spacer()
@@ -222,7 +226,7 @@ struct TableRowCard: View {
                     .foregroundColor(.white)
                     .padding(.horizontal, 10)
                     .padding(.vertical, 6)
-                    .background(table.isAvailable ? Color(red: 0.0, green: 0.7, blue: 0.4) : Color(red: 0.96, green: 0.26, blue: 0.21))
+                    .background(table.isAvailable ? Theme.Colors.success : Theme.Colors.danger)
                     .cornerRadius(12)
                 
                 if table.isAvailable {
@@ -230,22 +234,22 @@ struct TableRowCard: View {
                         onReserve()
                     }
                     .font(.system(size: 14, weight: .medium))
-                    .foregroundColor(Color(red: 0.31, green: 0.27, blue: 0.9))
+                    .foregroundColor(Theme.Colors.primary)
                     .padding(.horizontal, 20)
                     .padding(.vertical, 10)
-                    .background(Color.white)
+                    .background(Theme.Colors.cardBackground)
                     .overlay(
                         RoundedRectangle(cornerRadius: 8)
-                            .stroke(Color(red: 0.31, green: 0.27, blue: 0.9), lineWidth: 1.5)
+                            .stroke(Theme.Colors.primary, lineWidth: 1.5)
                     )
                     .cornerRadius(8)
                 }
             }
         }
         .padding(16)
-        .background(Color.white)
+        .background(Theme.Colors.cardBackground)
         .cornerRadius(12)
-        .shadow(color: Color.black.opacity(0.05), radius: 2, x: 0, y: 1)
+        .shadow(color: Theme.Shadows.light, radius: 2, x: 0, y: 1)
     }
 }
 
@@ -286,9 +290,9 @@ struct ReviewsView: View {
                 }
                 .frame(maxWidth: .infinity)
                 .padding(24)
-                .background(Color.white)
+                .background(Theme.Colors.cardBackground)
                 .cornerRadius(12)
-                .shadow(color: Color.black.opacity(0.05), radius: 2, x: 0, y: 1)
+                .shadow(color: Theme.Shadows.light, radius: 2, x: 0, y: 1)
             } else {
                 VStack(spacing: 12) {
                     ForEach(reviews) { review in
@@ -338,9 +342,9 @@ struct ReviewCard: View {
             }
         }
         .padding(16)
-        .background(Color.white)
+        .background(Theme.Colors.cardBackground)
         .cornerRadius(12)
-        .shadow(color: Color.black.opacity(0.05), radius: 2, x: 0, y: 1)
+        .shadow(color: Theme.Shadows.light, radius: 2, x: 0, y: 1)
     }
     
     private func formatDate(_ dateString: String) -> String {
@@ -548,7 +552,7 @@ struct TableReservationView: View {
                     .padding(16)
                 }
             }
-            .background(Color(red: 0.97, green: 0.97, blue: 0.98))
+            .background(Theme.Colors.background)
             .navigationBarHidden(true)
         }
         .alert("Reservation Confirmed!", isPresented: $showingSuccess) {
@@ -632,9 +636,9 @@ struct TableReservationView: View {
             timeSelectionSection
         }
         .padding(16)
-        .background(Color.white)
+        .background(Theme.Colors.cardBackground)
         .cornerRadius(12)
-        .shadow(color: Color.black.opacity(0.05), radius: 2, x: 0, y: 1)
+        .shadow(color: Theme.Shadows.light, radius: 2, x: 0, y: 1)
     }
     
     private var restaurantHoursInfo: some View {
@@ -777,9 +781,9 @@ struct TableReservationView: View {
                 }
             }
             .padding(16)
-            .background(Color.white)
+            .background(Theme.Colors.cardBackground)
             .cornerRadius(12)
-            .shadow(color: Color.black.opacity(0.05), radius: 2, x: 0, y: 1)
+            .shadow(color: Theme.Shadows.light, radius: 2, x: 0, y: 1)
         }
     }
     
@@ -869,9 +873,9 @@ struct TableReservationView: View {
             .cornerRadius(8)
         }
         .padding(16)
-        .background(Color.white)
+        .background(Theme.Colors.cardBackground)
         .cornerRadius(12)
-        .shadow(color: Color.black.opacity(0.05), radius: 2, x: 0, y: 1)
+        .shadow(color: Theme.Shadows.light, radius: 2, x: 0, y: 1)
     }
     
     private var guestInformationSection: some View {
@@ -890,9 +894,9 @@ struct TableReservationView: View {
             }
         }
         .padding(16)
-        .background(Color.white)
+        .background(Theme.Colors.cardBackground)
         .cornerRadius(12)
-        .shadow(color: Color.black.opacity(0.05), radius: 2, x: 0, y: 1)
+        .shadow(color: Theme.Shadows.light, radius: 2, x: 0, y: 1)
     }
     
     private var guestCountPicker: some View {
@@ -991,9 +995,9 @@ struct TableReservationView: View {
             }
         }
         .padding(16)
-        .background(Color.white)
+        .background(Theme.Colors.cardBackground)
         .cornerRadius(12)
-        .shadow(color: Color.black.opacity(0.05), radius: 2, x: 0, y: 1)
+        .shadow(color: Theme.Shadows.light, radius: 2, x: 0, y: 1)
     }
     
     private var dynamicReservationFeeDisplay: some View {

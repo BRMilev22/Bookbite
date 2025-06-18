@@ -17,7 +17,57 @@ class AuthenticationManager: ObservableObject {
         if let token = UserDefaults.standard.string(forKey: "auth_token"),
            !token.isEmpty {
             isAuthenticated = true
-            // Optionally validate token with server
+            
+            // Load cached user data immediately
+            loadCachedUser()
+            
+            // Fetch fresh user profile in background
+            Task {
+                await fetchCurrentUser()
+            }
+        }
+    }
+    
+    private func loadCachedUser() {
+        if let userData = UserDefaults.standard.data(forKey: "cached_user") {
+            do {
+                let user = try JSONDecoder().decode(User.self, from: userData)
+                currentUser = user
+            } catch {
+                print("Failed to decode cached user data: \(error)")
+                // Clear corrupted cache
+                clearCachedUser()
+            }
+        }
+    }
+    
+    private func cacheUser(_ user: User) {
+        do {
+            let userData = try JSONEncoder().encode(user)
+            UserDefaults.standard.set(userData, forKey: "cached_user")
+        } catch {
+            print("Failed to encode user data for caching: \(error)")
+        }
+    }
+    
+    private func clearCachedUser() {
+        UserDefaults.standard.removeObject(forKey: "cached_user")
+    }
+    
+    @MainActor
+    func fetchCurrentUser() async {
+        guard isAuthenticated else { return }
+        
+        do {
+            let user = try await apiService.getCurrentUser()
+            currentUser = user
+            cacheUser(user) // Cache the user data
+        } catch {
+            print("Failed to fetch current user: \(error)")
+            // If token is invalid, logout user
+            if error.localizedDescription.contains("401") || error.localizedDescription.contains("Unauthorized") {
+                await logout()
+            }
         }
     }
     
@@ -32,6 +82,9 @@ class AuthenticationManager: ObservableObject {
             if response.success, let token = response.token {
                 UserDefaults.standard.set(token, forKey: "auth_token")
                 currentUser = response.user
+                if let user = response.user {
+                    cacheUser(user) // Cache user data on login
+                }
                 isAuthenticated = true
             } else {
                 errorMessage = response.message
@@ -81,6 +134,7 @@ class AuthenticationManager: ObservableObject {
         }
         
         UserDefaults.standard.removeObject(forKey: "auth_token")
+        clearCachedUser() // Clear cached user data
         currentUser = nil
         isAuthenticated = false
         isLoading = false

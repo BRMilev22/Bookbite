@@ -22,10 +22,23 @@ struct Theme {
         static let paid = success
         static let refunded = danger
         
-        // Background Colors
-        static let background = Color.gray.opacity(0.05)
-        static let cardBackground = Color.white
-        static let inputBackground = Color.gray.opacity(0.1)
+        // Adaptive Background Colors
+        static let background = Color(UIColor.systemGroupedBackground)
+        static let cardBackground = Color(UIColor.secondarySystemGroupedBackground)
+        static let inputBackground = Color(UIColor.tertiarySystemFill)
+        static let primaryBackground = Color(UIColor.systemBackground)
+        
+        // Text Colors
+        static let primaryText = Color(UIColor.label)
+        static let secondaryText = Color(UIColor.secondaryLabel)
+        static let tertiaryText = Color(UIColor.tertiaryLabel)
+        
+        // System Adaptive Colors
+        static let separator = Color(UIColor.separator)
+        static let overlay = Color(UIColor.systemFill)
+        
+        // Dark mode aware shadow
+        static let shadowColor = Color.primary.opacity(0.1)
     }
     
     // MARK: - Typography
@@ -59,8 +72,8 @@ struct Theme {
     
     // MARK: - Shadows
     struct Shadows {
-        static let card = Color.black.opacity(0.08)
-        static let light = Color.black.opacity(0.05)
+        static let card = Color.primary.opacity(0.08)
+        static let light = Color.primary.opacity(0.05)
     }
 }
 

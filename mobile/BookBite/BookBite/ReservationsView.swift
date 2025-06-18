@@ -56,24 +56,24 @@ struct ReservationsView: View {
                         VStack(alignment: .leading, spacing: 4) {
                             Text("My Reservations")
                                 .font(.system(size: 28, weight: .bold, design: .default))
-                                .foregroundColor(.primary)
+                                .foregroundColor(Theme.Colors.primaryText)
                             Text("Manage and track all your dining experiences in one place")
                                 .font(.system(size: 16))
-                                .foregroundColor(.secondary)
+                                .foregroundColor(Theme.Colors.secondaryText)
                         }
                         Spacer()
                     }
                     
                     // Status Cards
                     HStack(spacing: 12) {
-                        StatusCard(title: "Upcoming", count: statusCounts.upcoming, color: Color(red: 0.31, green: 0.27, blue: 0.9), systemImage: "calendar")
-                        StatusCard(title: "Past Visits", count: statusCounts.past, color: Color(red: 0.0, green: 0.7, blue: 0.4), systemImage: "checkmark.circle.fill")
-                        StatusCard(title: "Pending", count: statusCounts.pending, color: Color(red: 1.0, green: 0.6, blue: 0.0), systemImage: "clock.fill")
-                        StatusCard(title: "Cancelled", count: statusCounts.cancelled, color: Color(red: 0.96, green: 0.26, blue: 0.21), systemImage: "xmark.circle.fill")
+                        StatusCard(title: "Upcoming", count: statusCounts.upcoming, color: Theme.Colors.primary, systemImage: "calendar")
+                        StatusCard(title: "Past Visits", count: statusCounts.past, color: Theme.Colors.success, systemImage: "checkmark.circle.fill")
+                        StatusCard(title: "Pending", count: statusCounts.pending, color: Theme.Colors.warning, systemImage: "clock.fill")
+                        StatusCard(title: "Cancelled", count: statusCounts.cancelled, color: Theme.Colors.danger, systemImage: "xmark.circle.fill")
                     }
                 }
                 .padding(20)
-                .background(Color(UIColor.systemBackground))
+                .background(Theme.Colors.primaryBackground)
                 
                 // Status Filter Tabs
                 ScrollView(.horizontal, showsIndicators: false) {
@@ -86,17 +86,17 @@ struct ReservationsView: View {
                             }) {
                                 Text(status)
                                     .font(.system(size: 14, weight: .medium))
-                                    .foregroundColor(selectedStatus == status ? .white : Color(red: 0.31, green: 0.27, blue: 0.9))
+                                    .foregroundColor(selectedStatus == status ? .white : Theme.Colors.primary)
                                     .padding(.horizontal, 20)
                                     .padding(.vertical, 10)
                                     .background(
                                         selectedStatus == status ? 
-                                        Color(red: 0.31, green: 0.27, blue: 0.9) : 
+                                        Theme.Colors.primary : 
                                         Color.clear
                                     )
                                     .overlay(
                                         RoundedRectangle(cornerRadius: 25)
-                                            .stroke(Color(red: 0.31, green: 0.27, blue: 0.9), lineWidth: selectedStatus == status ? 0 : 1)
+                                            .stroke(Theme.Colors.primary, lineWidth: selectedStatus == status ? 0 : 1)
                                     )
                                     .cornerRadius(25)
                             }
@@ -107,19 +107,19 @@ struct ReservationsView: View {
                     .padding(.horizontal, 20)
                 }
                 .padding(.bottom, 16)
-                .background(Color(UIColor.systemBackground))
+                .background(Theme.Colors.primaryBackground)
                 
                 // Search Bar
                 HStack(spacing: 12) {
                     Image(systemName: "magnifyingglass")
-                        .foregroundColor(.secondary)
+                        .foregroundColor(Theme.Colors.secondaryText)
                         .font(.system(size: 16))
                     TextField("Search by restaurant name or date...", text: .constant(""))
                         .textFieldStyle(PlainTextFieldStyle())
                         .font(.system(size: 16))
                 }
                 .padding(16)
-                .background(Color(UIColor.systemGray6))
+                .background(Theme.Colors.inputBackground)
                 .cornerRadius(12)
                 .padding(.horizontal, 20)
                 .padding(.bottom, 20)
@@ -128,20 +128,21 @@ struct ReservationsView: View {
                 if isLoading {
                     ProgressView("Loading reservations...")
                         .font(.system(size: 16))
-                        .foregroundColor(.secondary)
+                        .foregroundColor(Theme.Colors.secondaryText)
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
                 } else if let errorMessage = errorMessage {
                     VStack(spacing: 20) {
                         Image(systemName: "calendar.badge.exclamationmark")
                             .font(.system(size: 60))
-                            .foregroundColor(Color(red: 1.0, green: 0.6, blue: 0.0))
+                            .foregroundColor(Theme.Colors.warning)
                         
                         Text("Error")
                             .font(.system(size: 24, weight: .semibold))
+                            .foregroundColor(Theme.Colors.primaryText)
                         
                         Text(errorMessage)
                             .multilineTextAlignment(.center)
-                            .foregroundColor(.secondary)
+                            .foregroundColor(Theme.Colors.secondaryText)
                             .font(.system(size: 16))
                         
                         Button("Retry") {
@@ -153,7 +154,7 @@ struct ReservationsView: View {
                         .foregroundColor(.white)
                         .padding(.horizontal, 24)
                         .padding(.vertical, 12)
-                        .background(Color(red: 0.31, green: 0.27, blue: 0.9))
+                        .background(Theme.Colors.primary)
                         .cornerRadius(8)
                     }
                     .padding(20)
@@ -162,14 +163,15 @@ struct ReservationsView: View {
                     VStack(spacing: 20) {
                         Image(systemName: "calendar")
                             .font(.system(size: 60))
-                            .foregroundColor(.secondary)
+                            .foregroundColor(Theme.Colors.secondaryText)
                         
                         Text("No \(selectedStatus) Reservations")
                             .font(.system(size: 24, weight: .semibold))
+                            .foregroundColor(Theme.Colors.primaryText)
                         
                         Text("You don't have any \(selectedStatus.lowercased()) reservations.")
                             .multilineTextAlignment(.center)
-                            .foregroundColor(.secondary)
+                            .foregroundColor(Theme.Colors.secondaryText)
                             .font(.system(size: 16))
                     }
                     .padding(20)
@@ -195,7 +197,7 @@ struct ReservationsView: View {
                     }
                 }
             }
-            .background(Color(UIColor.systemGroupedBackground))
+            .background(Theme.Colors.background)
             .navigationBarHidden(true)
             .task {
                 await loadReservations()
@@ -276,19 +278,19 @@ struct StatusCard: View {
             VStack(alignment: .leading, spacing: 4) {
                 Text("\(count)")
                     .font(.system(size: 24, weight: .bold))
-                    .foregroundColor(.primary)
+                    .foregroundColor(Theme.Colors.primaryText)
                 
                 Text(title)
                     .font(.system(size: 12, weight: .medium))
-                    .foregroundColor(.secondary)
+                    .foregroundColor(Theme.Colors.secondaryText)
                     .lineLimit(1)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
         }
         .padding(16)
-        .background(Color.white)
+        .background(Theme.Colors.cardBackground)
         .cornerRadius(12)
-        .shadow(color: Color.black.opacity(0.05), radius: 8, x: 0, y: 2)
+        .shadow(color: Theme.Shadows.light, radius: 8, x: 0, y: 2)
     }
 }
 
@@ -300,26 +302,26 @@ struct ReservationCard: View {
     private var statusColor: Color {
         switch reservation.status.lowercased() {
         case "confirmed":
-            return Color(red: 0.0, green: 0.7, blue: 0.4) // Green
+            return Theme.Colors.success
         case "pending":
-            return Color(red: 1.0, green: 0.6, blue: 0.0) // Orange
+            return Theme.Colors.warning
         case "cancelled":
-            return Color(red: 0.96, green: 0.26, blue: 0.21) // Red
+            return Theme.Colors.danger
         default:
-            return Color.secondary
+            return Theme.Colors.secondaryText
         }
     }
     
     private var paymentStatusColor: Color {
         switch reservation.paymentStatus.lowercased() {
         case "paid":
-            return Color(red: 0.0, green: 0.7, blue: 0.4)
+            return Theme.Colors.success
         case "pending":
-            return Color(red: 1.0, green: 0.6, blue: 0.0)
+            return Theme.Colors.warning
         case "refunded":
-            return Color(red: 0.96, green: 0.26, blue: 0.21)
+            return Theme.Colors.danger
         default:
-            return Color.secondary
+            return Theme.Colors.secondaryText
         }
     }
     
@@ -375,17 +377,17 @@ struct ReservationCard: View {
                     VStack(alignment: .leading, spacing: 4) {
                         Text(restaurant?.name ?? "Unknown Restaurant")
                             .font(.system(size: 18, weight: .semibold))
-                            .foregroundColor(.primary)
+                            .foregroundColor(Theme.Colors.primaryText)
                             .lineLimit(2)
                         
                         if let address = restaurant?.address {
                             HStack(spacing: 4) {
                                 Image(systemName: "location.fill")
-                                    .foregroundColor(.secondary)
+                                    .foregroundColor(Theme.Colors.secondaryText)
                                     .font(.system(size: 12))
                                 Text(address)
                                     .font(.system(size: 14))
-                                    .foregroundColor(.secondary)
+                                    .foregroundColor(Theme.Colors.secondaryText)
                                     .lineLimit(1)
                             }
                         }
@@ -420,21 +422,21 @@ struct ReservationCard: View {
                         // Time
                         HStack(spacing: 6) {
                             Image(systemName: "clock.fill")
-                                .foregroundColor(Color(red: 0.31, green: 0.27, blue: 0.9))
+                                .foregroundColor(Theme.Colors.primary)
                                 .font(.system(size: 14))
                             Text(reservation.startTime)
                                 .font(.system(size: 14, weight: .medium))
-                                .foregroundColor(.primary)
+                                .foregroundColor(Theme.Colors.primaryText)
                         }
                         
                         // Guests
                         HStack(spacing: 6) {
                             Image(systemName: "person.2.fill")
-                                .foregroundColor(Color(red: 0.31, green: 0.27, blue: 0.9))
+                                .foregroundColor(Theme.Colors.primary)
                                 .font(.system(size: 14))
                             Text("\(reservation.guestCount) guests")
                                 .font(.system(size: 14, weight: .medium))
-                                .foregroundColor(.primary)
+                                .foregroundColor(Theme.Colors.primaryText)
                         }
                         
                         Spacer()
@@ -442,11 +444,11 @@ struct ReservationCard: View {
                         // Table
                         HStack(spacing: 6) {
                             Image(systemName: "tablecells.fill")
-                                .foregroundColor(Color(red: 0.31, green: 0.27, blue: 0.9))
+                                .foregroundColor(Theme.Colors.primary)
                                 .font(.system(size: 14))
                             Text("Table #\(reservation.tableId)")
                                 .font(.system(size: 14, weight: .medium))
-                                .foregroundColor(.primary)
+                                .foregroundColor(Theme.Colors.primaryText)
                         }
                     }
                     
@@ -455,10 +457,10 @@ struct ReservationCard: View {
                         HStack {
                             Text("Special Requests:")
                                 .font(.system(size: 14, weight: .medium))
-                                .foregroundColor(.primary)
+                                .foregroundColor(Theme.Colors.primaryText)
                             Text(specialRequests)
                                 .font(.system(size: 14))
-                                .foregroundColor(.secondary)
+                                .foregroundColor(Theme.Colors.secondaryText)
                                 .lineLimit(2)
                             Spacer()
                         }
@@ -474,10 +476,10 @@ struct ReservationCard: View {
                             onCancel()
                         }
                         .font(.system(size: 14, weight: .medium))
-                        .foregroundColor(Color(red: 0.96, green: 0.26, blue: 0.21))
+                        .foregroundColor(Theme.Colors.danger)
                         .padding(.horizontal, 16)
                         .padding(.vertical, 8)
-                        .background(Color(red: 0.96, green: 0.26, blue: 0.21).opacity(0.1))
+                        .background(Theme.Colors.danger.opacity(0.1))
                         .cornerRadius(8)
                     }
                     .padding(.top, 8)
@@ -485,9 +487,9 @@ struct ReservationCard: View {
             }
             .padding(20)
         }
-        .background(Color.white)
+        .background(Theme.Colors.cardBackground)
         .cornerRadius(16)
-        .shadow(color: Color.black.opacity(0.08), radius: 12, x: 0, y: 4)
+        .shadow(color: Theme.Shadows.card, radius: 12, x: 0, y: 4)
     }
     
     private func formatDateForBadge(_ dateString: String) -> String {
