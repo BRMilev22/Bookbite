@@ -1,6 +1,6 @@
 //
-//  BoobBiteUITestsLaunchTests.swift
-//  BoobBiteUITests
+//  BookBiteUITestsLaunchTests.swift
+//  BookBiteUITests
 //
 //  Created by Boris Milev on 17.06.25.
 //

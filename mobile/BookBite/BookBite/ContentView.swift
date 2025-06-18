@@ -1,6 +1,6 @@
 //
 //  ContentView.swift
-//  BoobBite
+//  BookBite
 //
 //  Created by Boris Milev on 17.06.25.
 //

@@ -24,25 +24,25 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
-		4567C7BD2E01BF5A0043362E /* BoobBite.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = BoobBite.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		4567C7CA2E01BF5B0043362E /* BoobBiteTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = BoobBiteTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
-		4567C7D42E01BF5B0043362E /* BoobBiteUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = BoobBiteUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		4567C7BD2E01BF5A0043362E /* BookBite.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = BookBite.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		4567C7CA2E01BF5B0043362E /* BookBiteTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = BookBiteTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		4567C7D42E01BF5B0043362E /* BookBiteUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = BookBiteUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
-		4567C7BF2E01BF5A0043362E /* BoobBite */ = {
+		4567C7BF2E01BF5A0043362E /* BookBite */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			path = BoobBite;
+			path = BookBite;
 			sourceTree = "<group>";
 		};
-		4567C7CD2E01BF5B0043362E /* BoobBiteTests */ = {
+		4567C7CD2E01BF5B0043362E /* BookBiteTests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			path = BoobBiteTests;
+			path = BookBiteTests;
 			sourceTree = "<group>";
 		};
-		4567C7D72E01BF5B0043362E /* BoobBiteUITests */ = {
+		4567C7D72E01BF5B0043362E /* BookBiteUITests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			path = BoobBiteUITests;
+			path = BookBiteUITests;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -75,9 +75,9 @@
 		4567C7B42E01BF5A0043362E = {
 			isa = PBXGroup;
 			children = (
-				4567C7BF2E01BF5A0043362E /* BoobBite */,
-				4567C7CD2E01BF5B0043362E /* BoobBiteTests */,
-				4567C7D72E01BF5B0043362E /* BoobBiteUITests */,
+				4567C7BF2E01BF5A0043362E /* BookBite */,
+				4567C7CD2E01BF5B0043362E /* BookBiteTests */,
+				4567C7D72E01BF5B0043362E /* BookBiteUITests */,
 				4567C7BE2E01BF5A0043362E /* Products */,
 			);
 			sourceTree = "<group>";
@@ -85,9 +85,9 @@
 		4567C7BE2E01BF5A0043362E /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				4567C7BD2E01BF5A0043362E /* BoobBite.app */,
-				4567C7CA2E01BF5B0043362E /* BoobBiteTests.xctest */,
-				4567C7D42E01BF5B0043362E /* BoobBiteUITests.xctest */,
+				4567C7BD2E01BF5A0043362E /* BookBite.app */,
+				4567C7CA2E01BF5B0043362E /* BookBiteTests.xctest */,
+				4567C7D42E01BF5B0043362E /* BookBiteUITests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -95,9 +95,9 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		4567C7BC2E01BF5A0043362E /* BoobBite */ = {
+		4567C7BC2E01BF5A0043362E /* BookBite */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 4567C7DE2E01BF5B0043362E /* Build configuration list for PBXNativeTarget "BoobBite" */;
+			buildConfigurationList = 4567C7DE2E01BF5B0043362E /* Build configuration list for PBXNativeTarget "BookBite" */;
 			buildPhases = (
 				4567C7B92E01BF5A0043362E /* Sources */,
 				4567C7BA2E01BF5A0043362E /* Frameworks */,
@@ -108,18 +108,18 @@
 			dependencies = (
 			);
 			fileSystemSynchronizedGroups = (
-				4567C7BF2E01BF5A0043362E /* BoobBite */,
+				4567C7BF2E01BF5A0043362E /* BookBite */,
 			);
-			name = BoobBite;
+			name = BookBite;
 			packageProductDependencies = (
 			);
 			productName = BoobBite;
-			productReference = 4567C7BD2E01BF5A0043362E /* BoobBite.app */;
+			productReference = 4567C7BD2E01BF5A0043362E /* BookBite.app */;
 			productType = "com.apple.product-type.application";
 		};
-		4567C7C92E01BF5B0043362E /* BoobBiteTests */ = {
+		4567C7C92E01BF5B0043362E /* BookBiteTests */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 4567C7E12E01BF5B0043362E /* Build configuration list for PBXNativeTarget "BoobBiteTests" */;
+			buildConfigurationList = 4567C7E12E01BF5B0043362E /* Build configuration list for PBXNativeTarget "BookBiteTests" */;
 			buildPhases = (
 				4567C7C62E01BF5B0043362E /* Sources */,
 				4567C7C72E01BF5B0043362E /* Frameworks */,
@@ -131,18 +131,18 @@
 				4567C7CC2E01BF5B0043362E /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
-				4567C7CD2E01BF5B0043362E /* BoobBiteTests */,
+				4567C7CD2E01BF5B0043362E /* BookBiteTests */,
 			);
-			name = BoobBiteTests;
+			name = BookBiteTests;
 			packageProductDependencies = (
 			);
 			productName = BoobBiteTests;
-			productReference = 4567C7CA2E01BF5B0043362E /* BoobBiteTests.xctest */;
+			productReference = 4567C7CA2E01BF5B0043362E /* BookBiteTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
 		};
-		4567C7D32E01BF5B0043362E /* BoobBiteUITests */ = {
+		4567C7D32E01BF5B0043362E /* BookBiteUITests */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 4567C7E42E01BF5B0043362E /* Build configuration list for PBXNativeTarget "BoobBiteUITests" */;
+			buildConfigurationList = 4567C7E42E01BF5B0043362E /* Build configuration list for PBXNativeTarget "BookBiteUITests" */;
 			buildPhases = (
 				4567C7D02E01BF5B0043362E /* Sources */,
 				4567C7D12E01BF5B0043362E /* Frameworks */,
@@ -154,13 +154,13 @@
 				4567C7D62E01BF5B0043362E /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
-				4567C7D72E01BF5B0043362E /* BoobBiteUITests */,
+				4567C7D72E01BF5B0043362E /* BookBiteUITests */,
 			);
-			name = BoobBiteUITests;
+			name = BookBiteUITests;
 			packageProductDependencies = (
 			);
 			productName = BoobBiteUITests;
-			productReference = 4567C7D42E01BF5B0043362E /* BoobBiteUITests.xctest */;
+			productReference = 4567C7D42E01BF5B0043362E /* BookBiteUITests.xctest */;
 			productType = "com.apple.product-type.bundle.ui-testing";
 		};
 /* End PBXNativeTarget section */
@@ -186,7 +186,7 @@
 					};
 				};
 			};
-			buildConfigurationList = 4567C7B82E01BF5A0043362E /* Build configuration list for PBXProject "BoobBite" */;
+			buildConfigurationList = 4567C7B82E01BF5A0043362E /* Build configuration list for PBXProject "BookBite" */;
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
@@ -200,9 +200,9 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				4567C7BC2E01BF5A0043362E /* BoobBite */,
-				4567C7C92E01BF5B0043362E /* BoobBiteTests */,
-				4567C7D32E01BF5B0043362E /* BoobBiteUITests */,
+				4567C7BC2E01BF5A0043362E /* BookBite */,
+				4567C7C92E01BF5B0043362E /* BookBiteTests */,
+				4567C7D32E01BF5B0043362E /* BookBiteUITests */,
 			);
 		};
 /* End PBXProject section */
@@ -258,12 +258,12 @@
 /* Begin PBXTargetDependency section */
 		4567C7CC2E01BF5B0043362E /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = 4567C7BC2E01BF5A0043362E /* BoobBite */;
+			target = 4567C7BC2E01BF5A0043362E /* BookBite */;
 			targetProxy = 4567C7CB2E01BF5B0043362E /* PBXContainerItemProxy */;
 		};
 		4567C7D62E01BF5B0043362E /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = 4567C7BC2E01BF5A0043362E /* BoobBite */;
+			target = 4567C7BC2E01BF5A0043362E /* BookBite */;
 			targetProxy = 4567C7D52E01BF5B0043362E /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
@@ -410,7 +410,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = bmilev.BoobBite;
+				PRODUCT_BUNDLE_IDENTIFIER = bmilev.BookBite;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
@@ -438,7 +438,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = bmilev.BoobBite;
+				PRODUCT_BUNDLE_IDENTIFIER = bmilev.BookBite;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
@@ -456,7 +456,7 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 18.5;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = bmilev.BoobBiteTests;
+				PRODUCT_BUNDLE_IDENTIFIER = bmilev.BookBiteTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_VERSION = 5.0;
@@ -475,7 +475,7 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 18.5;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = bmilev.BoobBiteTests;
+				PRODUCT_BUNDLE_IDENTIFIER = bmilev.BookBiteTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_VERSION = 5.0;
@@ -492,7 +492,7 @@
 				DEVELOPMENT_TEAM = 24T3M8PF9V;
 				GENERATE_INFOPLIST_FILE = YES;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = bmilev.BoobBiteUITests;
+				PRODUCT_BUNDLE_IDENTIFIER = bmilev.BookBiteUITests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_VERSION = 5.0;
@@ -509,7 +509,7 @@
 				DEVELOPMENT_TEAM = 24T3M8PF9V;
 				GENERATE_INFOPLIST_FILE = YES;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = bmilev.BoobBiteUITests;
+				PRODUCT_BUNDLE_IDENTIFIER = bmilev.BookBiteUITests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_VERSION = 5.0;
@@ -521,7 +521,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		4567C7B82E01BF5A0043362E /* Build configuration list for PBXProject "BoobBite" */ = {
+		4567C7B82E01BF5A0043362E /* Build configuration list for PBXProject "BookBite" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				4567C7DC2E01BF5B0043362E /* Debug */,
@@ -530,7 +530,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		4567C7DE2E01BF5B0043362E /* Build configuration list for PBXNativeTarget "BoobBite" */ = {
+		4567C7DE2E01BF5B0043362E /* Build configuration list for PBXNativeTarget "BookBite" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				4567C7DF2E01BF5B0043362E /* Debug */,
@@ -539,7 +539,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		4567C7E12E01BF5B0043362E /* Build configuration list for PBXNativeTarget "BoobBiteTests" */ = {
+		4567C7E12E01BF5B0043362E /* Build configuration list for PBXNativeTarget "BookBiteTests" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				4567C7E22E01BF5B0043362E /* Debug */,
@@ -548,7 +548,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		4567C7E42E01BF5B0043362E /* Build configuration list for PBXNativeTarget "BoobBiteUITests" */ = {
+		4567C7E42E01BF5B0043362E /* Build configuration list for PBXNativeTarget "BookBiteUITests" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				4567C7E52E01BF5B0043362E /* Debug */,
