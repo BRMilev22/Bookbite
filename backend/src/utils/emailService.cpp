@@ -48,7 +48,7 @@ bool EmailService::sendReservationConfirmation(
     const std::string& confirmationToken,
     int reservationId
 ) {
-    std::string confirmationUrl = "http://localhost:3000/confirm-reservation?token=" + confirmationToken;
+    std::string confirmationUrl = "http://192.168.0.116:3000/confirm-reservation?token=" + confirmationToken;
     
     std::string subject = "Please confirm your reservation at " + restaurantName;
     std::string htmlBody = getConfirmationEmailTemplate(
@@ -80,7 +80,7 @@ bool EmailService::sendEmailVerification(
     const std::string& username,
     const std::string& verificationToken
 ) {
-    std::string verificationUrl = "http://localhost:3000/verify-email?token=" + verificationToken;
+    std::string verificationUrl = "http://192.168.0.116:3000/verify-email?token=" + verificationToken;
     
     std::string subject = "Verify Your BookBite Account";
     

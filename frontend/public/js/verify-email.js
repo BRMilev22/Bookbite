@@ -10,7 +10,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     // Call the verification API
-    fetch(`http://localhost:8080/api/auth/verify-email?token=${encodeURIComponent(token)}`)
+    fetch(`http://192.168.0.116:8080/api/auth/verify-email?token=${encodeURIComponent(token)}`)
         .then(response => {
             console.log('API response status:', response.status);
             return response.json();
