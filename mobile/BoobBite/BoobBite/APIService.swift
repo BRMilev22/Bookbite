@@ -4,7 +4,7 @@ import Combine
 class APIService: ObservableObject {
     static let shared = APIService()
     
-    private let baseURL = "http://localhost:8080/api"
+    private let baseURL = "http://192.168.0.116:8080/api"
     private let session = URLSession.shared
     
     init() {}

@@ -368,6 +368,8 @@ struct TableReservationView: View {
     @State private var todaysReservations: [Reservation] = []
     @State private var isLoadingReservations = false
     @State private var userProfile: User?
+    @State private var showingPayment = false
+    @State private var paymentProcessed = false
     
     @Environment(\.dismiss) private var dismiss
     @EnvironmentObject var apiService: APIService
@@ -517,424 +519,31 @@ struct TableReservationView: View {
         return startTime.isEmpty || availableEndTimes.isEmpty
     }
     
+    // Form validation
+    private var isFormValid: Bool {
+        return !startTime.isEmpty && 
+               !endTime.isEmpty && 
+               !phoneNumber.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty &&
+               !email.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty &&
+               email.contains("@") &&
+               guestCount >= 1 &&
+               guestCount <= table.capacity
+    }
+    
     var body: some View {
         NavigationView {
             ScrollView {
                 VStack(spacing: 0) {
-                    // Header
-                    VStack(spacing: 16) {
-                        Text("Make Reservation")
-                            .font(.system(size: 24, weight: .bold))
-                            .foregroundColor(.white)
-                    }
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 24)
-                    .background(Color(red: 0.31, green: 0.27, blue: 0.9))
+                    headerSection
                     
                     VStack(spacing: 20) {
-                        // Date Selection
-                        VStack(alignment: .leading, spacing: 12) {
-                            HStack {
-                                Image(systemName: "calendar")
-                                    .foregroundColor(Color(red: 0.31, green: 0.27, blue: 0.9))
-                                Text("When would you like to dine?")
-                                    .font(.system(size: 16, weight: .semibold))
-                            }
-                            
-                            // Restaurant hours info
-                            HStack {
-                                Image(systemName: "clock")
-                                    .foregroundColor(Color(red: 0.31, green: 0.27, blue: 0.9))
-                                    .font(.caption)
-                                Text("Open \(restaurant.openingTime) - \(restaurant.closingTime)")
-                                    .font(.system(size: 12))
-                                    .foregroundColor(.secondary)
-                                Spacer()
-                            }
-                            .padding(.horizontal, 8)
-                            .padding(.vertical, 4)
-                            .background(Color(red: 0.31, green: 0.27, blue: 0.9).opacity(0.05))
-                            .cornerRadius(6)
-                            
-                            VStack(alignment: .leading, spacing: 8) {
-                                Text("Date")
-                                    .font(.system(size: 14, weight: .medium))
-                                    .foregroundColor(.secondary)
-                                
-                                DatePicker("", selection: $selectedDate, displayedComponents: .date)
-                                    .datePickerStyle(CompactDatePickerStyle())
-                                    .onChange(of: selectedDate) { _ in
-                                        Task {
-                                            await loadReservationsForDate()
-                                        }
-                                    }
-                            }
-                            
-                            HStack(spacing: 16) {
-                                VStack(alignment: .leading, spacing: 8) {
-                                    Text("Start Time")
-                                        .font(.system(size: 14, weight: .medium))
-                                        .foregroundColor(.secondary)
-                                    
-                                    Menu {
-                                        ForEach(timeSlots, id: \.self) { time in
-                                            Button(action: {
-                                                if !isTimeSlotReserved(time) {
-                                                    startTime = time
-                                                    // Update end time if current end time is not valid
-                                                    updateEndTimeIfNeeded()
-                                                }
-                                            }) {
-                                                HStack {
-                                                    Text(time)
-                                                    if isTimeSlotReserved(time) {
-                                                        Text("(Reserved)")
-                                                            .foregroundColor(.secondary)
-                                                            .font(.caption)
-                                                    }
-                                                }
-                                            }
-                                            .disabled(isTimeSlotReserved(time))
-                                        }
-                                    } label: {
-                                        HStack {
-                                            Text(startTime.isEmpty ? "Select start time" : startTime)
-                                                .foregroundColor(startTime.isEmpty ? .secondary : .primary)
-                                            Spacer()
-                                            Image(systemName: "chevron.down")
-                                                .font(.caption)
-                                        }
-                                        .padding(.horizontal, 12)
-                                        .padding(.vertical, 8)
-                                        .background(Color.gray.opacity(0.1))
-                                        .cornerRadius(8)
-                                    }
-                                }
-                                
-                                VStack(alignment: .leading, spacing: 8) {
-                                    Text("End Time")
-                                        .font(.system(size: 14, weight: .medium))
-                                        .foregroundColor(isEndTimeSelectionDisabled ? .gray : .secondary)
-                                    
-                                    if isEndTimeSelectionDisabled {
-                                        HStack {
-                                            Text(startTime.isEmpty ? "Select start time first" : "No available end times")
-                                                .foregroundColor(.secondary)
-                                            Spacer()
-                                        }
-                                        .padding(.horizontal, 12)
-                                        .padding(.vertical, 8)
-                                        .background(Color.gray.opacity(0.05))
-                                        .cornerRadius(8)
-                                    } else {
-                                        Menu {
-                                            ForEach(availableEndTimes, id: \.self) { time in
-                                                Button(action: {
-                                                    endTime = time
-                                                }) {
-                                                    Text(time)
-                                                }
-                                            }
-                                        } label: {
-                                            HStack {
-                                                Text(endTime.isEmpty ? "Select end time" : endTime)
-                                                    .foregroundColor(endTime.isEmpty ? .secondary : .primary)
-                                                Spacer()
-                                                Image(systemName: "chevron.down")
-                                                    .font(.caption)
-                                            }
-                                            .padding(.horizontal, 12)
-                                            .padding(.vertical, 8)
-                                            .background(Color.gray.opacity(0.1))
-                                            .cornerRadius(8)
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                        .padding(16)
-                        .background(Color.white)
-                        .cornerRadius(12)
-                        .shadow(color: Color.black.opacity(0.05), radius: 2, x: 0, y: 1)
-                        
-                        // Today's Reservations
-                        if isToday(selectedDate) && !todaysReservations.isEmpty {
-                            VStack(alignment: .leading, spacing: 12) {
-                                HStack {
-                                    Image(systemName: "calendar.badge.clock")
-                                        .foregroundColor(Color(red: 0.31, green: 0.27, blue: 0.9))
-                                    Text("Today's Reservations")
-                                        .font(.system(size: 16, weight: .semibold))
-                                }
-                                
-                                if isLoadingReservations {
-                                    HStack {
-                                        ProgressView()
-                                            .scaleEffect(0.8)
-                                        Text("Loading reservations...")
-                                            .font(.system(size: 14))
-                                            .foregroundColor(.secondary)
-                                    }
-                                    .padding(12)
-                                } else {
-                                    let tableReservations = todaysReservations.filter { $0.tableId == table.id }
-                                    
-                                    if tableReservations.isEmpty {
-                                        Text("No reservations for this table today")
-                                            .font(.system(size: 14))
-                                            .foregroundColor(.secondary)
-                                            .padding(12)
-                                    } else {
-                                        ForEach(tableReservations) { reservation in
-                                            HStack {
-                                                VStack(alignment: .leading, spacing: 4) {
-                                                    Text("Table \(table.tableNumber)")
-                                                        .font(.system(size: 14, weight: .medium))
-                                                    Text("\(reservation.startTime) - \(reservation.endTime)")
-                                                        .font(.system(size: 12))
-                                                        .foregroundColor(.secondary)
-                                                }
-                                                
-                                                Spacer()
-                                                
-                                                Text("Booked")
-                                                    .font(.system(size: 12, weight: .medium))
-                                                    .foregroundColor(.white)
-                                                    .padding(.horizontal, 8)
-                                                    .padding(.vertical, 4)
-                                                    .background(Color(red: 0.96, green: 0.26, blue: 0.21))
-                                                    .cornerRadius(8)
-                                            }
-                                            .padding(12)
-                                            .background(Color.gray.opacity(0.05))
-                                            .cornerRadius(8)
-                                        }
-                                    }
-                                }
-                            }
-                            .padding(16)
-                            .background(Color.white)
-                            .cornerRadius(12)
-                            .shadow(color: Color.black.opacity(0.05), radius: 2, x: 0, y: 1)
-                        }
-                        
-                        // Table Selection
-                        VStack(alignment: .leading, spacing: 12) {
-                            HStack {
-                                Image(systemName: "table.furniture")
-                                    .foregroundColor(Color(red: 0.31, green: 0.27, blue: 0.9))
-                                Text("Your Table")
-                                    .font(.system(size: 16, weight: .semibold))
-                            }
-                            
-                            HStack {
-                                VStack(alignment: .leading, spacing: 4) {
-                                    Text("Table \(table.tableNumber)")
-                                        .font(.system(size: 16, weight: .medium))
-                                    Text("Seats up to \(table.capacity) guests")
-                                        .font(.system(size: 14))
-                                        .foregroundColor(.secondary)
-                                }
-                                
-                                Spacer()
-                                
-                                Text("\(table.capacity) seats")
-                                    .font(.system(size: 14, weight: .medium))
-                                    .foregroundColor(.white)
-                                    .padding(.horizontal, 12)
-                                    .padding(.vertical, 6)
-                                    .background(Color(red: 0.31, green: 0.27, blue: 0.9))
-                                    .cornerRadius(8)
-                            }
-                            .padding(12)
-                            .background(Color.gray.opacity(0.05))
-                            .cornerRadius(8)
-                        }
-                        .padding(16)
-                        .background(Color.white)
-                        .cornerRadius(12)
-                        .shadow(color: Color.black.opacity(0.05), radius: 2, x: 0, y: 1)
-                        
-                        // Guest Information
-                        VStack(alignment: .leading, spacing: 12) {
-                            HStack {
-                                Image(systemName: "person.2")
-                                    .foregroundColor(Color(red: 0.31, green: 0.27, blue: 0.9))
-                                Text("Guest Information")
-                                    .font(.system(size: 16, weight: .semibold))
-                            }
-                            
-                            HStack(spacing: 16) {
-                                VStack(alignment: .leading, spacing: 8) {
-                                    Text("Number of Guests")
-                                        .font(.system(size: 14, weight: .medium))
-                                        .foregroundColor(.secondary)
-                                    
-                                    Picker("Guests", selection: $guestCount) {
-                                        ForEach(1...table.capacity, id: \.self) { count in
-                                            Text("\(count) Guest\(count == 1 ? "" : "s")").tag(count)
-                                        }
-                                    }
-                                    .pickerStyle(MenuPickerStyle())
-                                    .frame(maxWidth: .infinity)
-                                    .padding(.horizontal, 12)
-                                    .padding(.vertical, 8)
-                                    .background(Color.gray.opacity(0.1))
-                                    .cornerRadius(8)
-                                }
-                                
-                                VStack(alignment: .leading, spacing: 8) {
-                                    Text("Phone Number")
-                                        .font(.system(size: 14, weight: .medium))
-                                        .foregroundColor(.secondary)
-                                    
-                                    TextField("Your phone number", text: $phoneNumber)
-                                        .keyboardType(.phonePad)
-                                        .padding(.horizontal, 12)
-                                        .padding(.vertical, 8)
-                                        .background(Color.gray.opacity(0.1))
-                                        .cornerRadius(8)
-                                }
-                            }
-                            
-                            VStack(alignment: .leading, spacing: 8) {
-                                Text("Email Address")
-                                    .font(.system(size: 14, weight: .medium))
-                                    .foregroundColor(.secondary)
-                                
-                                TextField("Your email address", text: $email)
-                                    .keyboardType(.emailAddress)
-                                    .textInputAutocapitalization(.never)
-                                    .padding(.horizontal, 12)
-                                    .padding(.vertical, 8)
-                                    .background(Color.gray.opacity(0.1))
-                                    .cornerRadius(8)
-                            }
-                            
-                            VStack(alignment: .leading, spacing: 8) {
-                                Text("Special Requests (Optional)")
-                                    .font(.system(size: 14, weight: .medium))
-                                    .foregroundColor(.secondary)
-                                
-                                TextField("Any special dietary requirements, celebrations, or other requests...", text: $specialRequests, axis: .vertical)
-                                    .lineLimit(3...5)
-                                    .padding(.horizontal, 12)
-                                    .padding(.vertical, 8)
-                                    .background(Color.gray.opacity(0.1))
-                                    .cornerRadius(8)
-                            }
-                        }
-                        .padding(16)
-                        .background(Color.white)
-                        .cornerRadius(12)
-                        .shadow(color: Color.black.opacity(0.05), radius: 2, x: 0, y: 1)
-                        
-                        // Payment Information
-                        VStack(alignment: .leading, spacing: 12) {
-                            HStack {
-                                Image(systemName: "creditcard")
-                                    .foregroundColor(Color(red: 0.31, green: 0.27, blue: 0.9))
-                                Text("Payment Information")
-                                    .font(.system(size: 16, weight: .semibold))
-                            }
-                            
-                            VStack(alignment: .leading, spacing: 12) {
-                                HStack {
-                                    Text("Reservation Fee")
-                                        .font(.system(size: 14, weight: .medium))
-                                    Spacer()
-                                    Text("$\(String(format: "%.2f", restaurant.reservationFee))")
-                                        .font(.system(size: 18, weight: .bold))
-                                        .foregroundColor(Color(red: 0.31, green: 0.27, blue: 0.9))
-                                }
-                                .padding(12)
-                                .background(Color.gray.opacity(0.05))
-                                .cornerRadius(8)
-                                
-                                Text("Required to secure your booking - Table capacity: \(table.capacity)")
-                                    .font(.system(size: 12))
-                                    .foregroundColor(.secondary)
-                                
-                                VStack(alignment: .leading, spacing: 8) {
-                                    Text("Payment Method")
-                                        .font(.system(size: 14, weight: .medium))
-                                        .foregroundColor(.secondary)
-                                    
-                                    HStack(spacing: 12) {
-                                        Button(action: { paymentMethod = "card" }) {
-                                            HStack {
-                                                Image(systemName: paymentMethod == "card" ? "checkmark.circle.fill" : "circle")
-                                                    .foregroundColor(Color(red: 0.31, green: 0.27, blue: 0.9))
-                                                
-                                                VStack(alignment: .leading, spacing: 2) {
-                                                    Text("Credit/Debit Card")
-                                                        .font(.system(size: 14, weight: .medium))
-                                                    Text("Pay now securely online")
-                                                        .font(.system(size: 12))
-                                                        .foregroundColor(.secondary)
-                                                }
-                                                
-                                                Spacer()
-                                            }
-                                            .padding(12)
-                                            .background(paymentMethod == "card" ? Color(red: 0.31, green: 0.27, blue: 0.9).opacity(0.1) : Color.clear)
-                                            .cornerRadius(8)
-                                        }
-                                        .buttonStyle(PlainButtonStyle())
-                                        
-                                        Button(action: { paymentMethod = "restaurant" }) {
-                                            HStack {
-                                                Image(systemName: paymentMethod == "restaurant" ? "checkmark.circle.fill" : "circle")
-                                                    .foregroundColor(Color(red: 0.31, green: 0.27, blue: 0.9))
-                                                
-                                                VStack(alignment: .leading, spacing: 2) {
-                                                    Text("Pay at Restaurant")
-                                                        .font(.system(size: 14, weight: .medium))
-                                                    Text("Pay when you arrive")
-                                                        .font(.system(size: 12))
-                                                        .foregroundColor(.secondary)
-                                                }
-                                                
-                                                Spacer()
-                                            }
-                                            .padding(12)
-                                            .background(paymentMethod == "restaurant" ? Color(red: 0.31, green: 0.27, blue: 0.9).opacity(0.1) : Color.clear)
-                                            .cornerRadius(8)
-                                        }
-                                        .buttonStyle(PlainButtonStyle())
-                                    }
-                                }
-                            }
-                        }
-                        .padding(16)
-                        .background(Color.white)
-                        .cornerRadius(12)
-                        .shadow(color: Color.black.opacity(0.05), radius: 2, x: 0, y: 1)
-                        
-                        // Reserve Button
-                        Button(action: {
-                            Task {
-                                await makeReservation()
-                            }
-                        }) {
-                            HStack {
-                                if isLoading {
-                                    ProgressView()
-                                        .progressViewStyle(CircularProgressViewStyle(tint: .white))
-                                        .scaleEffect(0.8)
-                                } else {
-                                    Text("Confirm Reservation")
-                                        .font(.system(size: 16, weight: .semibold))
-                                }
-                            }
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 16)
-                            .background(Color(red: 0.31, green: 0.27, blue: 0.9))
-                            .foregroundColor(.white)
-                            .cornerRadius(12)
-                        }
-                        .disabled(isLoading || startTime.isEmpty || endTime.isEmpty || timeSlots.isEmpty)
-                        .opacity((isLoading || startTime.isEmpty || endTime.isEmpty || timeSlots.isEmpty) ? 0.6 : 1.0)
+                        dateSelectionSection
+                        todaysReservationsSection
+                        tableSelectionSection
+                        guestInformationSection
+                        paymentInformationSection
+                        formValidationSection
+                        reserveButtonSection
                     }
                     .padding(16)
                 }
@@ -953,6 +562,21 @@ struct TableReservationView: View {
             Button("OK") { }
         } message: {
             Text(errorMessage)
+        }
+        .sheet(isPresented: $showingPayment) {
+            PaymentView(
+                tableCapacity: table.capacity,
+                onPaymentComplete: {
+                    showingPayment = false
+                    paymentProcessed = true
+                    Task {
+                        await makeReservation()
+                    }
+                },
+                onCancel: {
+                    showingPayment = false
+                }
+            )
         }
         .onAppear {
             // Ensure view is immediately visible
@@ -974,10 +598,572 @@ struct TableReservationView: View {
                 // Reset times when date changes since availability might change
                 startTime = ""
                 endTime = ""
+                // Reset payment status when date changes
+                paymentProcessed = false
                 setDefaultTimes()
             }
         }
     }
+    
+    // MARK: - View Components
+    
+    private var headerSection: some View {
+        VStack(spacing: 16) {
+            Text("Make Reservation")
+                .font(.system(size: 24, weight: .bold))
+                .foregroundColor(.white)
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 24)
+        .background(Color(red: 0.31, green: 0.27, blue: 0.9))
+    }
+    
+    private var dateSelectionSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack {
+                Image(systemName: "calendar")
+                    .foregroundColor(Color(red: 0.31, green: 0.27, blue: 0.9))
+                Text("When would you like to dine?")
+                    .font(.system(size: 16, weight: .semibold))
+            }
+            
+            restaurantHoursInfo
+            datePickerSection
+            timeSelectionSection
+        }
+        .padding(16)
+        .background(Color.white)
+        .cornerRadius(12)
+        .shadow(color: Color.black.opacity(0.05), radius: 2, x: 0, y: 1)
+    }
+    
+    private var restaurantHoursInfo: some View {
+        HStack {
+            Image(systemName: "clock")
+                .foregroundColor(Color(red: 0.31, green: 0.27, blue: 0.9))
+                .font(.caption)
+            Text("Open \(restaurant.openingTime) - \(restaurant.closingTime)")
+                .font(.system(size: 12))
+                .foregroundColor(.secondary)
+            Spacer()
+        }
+        .padding(.horizontal, 8)
+        .padding(.vertical, 4)
+        .background(Color(red: 0.31, green: 0.27, blue: 0.9).opacity(0.05))
+        .cornerRadius(6)
+    }
+    
+    private var datePickerSection: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("Date")
+                .font(.system(size: 14, weight: .medium))
+                .foregroundColor(.secondary)
+            
+            DatePicker("", selection: $selectedDate, displayedComponents: .date)
+                .datePickerStyle(CompactDatePickerStyle())
+                .onChange(of: selectedDate) { _ in
+                    Task {
+                        await loadReservationsForDate()
+                    }
+                }
+        }
+    }
+    
+    private var timeSelectionSection: some View {
+        HStack(spacing: 16) {
+            startTimeSelector
+            endTimeSelector
+        }
+    }
+    
+    private var startTimeSelector: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("Start Time")
+                .font(.system(size: 14, weight: .medium))
+                .foregroundColor(.secondary)
+            
+            Menu {
+                ForEach(timeSlots, id: \.self) { time in
+                    Button(action: {
+                        if !isTimeSlotReserved(time) {
+                            startTime = time
+                            updateEndTimeIfNeeded()
+                        }
+                    }) {
+                        HStack {
+                            Text(time)
+                            if isTimeSlotReserved(time) {
+                                Text("(Reserved)")
+                                    .foregroundColor(.secondary)
+                                    .font(.caption)
+                            }
+                        }
+                    }
+                    .disabled(isTimeSlotReserved(time))
+                }
+            } label: {
+                HStack {
+                    Text(startTime.isEmpty ? "Select start time" : startTime)
+                        .foregroundColor(startTime.isEmpty ? .secondary : .primary)
+                    Spacer()
+                    Image(systemName: "chevron.down")
+                        .font(.caption)
+                }
+                .padding(.horizontal, 12)
+                .padding(.vertical, 8)
+                .background(Color.gray.opacity(0.1))
+                .cornerRadius(8)
+            }
+        }
+    }
+    
+    private var endTimeSelector: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("End Time")
+                .font(.system(size: 14, weight: .medium))
+                .foregroundColor(isEndTimeSelectionDisabled ? .gray : .secondary)
+            
+            if isEndTimeSelectionDisabled {
+                HStack {
+                    Text(startTime.isEmpty ? "Select start time first" : "No available end times")
+                        .foregroundColor(.secondary)
+                    Spacer()
+                }
+                .padding(.horizontal, 12)
+                .padding(.vertical, 8)
+                .background(Color.gray.opacity(0.05))
+                .cornerRadius(8)
+            } else {
+                Menu {
+                    ForEach(availableEndTimes, id: \.self) { time in
+                        Button(action: {
+                            endTime = time
+                        }) {
+                            Text(time)
+                        }
+                    }
+                } label: {
+                    HStack {
+                        Text(endTime.isEmpty ? "Select end time" : endTime)
+                            .foregroundColor(endTime.isEmpty ? .secondary : .primary)
+                        Spacer()
+                        Image(systemName: "chevron.down")
+                            .font(.caption)
+                    }
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 8)
+                    .background(Color.gray.opacity(0.1))
+                    .cornerRadius(8)
+                }
+            }
+        }
+    }
+    
+    @ViewBuilder
+    private var todaysReservationsSection: some View {
+        if isToday(selectedDate) && !todaysReservations.isEmpty {
+            VStack(alignment: .leading, spacing: 12) {
+                HStack {
+                    Image(systemName: "calendar.badge.clock")
+                        .foregroundColor(Color(red: 0.31, green: 0.27, blue: 0.9))
+                    Text("Today's Reservations")
+                        .font(.system(size: 16, weight: .semibold))
+                }
+                
+                if isLoadingReservations {
+                    loadingReservationsView
+                } else {
+                    reservationListView
+                }
+            }
+            .padding(16)
+            .background(Color.white)
+            .cornerRadius(12)
+            .shadow(color: Color.black.opacity(0.05), radius: 2, x: 0, y: 1)
+        }
+    }
+    
+    private var loadingReservationsView: some View {
+        HStack {
+            ProgressView()
+                .scaleEffect(0.8)
+            Text("Loading reservations...")
+                .font(.system(size: 14))
+                .foregroundColor(.secondary)
+        }
+        .padding(12)
+    }
+    
+    private var reservationListView: some View {
+        VStack {
+            let tableReservations = todaysReservations.filter { $0.tableId == table.id }
+            
+            if tableReservations.isEmpty {
+                Text("No reservations for this table today")
+                    .font(.system(size: 14))
+                    .foregroundColor(.secondary)
+                    .padding(12)
+            } else {
+                ForEach(tableReservations) { reservation in
+                    reservationRowView(reservation: reservation)
+                }
+            }
+        }
+    }
+    
+    private func reservationRowView(reservation: Reservation) -> some View {
+        HStack {
+            VStack(alignment: .leading, spacing: 4) {
+                Text("Table \(table.tableNumber)")
+                    .font(.system(size: 14, weight: .medium))
+                Text("\(reservation.startTime) - \(reservation.endTime)")
+                    .font(.system(size: 12))
+                    .foregroundColor(.secondary)
+            }
+            
+            Spacer()
+            
+            Text("Booked")
+                .font(.system(size: 12, weight: .medium))
+                .foregroundColor(.white)
+                .padding(.horizontal, 8)
+                .padding(.vertical, 4)
+                .background(Color(red: 0.96, green: 0.26, blue: 0.21))
+                .cornerRadius(8)
+        }
+        .padding(12)
+        .background(Color.gray.opacity(0.05))
+        .cornerRadius(8)
+    }
+    
+    private var tableSelectionSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack {
+                Image(systemName: "table.furniture")
+                    .foregroundColor(Color(red: 0.31, green: 0.27, blue: 0.9))
+                Text("Your Table")
+                    .font(.system(size: 16, weight: .semibold))
+            }
+            
+            HStack {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Table \(table.tableNumber)")
+                        .font(.system(size: 16, weight: .medium))
+                    Text("Seats up to \(table.capacity) guests")
+                        .font(.system(size: 14))
+                        .foregroundColor(.secondary)
+                }
+                
+                Spacer()
+                
+                Text("\(table.capacity) seats")
+                    .font(.system(size: 14, weight: .medium))
+                    .foregroundColor(.white)
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 6)
+                    .background(Color(red: 0.31, green: 0.27, blue: 0.9))
+                    .cornerRadius(8)
+            }
+            .padding(12)
+            .background(Color.gray.opacity(0.05))
+            .cornerRadius(8)
+        }
+        .padding(16)
+        .background(Color.white)
+        .cornerRadius(12)
+        .shadow(color: Color.black.opacity(0.05), radius: 2, x: 0, y: 1)
+    }
+    
+    private var guestInformationSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack {
+                Image(systemName: "person.2")
+                    .foregroundColor(Color(red: 0.31, green: 0.27, blue: 0.9))
+                Text("Guest Information")
+                    .font(.system(size: 16, weight: .semibold))
+            }
+            
+            VStack(spacing: 12) {
+                guestCountPicker
+                contactFieldsSection
+                specialRequestsField
+            }
+        }
+        .padding(16)
+        .background(Color.white)
+        .cornerRadius(12)
+        .shadow(color: Color.black.opacity(0.05), radius: 2, x: 0, y: 1)
+    }
+    
+    private var guestCountPicker: some View {
+        HStack(spacing: 16) {
+            VStack(alignment: .leading, spacing: 8) {
+                Text("Number of Guests")
+                    .font(.system(size: 14, weight: .medium))
+                    .foregroundColor(.secondary)
+                
+                Picker("Guests", selection: $guestCount) {
+                    ForEach(1...table.capacity, id: \.self) { count in
+                        Text("\(count) Guest\(count == 1 ? "" : "s")").tag(count)
+                    }
+                }
+                .pickerStyle(MenuPickerStyle())
+                .frame(maxWidth: .infinity)
+                .padding(.horizontal, 12)
+                .padding(.vertical, 8)
+                .background(Color.gray.opacity(0.1))
+                .cornerRadius(8)
+            }
+            
+            phoneNumberField
+        }
+    }
+    
+    private var phoneNumberField: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("Phone Number *")
+                .font(.system(size: 14, weight: .medium))
+                .foregroundColor(.secondary)
+            
+            TextField("Your phone number", text: $phoneNumber)
+                .keyboardType(.phonePad)
+                .textContentType(.telephoneNumber)
+                .padding(.horizontal, 12)
+                .padding(.vertical, 8)
+                .background(Color.gray.opacity(0.1))
+                .cornerRadius(8)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 8)
+                        .stroke(phoneNumber.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? Color.red.opacity(0.3) : Color.clear, lineWidth: 1)
+                )
+        }
+    }
+    
+    private var contactFieldsSection: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("Email Address *")
+                .font(.system(size: 14, weight: .medium))
+                .foregroundColor(.secondary)
+            
+            TextField("Your email address", text: $email)
+                .keyboardType(.emailAddress)
+                .textContentType(.emailAddress)
+                .textInputAutocapitalization(.never)
+                .autocorrectionDisabled()
+                .padding(.horizontal, 12)
+                .padding(.vertical, 8)
+                .background(Color.gray.opacity(0.1))
+                .cornerRadius(8)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 8)
+                        .stroke((!email.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && !email.contains("@")) || email.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? Color.red.opacity(0.3) : Color.clear, lineWidth: 1)
+                )
+        }
+    }
+    
+    private var specialRequestsField: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("Special Requests (Optional)")
+                .font(.system(size: 14, weight: .medium))
+                .foregroundColor(.secondary)
+            
+            TextField("Any special dietary requirements, celebrations, or other requests...", text: $specialRequests, axis: .vertical)
+                .lineLimit(3...5)
+                .padding(.horizontal, 12)
+                .padding(.vertical, 8)
+                .background(Color.gray.opacity(0.1))
+                .cornerRadius(8)
+        }
+    }
+    
+    private var paymentInformationSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack {
+                Image(systemName: "creditcard")
+                    .foregroundColor(Color(red: 0.31, green: 0.27, blue: 0.9))
+                Text("Payment Information")
+                    .font(.system(size: 16, weight: .semibold))
+            }
+            
+            VStack(alignment: .leading, spacing: 12) {
+                dynamicReservationFeeDisplay
+                paymentMethodSelector
+            }
+        }
+        .padding(16)
+        .background(Color.white)
+        .cornerRadius(12)
+        .shadow(color: Color.black.opacity(0.05), radius: 2, x: 0, y: 1)
+    }
+    
+    private var dynamicReservationFeeDisplay: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack {
+                Text("Reservation Fee")
+                    .font(.system(size: 14, weight: .medium))
+                Spacer()
+                Text("$\(String(format: "%.2f", calculateReservationFee(tableCapacity: table.capacity)))")
+                    .font(.system(size: 18, weight: .bold))
+                    .foregroundColor(Color(red: 0.31, green: 0.27, blue: 0.9))
+            }
+            .padding(12)
+            .background(Color.gray.opacity(0.05))
+            .cornerRadius(8)
+            
+            Text("Required to secure your booking - Table capacity: \(table.capacity) seats")
+                .font(.system(size: 12))
+                .foregroundColor(.secondary)
+        }
+    }
+    
+    private var paymentMethodSelector: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("Payment Method")
+                .font(.system(size: 14, weight: .medium))
+                .foregroundColor(.secondary)
+            
+            VStack(spacing: 8) {
+                cardPaymentOption
+                restaurantPaymentOption
+            }
+        }
+    }
+    
+    private var cardPaymentOption: some View {
+        Button(action: { paymentMethod = "card" }) {
+            HStack {
+                Image(systemName: paymentMethod == "card" ? "checkmark.circle.fill" : "circle")
+                    .foregroundColor(Color(red: 0.31, green: 0.27, blue: 0.9))
+                
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Credit/Debit Card")
+                        .font(.system(size: 14, weight: .medium))
+                    Text("Pay now securely online")
+                        .font(.system(size: 12))
+                        .foregroundColor(.secondary)
+                }
+                
+                Spacer()
+            }
+            .padding(12)
+            .background(paymentMethod == "card" ? Color(red: 0.31, green: 0.27, blue: 0.9).opacity(0.1) : Color.clear)
+            .cornerRadius(8)
+        }
+        .buttonStyle(PlainButtonStyle())
+    }
+    
+    private var restaurantPaymentOption: some View {
+        Button(action: { paymentMethod = "restaurant" }) {
+            HStack {
+                Image(systemName: paymentMethod == "restaurant" ? "checkmark.circle.fill" : "circle")
+                    .foregroundColor(Color(red: 0.31, green: 0.27, blue: 0.9))
+                
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Pay at Restaurant")
+                        .font(.system(size: 14, weight: .medium))
+                    Text("Pay when you arrive")
+                        .font(.system(size: 12))
+                        .foregroundColor(.secondary)
+                }
+                
+                Spacer()
+            }
+            .padding(12)
+            .background(paymentMethod == "restaurant" ? Color(red: 0.31, green: 0.27, blue: 0.9).opacity(0.1) : Color.clear)
+            .cornerRadius(8)
+        }
+        .buttonStyle(PlainButtonStyle())
+    }
+    
+    @ViewBuilder
+    private var formValidationSection: some View {
+        if !isFormValid {
+            VStack(alignment: .leading, spacing: 8) {
+                HStack {
+                    Image(systemName: "exclamationmark.triangle")
+                        .foregroundColor(.orange)
+                    Text("Please complete all required fields:")
+                        .font(.system(size: 14, weight: .medium))
+                        .foregroundColor(.orange)
+                }
+                
+                VStack(alignment: .leading, spacing: 4) {
+                    if startTime.isEmpty {
+                        Text("• Select a start time")
+                            .font(.system(size: 12))
+                            .foregroundColor(.secondary)
+                    }
+                    if endTime.isEmpty {
+                        Text("• Select an end time")
+                            .font(.system(size: 12))
+                            .foregroundColor(.secondary)
+                    }
+                    if phoneNumber.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                        Text("• Enter your phone number")
+                            .font(.system(size: 12))
+                            .foregroundColor(.secondary)
+                    }
+                    if email.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || !email.contains("@") {
+                        Text("• Enter a valid email address")
+                            .font(.system(size: 12))
+                            .foregroundColor(.secondary)
+                    }
+                }
+            }
+            .padding(16)
+            .background(Color.orange.opacity(0.1))
+            .cornerRadius(12)
+        }
+    }
+    
+    private var reserveButtonSection: some View {
+        Button(action: {
+            if paymentMethod == "card" {
+                showingPayment = true
+            } else {
+                Task {
+                    await makeReservation()
+                }
+            }
+        }) {
+            HStack {
+                if isLoading {
+                    ProgressView()
+                        .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                        .scaleEffect(0.8)
+                } else {
+                    Text("Confirm Reservation")
+                        .font(.system(size: 16, weight: .semibold))
+                }
+            }
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 16)
+            .background(isFormValid ? Color(red: 0.31, green: 0.27, blue: 0.9) : Color.gray)
+            .foregroundColor(.white)
+            .cornerRadius(12)
+        }
+        .disabled(!isFormValid || isLoading)
+        .opacity((!isFormValid || isLoading) ? 0.6 : 1.0)
+    }
+    
+    // MARK: - Helper Functions
+    
+    /// Calculate reservation fee based on table capacity
+    /// Matches PaymentView logic for consistency
+    private func calculateReservationFee(tableCapacity: Int) -> Double {
+        switch tableCapacity {
+        case 1...2:
+            return 4.0  // Small tables (1-2 people): $4
+        case 3...4:
+            return 6.0  // Medium tables (3-4 people): $6
+        case 5...6:
+            return 9.0  // Large tables (5-6 people): $9
+        default:
+            return 12.0 // Extra large tables (7+ people): $12
+        }
+    }
+
+    // MARK: - Private Functions
     
     private func isToday(_ date: Date) -> Bool {
         Calendar.current.isDateInToday(date)
@@ -1109,11 +1295,11 @@ struct TableReservationView: View {
                 endTime: endTime,
                 guestCount: guestCount,
                 specialRequests: specialRequests.isEmpty ? nil : specialRequests,
-                phoneNumber: phoneNumber.isEmpty ? (userProfile?.phoneNumber ?? "") : phoneNumber,
-                email: email.isEmpty ? (userProfile?.email ?? "") : email,
-                totalAmount: restaurant.reservationFee,
-                paymentStatus: "pending",
-                paymentMethod: paymentMethod
+                phoneNumber: phoneNumber.trimmingCharacters(in: .whitespacesAndNewlines),
+                email: email.trimmingCharacters(in: .whitespacesAndNewlines),
+                totalAmount: paymentMethod == "card" ? restaurant.reservationFee : 0.0,
+                paymentStatus: paymentMethod == "card" && paymentProcessed ? "completed" : "pending",
+                paymentMethod: paymentMethod == "restaurant" ? "cash" : "card"
             )
             
             // Make the API call
