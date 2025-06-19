@@ -32,7 +32,6 @@ private:
     RestaurantData restaurantData;
     EmailService emailService;
 
-    // Helper method to update table availability
     void updateTableAvailability(int tableId, bool isAvailable);
 };
 

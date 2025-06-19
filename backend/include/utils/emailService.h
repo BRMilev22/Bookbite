@@ -9,14 +9,12 @@ class EmailService {
 public:
     EmailService();
     
-    // Send email verification
     bool sendEmailVerification(
         const std::string& toEmail,
         const std::string& username,
         const std::string& verificationToken
     );
     
-    // Send reservation confirmation email
     bool sendReservationConfirmation(
         const std::string& toEmail,
         const std::string& customerName,
@@ -28,7 +26,6 @@ public:
         int reservationId
     );
     
-    // Send reservation confirmed email (after email confirmation)
     bool sendReservationConfirmed(
         const std::string& toEmail,
         const std::string& customerName,
@@ -39,7 +36,6 @@ public:
         int reservationId
     );
     
-    // Generate confirmation token
     std::string generateConfirmationToken();
     
 private:
@@ -49,7 +45,6 @@ private:
     std::string smtpPassword;
     std::string fromEmail;
     
-    // Helper methods
     bool sendEmail(
         const std::string& toEmail,
         const std::string& subject,

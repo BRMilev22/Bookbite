@@ -350,9 +350,9 @@ bool ReservationData::isTableAvailable(int tableId, const std::string& date, con
         nanodbc::statement stmt(conn);
         
         std::string query = "SELECT COUNT(*) as conflict_count FROM reservations WHERE table_id = ? AND date = ? AND status != 'cancelled' AND "
-                           "((start_time < ? AND end_time > ?) OR "  // Reservation spans over new start time
-                           " (start_time < ? AND end_time > ?) OR "  // Reservation spans over new end time
-                           " (start_time >= ? AND end_time <= ?))";  // Reservation is within new time range
+                           "((start_time < ? AND end_time > ?) OR "
+                           " (start_time < ? AND end_time > ?) OR "
+                           " (start_time >= ? AND end_time <= ?))";
         
         if (excludeReservationId > 0) {
             query += " AND id != ?";

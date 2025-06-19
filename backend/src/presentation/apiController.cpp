@@ -9,9 +9,6 @@ using json = nlohmann::json;
 ApiController::ApiController() {}
 
 void ApiController::setupRoutes(crow::App<>& app) {
-    // Handle CORS by adding headers to each response manually
-    
-    // Handle OPTIONS requests for CORS
     app.route_dynamic("/api/(.*)")
     .methods("OPTIONS"_method)
     ([](const crow::request& req) {
@@ -22,14 +19,12 @@ void ApiController::setupRoutes(crow::App<>& app) {
         return res;
     });
     
-    // Set up API routes
     setupAuthRoutes(app);
     setupRestaurantRoutes(app);
     setupReservationRoutes(app);
     setupReviewRoutes(app);
     setupAdminRoutes(app);
     
-    // Health check route
     app.route_dynamic("/api/health")
     .methods("GET"_method)
     ([this](const crow::request& req) {
@@ -41,40 +36,32 @@ void ApiController::setupRoutes(crow::App<>& app) {
 }
 
 bool ApiController::isAuthenticated(const crow::request& req) {
-    // Get Authorization header
     auto authHeader = req.get_header_value("Authorization");
     if (authHeader.empty()) {
         return false;
     }
     
-    // Check format: "Bearer <token>"
     if (authHeader.substr(0, 7) != "Bearer ") {
         return false;
     }
     
-    // Extract token
     std::string token = authHeader.substr(7);
     
-    // Validate token
     return authService.validateToken(token);
 }
 
 int ApiController::getUserIdFromRequest(const crow::request& req) {
-    // Get Authorization header
     auto authHeader = req.get_header_value("Authorization");
     if (authHeader.empty()) {
         return -1;
     }
     
-    // Check format: "Bearer <token>"
     if (authHeader.substr(0, 7) != "Bearer ") {
         return -1;
     }
     
-    // Extract token
     std::string token = authHeader.substr(7);
     
-    // Get user ID from token
     return authService.getUserIdFromToken(token);
 }
 
@@ -99,7 +86,6 @@ void ApiController::setupAuthRoutes(crow::App<>& app) {
             std::string firstName = data.contains("firstName") ? data["firstName"] : "";
             std::string lastName = data.contains("lastName") ? data["lastName"] : "";
             
-            // Check password strength first
             if (!authService.isPasswordStrong(password)) {
                 json response;
                 response["success"] = false;
@@ -109,12 +95,10 @@ void ApiController::setupAuthRoutes(crow::App<>& app) {
             
             bool success = authService.registerUser(username, email, password, firstName, lastName);
             if (success) {
-                // Get the user to retrieve the verification token that was generated during registration
                 auto userData = UserData();
                 auto user = userData.getUserByEmail(email);
                 
                 if (user && !user->getEmailVerificationToken().empty()) {
-                    // Send verification email with the token that was generated during registration
                     emailService.sendEmailVerification(email, username, user->getEmailVerificationToken());
                 }
                 
@@ -136,7 +120,6 @@ void ApiController::setupAuthRoutes(crow::App<>& app) {
         }
     });
     
-    // Email verification route
     app.route_dynamic("/api/auth/verify-email")
     .methods("GET"_method)
     ([this](const crow::request& req) {

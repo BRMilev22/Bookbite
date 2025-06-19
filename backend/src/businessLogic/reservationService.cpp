@@ -20,36 +20,29 @@ std::optional<Reservation> ReservationService::getReservationById(int id) {
 }
 
 bool ReservationService::createReservation(const Reservation& reservation) {
-    // Check if the table exists
     auto table = tableData.getTableById(reservation.getTableId());
     if (!table) {
-        return false; // Table not found
+        return false;
     }
 
-    // Check if the table is available for the requested time slot
     if (!reservationData.isTableAvailable(reservation.getTableId(),
                                           reservation.getDate(),
                                           reservation.getStartTime(),
                                           reservation.getEndTime())) {
-        return false; // Table not available for this time slot
+        return false;
     }
 
-    // Create a copy of the reservation with pending status and confirmation token
     Reservation pendingReservation = reservation;
     pendingReservation.setStatus("pending");
     
-    // Generate confirmation token
     std::string confirmationToken = emailService.generateConfirmationToken();
     pendingReservation.setConfirmationToken(confirmationToken);
 
-    // Create the reservation without changing global table availability
     bool success = reservationData.addReservation(pendingReservation);
     
     if (success) {
-        // Get the reservation ID from the database
         auto createdReservation = reservationData.getReservationByConfirmationToken(confirmationToken);
         if (createdReservation) {
-            // Get user and restaurant information for the email
             auto user = userData.getUserById(reservation.getUserId());
             auto restaurant = restaurantData.getRestaurantById(reservation.getRestaurantId());
             
@@ -61,7 +54,6 @@ bool ReservationService::createReservation(const Reservation& reservation) {
                 
                 std::string timeSlot = reservation.getStartTime() + " - " + reservation.getEndTime();
                 
-                // Send confirmation email
                 emailService.sendReservationConfirmation(
                     reservation.getEmail().empty() ? user->getEmail() : reservation.getEmail(),
                     customerName,
@@ -83,38 +75,33 @@ bool ReservationService::createReservation(const Reservation& reservation) {
 }
 
 bool ReservationService::updateReservation(const Reservation& reservation) {
-    // Get the existing reservation
     auto existingReservation = reservationData.getReservationById(reservation.getId());
     if (!existingReservation) {
-        return false; // Reservation not found
+        return false;
     }
 
-    // Check if the table exists
     auto table = tableData.getTableById(reservation.getTableId());
     if (!table) {
-        return false; // Table not found
+        return false;
     }
 
-    // Check if the table is available for the new time slot (excluding current reservation)
     if (!reservationData.isTableAvailable(reservation.getTableId(),
                                           reservation.getDate(),
                                           reservation.getStartTime(),
                                           reservation.getEndTime(),
                                           reservation.getId())) {
-        return false; // Table not available for this time slot
+        return false;
     }
 
     return reservationData.updateReservation(reservation);
 }
 
 bool ReservationService::cancelReservation(int id) {
-    // Get the reservation
     auto reservation = reservationData.getReservationById(id);
     if (!reservation) {
-        return false; // Reservation not found
+        return false;
     }
 
-    // Update the reservation status
     return reservationData.updateReservationStatus(id, "cancelled");
 }
 

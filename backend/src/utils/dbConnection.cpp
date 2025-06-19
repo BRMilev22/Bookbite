@@ -4,8 +4,6 @@
 #include <chrono>
 
 DbConnection::DbConnection() {
-    // MariaDB ODBC connection string
-    // Change these parameters based on your MariaDB configuration
     connectionString = "Driver={MariaDB};Server=localhost;Port=3306;Database=bookbite;User=root;Password=;";
     setupConnection();
 }
@@ -26,7 +24,6 @@ void DbConnection::setupConnection() {
 }
 
 nanodbc::connection DbConnection::getConnection() {
-    // Return a new connection each time to avoid concurrency issues
     return createConnection();
 }
 

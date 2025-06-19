@@ -40,61 +40,53 @@ std::string AuthService::generateToken(int userId) {
 
 bool AuthService::registerUser(const std::string& username, const std::string& email, const std::string& password, 
                                const std::string& firstName, const std::string& lastName) {
-    // Validate password strength
     if (!isPasswordStrong(password)) {
-        return false; // Password doesn't meet requirements
+        return false;
     }
     
-    // Check if username or email already exists
     auto existingUsername = userData.getUserByUsername(username);
     auto existingEmail = userData.getUserByEmail(email);
 
     if (existingUsername || existingEmail) {
-        return false; // Username or email already exists
+        return false;
     }
 
-    // Create new user
     User newUser;
     newUser.setUsername(username);
     newUser.setEmail(email);
     newUser.setPasswordHash(hashPassword(password));
     newUser.setFirstName(firstName);
     newUser.setLastName(lastName);
-    newUser.setEmailVerified(false); // Email not verified by default
+    newUser.setEmailVerified(false);
     
-    // Generate email verification token
     std::string verificationToken = generateEmailVerificationToken();
     newUser.setEmailVerificationToken(verificationToken);
     
-    // Set expiration to 24 hours from now
     std::time_t now = std::time(nullptr);
-    std::time_t expires = now + (24 * 60 * 60); // 24 hours
+    std::time_t expires = now + (24 * 60 * 60);
     newUser.setEmailVerificationExpires(std::to_string(expires));
 
     return userData.addUser(newUser);
 }
 
 std::string AuthService::loginUser(const std::string& username, const std::string& password) {
-    // Validate user credentials
     if (!userData.validateUser(username, hashPassword(password))) {
-        return ""; // Invalid credentials
+        return "";
     }
 
-    // Get user and check email verification
     auto user = userData.getUserByUsername(username);
     if (!user) {
-        return ""; // User not found (shouldn't happen if validateUser passed)
+        return "";
     }
     
-    // Check if email is verified
     if (!user->isEmailVerified()) {
-        return "EMAIL_NOT_VERIFIED"; // Special return value to indicate email verification needed
+        return "EMAIL_NOT_VERIFIED";
     }
 
     std::string token = generateToken(user->getId());
 
     if (!storeTokenInDatabase(token, user->getId())) {
-        return ""; // Failed to store token
+        return "";
     }
 
     return token;
@@ -117,7 +109,6 @@ bool AuthService::storeTokenInDatabase(const std::string& token, int userId) {
         nanodbc::connection conn = dbConnection.getConnection();
         nanodbc::statement stmt(conn);
 
-        // Set token to expire in 24 hours from now
         nanodbc::prepare(stmt, "INSERT INTO user_tokens (token, user_id, expires_at) VALUES (?, ?, DATE_ADD(NOW(), INTERVAL 24 HOUR))");
 
         stmt.bind(0, token.c_str());
@@ -252,7 +243,6 @@ bool AuthService::verifyEmailToken(const std::string& token) {
         nanodbc::connection conn = dbConnection.getConnection();
         nanodbc::statement stmt(conn);
 
-        // Find user with this verification token that hasn't expired
         nanodbc::prepare(stmt, 
             "SELECT id FROM users WHERE email_verification_token = ? AND email_verification_expires > NOW() AND email_verified = 0");
         
@@ -262,7 +252,6 @@ bool AuthService::verifyEmailToken(const std::string& token) {
         if (result.next()) {
             int userId = result.get<int>(0);
             
-            // Update user to mark email as verified and clear token
             nanodbc::statement updateStmt(conn);
             nanodbc::prepare(updateStmt,
                 "UPDATE users SET email_verified = 1, email_verification_token = NULL, email_verification_expires = NULL WHERE id = ?");

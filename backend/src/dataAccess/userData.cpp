@@ -49,10 +49,8 @@ std::vector<User> UserData::getAllUsers() {
             user.setCreatedAt(result.get<nanodbc::string>("created_at", ""));
             user.setRoleName(result.get<nanodbc::string>("role_name", "user"));
             
-            // Parse permissions JSON (simplified)
             std::string permissionsJson = result.get<nanodbc::string>("permissions", "[]");
             std::vector<std::string> permissions;
-            // Basic JSON parsing for permissions array
             if (permissionsJson.find("make_reservation") != std::string::npos) permissions.push_back("make_reservation");
             if (permissionsJson.find("view_reservations") != std::string::npos) permissions.push_back("view_reservations");
             if (permissionsJson.find("cancel_reservation") != std::string::npos) permissions.push_back("cancel_reservation");
@@ -262,13 +260,11 @@ bool UserData::validateUser(const std::string& username, const std::string& pass
             return false;
         }
         
-        // Check if user account is active
         if (!user->isActive()) {
             std::cerr << "Login attempt for inactive user: " << username << std::endl;
             return false;
         }
         
-        // Password is already hashed by AuthService before being passed here
         return password == user->getPasswordHash();
     } catch (const std::exception& e) {
         std::cerr << "Error in validateUser: " << e.what() << std::endl;
@@ -276,7 +272,6 @@ bool UserData::validateUser(const std::string& username, const std::string& pass
     }
 }
 
-// Role management methods
 std::vector<UserRole> UserData::getAllRoles() {
     std::vector<UserRole> roles;
     try {

@@ -16,11 +16,9 @@ public:
     int getUserIdFromToken(const std::string& token);
     void logoutUser(const std::string& token);
     
-    // Email verification methods
     bool verifyEmailToken(const std::string& token);
     std::string generateEmailVerificationToken();
     
-    // Password validation
     bool isPasswordStrong(const std::string& password);
     std::string getPasswordRequirements();
 
@@ -31,7 +29,6 @@ private:
     std::string generateToken(int userId);
     std::string hashPassword(const std::string& password);
     
-    // Database-backed token methods
     bool storeTokenInDatabase(const std::string& token, int userId);
     bool validateTokenInDatabase(const std::string& token);
     int getUserIdFromTokenInDatabase(const std::string& token);

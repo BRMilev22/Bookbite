@@ -10,14 +10,12 @@
 #include <cstdlib>
 
 EmailService::EmailService() {
-    // Initialize SMTP configuration
     smtpHost = std::getenv("SMTP_HOST") ? std::getenv("SMTP_HOST") : "smtp.gmail.com";
     smtpPort = std::getenv("SMTP_PORT") ? std::stoi(std::getenv("SMTP_PORT")) : 587;
     smtpUser = std::getenv("SMTP_USER") ? std::getenv("SMTP_USER") : "";
     smtpPassword = std::getenv("SMTP_PASSWORD") ? std::getenv("SMTP_PASSWORD") : "";
     fromEmail = std::getenv("FROM_EMAIL") ? std::getenv("FROM_EMAIL") : "noreply@bookbite.com";
     
-    // If no environment variables set, fall back to console logging
     if (smtpUser.empty() || smtpPassword.empty()) {
         std::cout << "📧 Email service running in console mode (no SMTP credentials)" << std::endl;
     } else {
@@ -148,7 +146,6 @@ bool EmailService::sendEmail(
     const std::string& htmlBody,
     const std::string& textBody
 ) {
-    // If no SMTP credentials, just log to console (development mode)
     if (smtpUser.empty() || smtpPassword.empty()) {
         std::cout << "=== EMAIL SENT (CONSOLE MODE) ===" << std::endl;
         std::cout << "To: " << toEmail << std::endl;
@@ -159,7 +156,6 @@ bool EmailService::sendEmail(
         return true;
     }
     
-    // Send actual email using CURL SMTP
     CURL *curl;
     CURLcode res = CURLE_OK;
     

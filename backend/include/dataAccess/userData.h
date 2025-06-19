@@ -19,13 +19,11 @@ public:
     bool deleteUser(int id);
     bool validateUser(const std::string& username, const std::string& password);
     
-    // Role management
     std::vector<UserRole> getAllRoles();
     std::optional<UserRole> getRoleById(int id);
     bool updateUserRole(int userId, int roleId);
     bool updateUserStatus(int userId, bool isActive);
     
-    // Admin audit logging
     bool logAdminAction(int adminUserId, const std::string& action, const std::string& targetType = "", 
                        int targetId = 0, const std::string& details = "", const std::string& ipAddress = "");
 

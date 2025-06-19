@@ -21,8 +21,6 @@ public:
     bool updateReservationStatus(int id, const std::string& status);
     bool isTableAvailable(int tableId, const std::string& date, const std::string& startTime, const std::string& endTime, int excludeReservationId = 0);
     std::vector<int> getAvailableTableIds(int restaurantId, const std::string& date, const std::string& startTime, const std::string& endTime, int minCapacity = 0);
-    
-    // Confirmation token methods
     std::optional<Reservation> getReservationByConfirmationToken(const std::string& token);
     bool updateReservationConfirmationToken(int id, const std::string& token);
     bool confirmReservation(const std::string& token);
